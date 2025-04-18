@@ -1,0 +1,291 @@
+.admin-login-logo {
+    font-family: 'Poppins', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 59px;
+    text-align: right;
+    color: #116AFD;
+    margin-bottom: 20px;
+}
+
+.admin-login-left-col {
+    background: linear-gradient(180deg, #0575E6 0%, #02298A 84.79%, #021B79 100%);
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.admin-login {
+    height: 100vh;
+    width: 100%;
+}
+
+.login-img {
+    height: 100%;
+    width: 75%;
+    z-index: 2;
+    position: relative;
+}
+
+
+.admin-login-right-col {
+    
+    padding: 20px;
+}
+
+.login-form {
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-input-group {
+    position: relative;
+    margin-bottom: 20px;
+    border-radius: 30px;
+    width: 60%;
+    margin: 0 auto;
+}
+
+.input-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    color: #888;
+}
+
+.custom-input {
+    padding-left: 35px !important;
+    border-radius: 30px !important;
+    border: 1px solid #EEEEEE !important;
+    height: 50px;
+    font-family: 'Poppins',sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    line-height: 21px;
+    text-align: left;
+    text-underline-position: from-font;
+    text-decoration-skip-ink: none;
+    color: #333333 !important;
+    background-color: #FFFFFF !important;
+}
+
+.button-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.admin-login-p1{
+    font-family: 'Poppins',sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 39px;
+    text-align: center;
+    text-underline-position: from-font;
+    text-decoration-skip-ink: none;
+    color: #333333;
+
+}
+.admin-login-p2{
+    font-family: 'Poppins',sans-serif;
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 27px;
+    text-align: center;
+    text-underline-position: from-font;
+    text-decoration-skip-ink: none;
+    color: #333333;
+
+}
+
+.admin-login-button{
+    background-color: #0575E6;
+    border-radius: 30px;
+    padding: 10px;
+    font-family: 'Poppins',sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 21px;
+    text-align: center;
+    text-underline-position: from-font;
+    text-decoration-skip-ink: none;
+    color: #FFFFFF;
+    border: none;
+    width: 30%;
+    margin-top: 3%;
+
+}
+
+.admin-login-img-back {
+    background-color: #00A8FF;
+    height: 200px;
+    width: 350px;
+    position: absolute; /* Align it relative to the parent container */
+    top: 50%; /* Center it vertically */
+    right: -50px; /* Move it to the right of the image */
+    transform: translateY(-50%); /* Center adjustment */
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    z-index: 1; 
+    border-radius: 10px; 
+  }
+  
+  .admin-login-img-back-icon {
+    color: #FFFFFF40; /* Semi-transparent white */
+    width: 100px; /* Adjust icon width */
+    height: 100px; /* Adjust icon height */
+    margin: 0 10px; /* Space between icons */
+  }
+  
+
+.img-container-login {
+    position: relative;
+    box-shadow: 24px -4px 30px 0px #78787833;
+
+  }
+
+
+  .login-img-left {
+    position: absolute; 
+    top: 40%; 
+    left: -50px; 
+    transform: translateY(-50%); 
+    width: 75%;
+    height: 100%; 
+    opacity: 1; 
+    z-index: 0; 
+  }
+  .circle-container {
+    position: absolute; /* Positioned relative to the img-container-login */
+    top: 50%; /* Center vertically */
+    left: 60px; /* Center behind the left image */
+    transform: translate(-50%, -50%);
+    z-index: 0; /* Ensure it stays behind the images */
+  }
+  
+  .circle {
+    position: absolute;
+    border-radius: 50%;
+    background-color: #FFFFFF0F;
+  }
+  
+  .circle-1 {
+    width: 200px;
+    height: 200px;
+  }
+  
+  .circle-2 {
+    width: 300px;
+    height: 300px;
+  }
+  
+  .circle-3 {
+    width: 400px;
+    height: 400px;
+  }
+  
+  .circle-1,
+  .circle-2,
+  .circle-3 {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .angled-rect-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+  }
+  
+  .angled-rect {
+    position: absolute;
+    border: 2px solid #CCCCF5;
+    transform-origin: center;
+  }
+  
+  /* First Line */
+  .angled-rect-1 {
+    top: 10%;
+    left: 5%;
+    width: 450px;
+    height: 250px;
+    transform: rotate(-18deg);
+  }
+  
+  /* Second Line */
+  .angled-rect-2 {
+    top: 30%;
+    left: 10%;
+    width: 400px;
+    height: 200px;
+    transform: rotate(-10deg);
+  }
+  
+  /* Third Line */
+  .angled-rect-3 {
+    top: 50%;
+    left: 15%;
+    width: 350px;
+    height: 150px;
+    transform: rotate(-5deg);
+  }
+  .spinner-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Ensure it stays on top of other elements */
+  }
+  /* Container for the toggle buttons */
+.login-toggle-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+/* Style for each toggle button */
+.login-toggle-button {
+  padding: 12px 25px;
+  font-size: 16px;
+  font-weight: bold;
+  background-color: #f0f0f0;
+  border: 2px solid transparent;
+  border-radius: 30px;
+  cursor: pointer;
+  margin: 0 15px;
+  transition: all 0.3s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* Active state styling for the selected button */
+.login-toggle-active {
+  background-color: #4caf50; 
+  color: white;
+  border-color: #4caf50;
+}
+
+/* Icon styling */
+.login-toggle-button i {
+  font-size: 18px;
+}
+
+/* Hover effect for the buttons */
+.login-toggle-button:hover {
+  background-color: #e7e7e7;
+  transform: scale(1.05);
+  color: black;
+}

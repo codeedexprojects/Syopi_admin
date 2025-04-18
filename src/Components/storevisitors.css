@@ -1,0 +1,59 @@
+.store-visitors{
+    border-radius: 10px;
+    padding: 30px;
+    border: 1px solid #E0E2E7;
+    box-shadow: 0px 8px 16px 0px #0000000F; 
+    height: 100%;
+    background-color: #FFFFFF;
+}
+.sv-title{
+    color: #000000;
+    font-family: "Inter",sans-serif;
+    font-size: 22px;
+    font-weight: 400;
+    text-align: left;
+    text-underline-position: from-font;
+    text-decoration-skip-ink: none;
+}
+
+.sv-dropdown{
+    width: Hug (134px)px;
+    height: Hug (44px)px;
+    top: 20px;
+    left: 306px;
+    padding: 20px;
+    gap: 4px;
+    border-radius: 8px;
+    opacity: 0px;
+    background-color: #6777EE;
+    font-family: Poppins;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 24px;
+    text-align: left;
+    text-underline-position: from-font;
+    text-decoration-skip-ink: none;
+    color: #FFFFFF;
+    border: none;
+}
+
+.sv-option{
+    background-color: white;
+    color: #000000;
+}
+.sv-option:hover{
+    background-color: white !important;
+    color: #000000 !important;
+}
+
+.sv-label{
+    color: #000000;
+    font-family: "Inter",sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+    text-align: left;
+    text-underline-position: from-font;
+    text-decoration-skip-ink: none;
+
+}

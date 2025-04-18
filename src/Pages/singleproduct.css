@@ -1,0 +1,262 @@
+.single-product{
+    margin-top: 7%;
+    padding: 20px;
+}
+
+.single-product-title{
+    font-family: 'Poppins',sans-serif;
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 48px;
+    text-align: left;
+    text-underline-position: from-font;
+    text-decoration-skip-ink: none;
+    color: #9496A1;
+
+}
+
+.remove-product-button{
+    border-radius: 14px;
+    background-color: #FB544B;
+    font-family: 'Poppins',sans-serif;
+font-size: 15px;
+font-weight: 600;
+line-height: 30px;
+text-align: center;
+text-underline-position: from-font;
+text-decoration-skip-ink: none;
+color: #FFFFFF;
+border: none;
+padding: 8px;
+width: 30%;
+}
+.add-product-button2{
+    border-radius: 14px;
+    background-color: #495DD9;
+    font-family: 'Poppins',sans-serif;
+font-size: 15px;
+font-weight: 600;
+line-height: 30px;
+text-align: center;
+text-underline-position: from-font;
+text-decoration-skip-ink: none;
+color: #FFFFFF;
+border: none;
+padding: 8px;
+width: 30%;
+}
+
+.single-product-form-label{
+    font-family: 'Poppins',sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    text-align: left;
+    text-underline-position: from-font;
+    text-decoration-skip-ink: none;
+    color: #000000;
+
+}
+.single-product-img{
+  width: 100%;
+  height: 350px;
+}
+.single-product-form{
+    background-color: #E9E9E9 !important;
+    border: none !important;
+    border-radius: 14px !important;
+    color: #494949 !important;
+    font-family: 'Poppins',sans-serif;
+font-size: 14px !important;
+font-weight: 500 !important;
+text-align: left;
+text-underline-position: from-font;
+text-decoration-skip-ink: none;
+
+height: 45px;
+}
+.single-product-description{
+  background-color: #E9E9E9 !important;
+    border: none !important;
+    border-radius: 14px !important;
+    color: #494949 !important;
+    font-family: 'Poppins',sans-serif;
+font-size: 14px !important;
+font-weight: 500 !important;
+text-align: left;
+text-underline-position: from-font;
+text-decoration-skip-ink: none;
+
+}
+
+.add-image-icon {
+  font-size: 50px;
+  color: #6F6F6F;
+  position: absolute;  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.image-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+  
+  .size-selection {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  
+  .size-btn {
+    padding: 10px 15px;
+    background-color: #f8f9fa;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  
+  .size-btn:hover {
+    background-color: #007bff;
+    color: white;
+  }
+  
+  .size-btn:active {
+    background-color: #0056b3;
+  }
+  
+  .dropdown-wrapper {
+    position: relative;
+  }
+  
+  .custom-dropdown {
+    padding-right: 2.5rem; /* Space for the icon */
+  }
+  
+  .dropdown-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .single-product-right-column{
+    padding: 20px;
+    border-radius: 10px;
+    background-color: #FFFF;
+  }
+
+  .color-picker-container {
+    display: flex;
+    align-items: center; /* Align all items horizontally */
+    gap: 10px; /* Space between the elements */
+    margin-bottom: 15px;
+  }
+  
+ 
+  
+  .add-color-btn {
+    margin-left: 10px; /* Space between the color picker and button */
+  }
+  
+  .added-colors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+    justify-content: flex-start; /* Align to the left, you can change it to flex-end to align to the right */
+  }
+  
+  .color-circle-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .color-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid #ccc;
+    border: none;
+  }
+  
+  .color-name {
+    margin-top: 5px;
+    font-size: 12px;
+    text-align: center;
+  }
+  
+
+
+  .size-selection {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px; 
+    margin-top: 5px;
+  }
+  
+
+  .size-checkbox {
+    width: 25px;
+    height: 25px;
+    cursor: pointer;
+  }
+  
+  .size-label {
+    color: #000000; 
+    font-family: 'Poppins',sans-serif;
+font-size: 18px;
+font-weight: 600;
+line-height: 48px;
+text-align: left;
+text-underline-position: from-font;
+text-decoration-skip-ink: none;
+margin-left: 3px;
+
+  }
+  
+
+  .add-color-btn{
+    border-radius: 14px;
+    background-color: #38BAF4;
+    font-family: 'Poppins',sans-serif;
+font-size: 15px;
+font-weight: 600;
+line-height: 30px;
+text-align: center;
+text-underline-position: from-font;
+text-decoration-skip-ink: none;
+color: #FFFF;
+border: none;
+width: 10%;
+padding: 5px;
+  }
+
+
+  .main-image-delete-icon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: #ff0000;
+    font-size: 20px;
+    cursor: pointer;
+    border-radius: 50%;
+    padding: 5px;
+  }
+
+
+  .additional-image-delete-icon {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    color: #ff0000;
+    font-size: 11px;
+    cursor: pointer;
+    border-radius: 50%;
+    padding: 3px;
+  }

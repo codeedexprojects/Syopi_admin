@@ -1,0 +1,77 @@
+.usermanage{
+    padding: 20px;
+    margin-top: 7%;
+}
+
+.user-search-input{
+    background-color: #E9E9E9 !important;
+    border-radius: 14px !important;
+    padding-left: 2.5rem !important;
+    font-family: 'Poppins',sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 30px;
+    text-align: left;
+    text-underline-position: from-font;
+    text-decoration-skip-ink: none;
+    padding: 8px;
+    
+}
+
+.user-filter-button{
+    border-radius: 14px;
+    background-color: #495DD9;
+    font-family: Poppins;
+font-size: 15px;
+font-weight: 500;
+line-height: 30px;
+text-align: center;
+text-underline-position: from-font;
+text-decoration-skip-ink: none;
+padding: 5px;
+color: #FFF;
+border: none;
+
+}
+.user-manage-card{
+
+box-shadow: 3px 2px 4px 0px #00000017, 13px 7px 6px 0px #00000003 !important;
+border-radius: 14px !important;
+border: none !important;
+background-color: #FFFFFF !important;
+
+}
+.user-manage-card-heading{
+    font-family: 'Poppins',sans-serif;
+font-size: 14px !important;
+font-weight: 600 !important;
+line-height: 21px !important;
+text-align: left;
+text-underline-position: from-font;
+text-decoration-skip-ink: none;
+color: #9496A1 !important;
+
+}
+.user-manage-card-number{
+    font-family: 'Poppins',sans-serif;
+font-size: 25px;
+font-weight: 600;
+line-height: 40px;
+letter-spacing: 1px;
+text-align: left;
+text-underline-position: from-font;
+text-decoration-skip-ink: none;
+color: #202224;
+
+}
+.view-all-link-user{
+    font-family: 'Poppins',sans-serif;
+font-size: 14px;
+font-weight: 300;
+line-height: 2px;
+text-align: left;
+text-underline-position: from-font;
+text-decoration-skip-ink: none;
+color: #38BAF4;
+text-decoration: none;
+}

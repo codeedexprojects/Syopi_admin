@@ -1,0 +1,146 @@
+.App {
+  display: flex;
+  transition: margin-left 0.3s ease;
+}
+
+.sidebar-open .content {
+  margin-left: 250px;
+  overflow-x: hidden
+}
+
+.content {
+  flex-grow: 1;
+  transition: margin-left 0.3s ease;
+  background-color: rgb(244 244 244);
+}
+
+
+.modal.show .modal-dialog {
+height: auto !important;
+}
+
+.css-15kkzqw-MuiPickersLayout-root{
+margin-top: -40% !important;
+}
+
+
+.position-relative {
+  position: relative;
+}
+
+.with-icon {
+  padding-right: 2.5rem; /* Adjust for icon spacing */
+}
+
+.form-icon {
+  position: absolute;
+  right: 10px; /* Adjust as needed */
+  top: 70%;
+  transform: translateY(-50%);
+  color: #6c757d; /* Icon color */
+  font-size: 1.2rem; /* Icon size */
+  pointer-events: none; /* Ensure the icon doesn't block input interaction */
+}
+
+
+
+.image-square {
+  width: 100%;
+  height: 0;
+  padding-bottom: 100%; /* Keeps the square aspect ratio */
+  position: relative;
+  border: 1px dashed #9496A1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  overflow: hidden;
+  border-radius: 5px;
+}
+
+
+
+.image-square img,
+.image-square .add-image-icon {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Ensures the image fills the container */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.add-image-icon {
+  font-size: 50px;
+  color: #6F6F6F;
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.added-image{
+  margin-top: 100%;
+}
+.add-image-icon-large {
+  font-size: 36px;
+  color: #666;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.single-product-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 350px; /* Adjust based on the size of `vendorprofile` */
+  background-color: #f0f0f0;
+  border: 1px dashed #ccc;
+  border-radius: 10px;
+  position: relative;
+}
+
+.features-heading {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+
+
+
+
+  .react-select__control {
+    background-color: #E9E9E9 !important;
+    border: none !important;
+    border-radius: 14px !important;
+    color: #494949 !important;
+    font-family: 'Poppins',sans-serif;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    text-align: left;
+    text-underline-position: from-font;
+    text-decoration-skip-ink: none;
+    height: 100%;
+  
+  }
+  .react-select__menu {
+    border-radius: 8px;
+  }
+  .react-select__multi-value {
+    background-color: #f0f0f0;
+    border-radius: 4px;
+    padding: 2px 6px;
+  }
+  .react-select__multi-value__label {
+    color: #333;
+  }
+  .react-select__multi-value__remove {
+    cursor: pointer;
+  }
+  

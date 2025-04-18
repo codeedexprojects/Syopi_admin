@@ -1,0 +1,208 @@
+.notification{
+    padding: 20px;
+    margin-top: 7%;
+}
+
+
+.notification-title{
+    font-family: 'Poppins',sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 30px;
+    text-align: left;
+    text-underline-position: from-font;
+    text-decoration-skip-ink: none;
+    color: #000000;
+}
+
+.notification-subtitle{
+    font-family: 'Poppins',sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 21px;
+    text-align: left;
+    text-underline-position: from-font;
+    text-decoration-skip-ink: none;
+    color: #524F4F;
+
+}
+
+.notification-date{
+    color: #7C7C7C;
+    font-family: 'Poppins',sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 21px;
+    text-align: left;
+    text-underline-position: from-font;
+    text-decoration-skip-ink: none;
+    margin-top: 9%;
+
+}
+
+.custom-modal-width .modal-dialog {
+    max-width: 800px !important; 
+    width: 100% !important; 
+  }
+  .MuiPickerPopper-root {
+    z-index: 1050 !important; /* Keep the calendar above other modal elements */
+  }
+  
+  .input-with-icon {
+    position: relative; /* Required to maintain proper alignment */
+  }
+  .upload-square {
+    width: 100%;
+    max-width: 250px; /* Adjust square size */
+    height: 250px;
+    border: 2px dashed #ccc;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    background-color: #f9f9f9;
+  }
+  
+  .upload-plus {
+    font-size: 48px;
+    color: #888;
+    font-weight: bold;
+  }
+  
+  .upload-square img {
+    border-radius: 12px;
+    object-fit: cover;
+  }
+
+  
+
+
+
+
+  /* Modal overlay (background) */
+.modal2-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* semi-transparent background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  /* Modal box */
+  .modal2 {
+    background-color: white;
+    padding: 10px;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 120px;
+  }
+  
+  /* Modal options (Remove, Edit) */
+  .modal-option2 {
+    cursor: pointer;
+    font-size: 14px;
+    padding: 5px 0;
+    margin: 0;
+    text-align: center;
+    color: #333;
+  }
+  
+  /* Optional hover effect */
+  .modal-option2:hover {
+    color: #007bff;
+  }
+  .popover-modal {
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .popover-option {
+    cursor: pointer;
+    font-size: 14px;
+    padding: 5px 0;
+    margin: 0;
+    text-align: center;
+    color: #333;
+  }
+  
+  .popover-option:hover {
+    color: #007bff;
+  }
+/* Logs */
+.logs{
+    padding: 20px;
+    margin-top: 7%;
+}
+
+.logs-title{
+    font-family: 'Poppins',sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 30px;
+    text-align: left;
+    text-underline-position: from-font;
+    text-decoration-skip-ink: none;
+    color: #000000;
+}
+
+.logs-subtitle{
+    font-family: 'Poppins',sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 21px;
+    text-align: left;
+    text-underline-position: from-font;
+    text-decoration-skip-ink: none;
+    color: #524F4F;
+
+}
+
+.logs-date{
+    color: #7C7C7C;
+    font-family: 'Poppins',sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 21px;
+    text-align: left;
+    text-underline-position: from-font;
+    text-decoration-skip-ink: none;
+    margin-top: 9%;
+}  
+
+
+.custom-popover {
+  position: absolute;
+  top: 35px;
+  right: 0;
+  background-color: white;
+  border: 1px solid #ccc;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  z-index: 1000;
+  padding: 10px;
+  width: 150px;
+}
+
+.popover-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+}
+
+.popover-item:hover {
+  background-color: #f5f5f5;
+  color: #000;
+}

@@ -1,0 +1,75 @@
+.suspend-user-button{
+   
+        border-radius: 14px;
+        background-color: #FFA425;
+        font-family: 'Poppins',sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 30px;
+    text-align: center;
+    text-underline-position: from-font;
+    text-decoration-skip-ink: none;
+    color: #FFFFFF;
+    border: none;
+    padding: 8px;
+    width: 30%;
+    
+}
+
+.reactivate-user-button{
+   
+    border-radius: 14px;
+    background-color: #4CAF50;
+    font-family: 'Poppins',sans-serif;
+font-size: 15px;
+font-weight: 600;
+line-height: 30px;
+text-align: center;
+text-underline-position: from-font;
+text-decoration-skip-ink: none;
+color: #FFFFFF;
+border: none;
+padding: 8px;
+width: 30%;
+
+}
+
+
+.remove-user-button{
+   
+    border-radius: 14px;
+    background-color: #F44336;
+    font-family: 'Poppins',sans-serif;
+font-size: 15px;
+font-weight: 600;
+line-height: 30px;
+text-align: center;
+text-underline-position: from-font;
+text-decoration-skip-ink: none;
+color: #FFFFFF;
+border: none;
+padding: 8px;
+width: 30%;
+
+}
+
+.userimg{
+    border-radius: 20px;
+    max-width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.single-product-form-address{
+    background-color: #E9E9E9 !important;
+    border: none !important;
+    border-radius: 14px !important;
+    color: #494949 !important;
+    font-family: 'Poppins',sans-serif;
+font-size: 14px !important;
+font-weight: 500 !important;
+text-align: left;
+text-underline-position: from-font;
+text-decoration-skip-ink: none;
+
+}

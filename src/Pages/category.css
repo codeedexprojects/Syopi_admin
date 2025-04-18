@@ -1,0 +1,198 @@
+.category{
+    padding: 20px;
+    margin-top: 7%;
+}
+
+
+.category-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0px;
+    margin-bottom: 16px; /* Adjust the value as needed */
+
+  }
+  
+  .category-card-wrapper {
+    display: flex;
+    justify-content: center;
+  }
+  
+  .category-card {
+    position: relative;
+    width: 100%;
+    padding-top: 100%; /* Aspect ratio 1:1 */
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    margin-bottom: 26px;
+  }
+  
+  .category-image {
+    position: absolute;
+    top: 9%;
+    left: 19%;
+    width: 50%;
+    height: 60%; 
+    object-fit: fill; 
+    border-radius: 5px 5px 0 0; 
+  }
+  
+  
+  .category-name {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    font-family: 'Poppins',sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 18px;
+    text-underline-position: from-font;
+    text-decoration-skip-ink: none;
+    color: #000000;
+    
+  }
+  
+  .category-icon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 18px;
+    color: #666;
+    cursor: pointer;
+  }
+
+
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 40%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    min-width: 300px;
+    min-height: 200px;
+  }
+  
+
+  .category-model-cancel{
+    border-radius: 14px;
+    background-color: #6F6F6F;
+    color: #FFFFFF;
+    font-family: 'Poppins',sans-serif;
+font-size: 14px;
+font-weight: 600;
+line-height: 30px;
+text-align: center;
+text-underline-position: from-font;
+text-decoration-skip-ink: none;
+padding: 5px;
+border: none;
+
+  }
+  .category-model-add{
+    border-radius: 14px;
+    background-color: #38BAF4;
+    color: #FFFFFF;
+    font-family: 'Poppins',sans-serif;
+font-size: 14px;
+font-weight: 600;
+line-height: 30px;
+text-align: center;
+text-underline-position: from-font;
+text-decoration-skip-ink: none;
+padding: 5px;
+border: none;
+
+  }
+
+  .category-modal-title{
+    font-family: 'Poppins',sans-serif;
+font-size: 28px;
+font-weight: 600 !important;
+line-height: 48px;
+text-align: left;
+text-underline-position: from-font;
+text-decoration-skip-ink: none;
+color: #000000 !important;
+
+  }
+
+  .category-small-modal-p{
+    font-family: 'Poppins',sans-serif;
+font-size: 15px;
+font-weight: 600;
+line-height: 30px;
+text-align: left;
+text-underline-position: from-font;
+text-decoration-skip-ink: none;
+color: #000000;
+cursor: pointer;
+  }
+  /* Hide the arrow in the popover */
+.no-arrow-popover .popover-arrow {
+    display: none !important;
+
+  }
+  .custom-popover-modal .modal-dialog {
+    width: 50px !important; /* Narrower width */
+    margin: auto; /* Center horizontally */
+  }
+  
+  .custom-popover-modal .modal-content {
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border: none;
+    width: 50px;
+  }
+  
+  .custom-popover-body {
+    padding: 5px; /* Minimal padding for compact look */
+    text-align: center;
+  }
+  
+  .modal.show .modal-dialog {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%; /* Ensure it takes up the full height of the viewport for vertical centering */
+  }
+  
+  .custom-popover-item {
+    margin: 5px 0;
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+  }
+  
+  .custom-popover-item:hover {
+    background-color: #f8f9fa;
+    border-radius: 3px;
+  }
+  
+
+  /* Add a fixed height and enable scrolling in the modal body */
+.scrollable-modal .modal-body-with-scroll {
+  max-height: 400px;  /* Adjust based on your modal height */
+  overflow-y: auto;
+}
+
+/* Set a fixed size for the image preview */
+.preview-image {
+  max-width: 100%;
+  width: 100%;
+  max-height: 150px;  /* Set a fixed height for image preview */
+  object-fit: contain; /* Ensure the image maintains its aspect ratio */
+}
