@@ -1074,7 +1074,22 @@ export const updateAdminOrderStatusApi = async (orderData) => {
     }
   };
 
-
+  export const getAllVendorBrandsApi = async () => {
+    const url = `${BASE_URL}/vendor/brand/view`;
+    const accessToken = getToken();
+  
+    if (!accessToken) return { success: false, error: "No token provided" };
+  
+    try {
+      const response = await commonApi("GET", url, null, {
+        Authorization: `Bearer ${accessToken}`,
+      });
+      return response;
+    } catch (error) {
+      return { success: false, error: error.message || "Error fetching brands" };
+    }
+  };
+  
 
   export const createVendorApi = async (vendorData) => {
     const url = `${BASE_URL}/admin/vendor/create`;
@@ -1750,7 +1765,46 @@ export const deletevendorcouponApi = async (couponId) => {
 
 
 
+export const getVendorOrdersApi = async () => {
+  const url = `${BASE_URL}/vendor/orders`;
 
+  const accessToken = localStorage.getItem('accessToken');
+
+  if (!accessToken) {
+    return { success: false, error: "No token provided" };
+  }
+
+  try {
+    const response = await commonApi("GET", url, null, {
+      Authorization: `Bearer ${accessToken}`,
+    });
+
+    return response;
+  } catch (error) {
+    return { success: false, error: error.message || "Error fetching admin orders" };
+  }
+};
+
+
+export const updateVendorOrderStatusApi = async (orderData) => {
+  const url = `${BASE_URL}/vendor/orders/`;
+
+  const accessToken = localStorage.getItem('accessToken');
+
+  if (!accessToken) {
+    return { success: false, error: "No token provided" };
+  }
+
+  try {
+    const response = await commonApi("PATCH", url, orderData, {
+      Authorization: `Bearer ${accessToken}`,
+    });
+
+    return response;
+  } catch (error) {
+    return { success: false, error: error.message || "Error updating order status" };
+  }
+};
 
 
 export const getallvendorProducts = async () => {

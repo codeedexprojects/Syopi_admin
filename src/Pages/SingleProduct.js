@@ -16,6 +16,7 @@ import { BASE_URL } from "../services/baseUrl";
 
 function SingleProduct() {
   const { id } = useParams();
+
   const [images, setImages] = useState([null, null, null, null]);
   const [color, setColor] = useState("");
   const [categories, setCategories] = useState([]);
@@ -48,7 +49,7 @@ function SingleProduct() {
   const [editingIndex, setEditingIndex] = useState(null); 
   const [productId, setProductId] = useState("");
   const adminID = localStorage.getItem("adminId");
-const [previewImages, setPreviewImages] = useState([]); // For preview URLs
+  const [previewImages, setPreviewImages] = useState([]); 
 
 
   useEffect(() => {
@@ -59,8 +60,8 @@ const [previewImages, setPreviewImages] = useState([]); // For preview URLs
 
         if (response && response.data) {
           const product = response.data;
-          setProducts(product); // Set the full product object
-          setImages(products.images || [null, null, null, null]); // Set images if available
+          setProducts(product); 
+          setImages(products.images || [null, null, null, null]);
           setProductName(product.name || "");
           setDescription(product.description || "");
           setBrand(product.brand || "");
@@ -1012,36 +1013,7 @@ images.forEach((image) => {
               </Col>
             </Row>
 
-            {/* <Row className="mb-3">
-              <Col md={12}>
-                <Row className="mb-3">
-                  <Col md={2}>
-                    <Form.Group>
-                      <Form.Label className="single-product-form-label">
-                        Offer
-                      </Form.Label>
-                      <Form.Control
-                        className="single-product-form"
-                        type="text"
-                        placeholder="Rs."
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={2}>
-                    <Form.Group>
-                      <Form.Label className="single-product-form-label">
-                        Coupon
-                      </Form.Label>
-                      <Form.Control
-                        className="single-product-form"
-                        type="text"
-                        placeholder="10%"
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
-              </Col>
-            </Row> */}
+       
           </Form>
           <button
             className="w-25 category-model-cancel"

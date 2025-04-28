@@ -104,6 +104,11 @@ function Sidebar({ isOpen }) {
                 <FaListAlt className="icon" /> Notification
               </li>
             </Link>
+            <Link to="/vendororders" style={{ textDecoration: "none" }}>
+              <li className={isActive("/vendororders") ? "active" : ""}>
+                <FaShoppingCart className="icon" /> Orders
+              </li>
+            </Link>
             <Link to="/vendorslider" style={{ textDecoration: "none" }}>
               <li className={isActive("/vendorslider") ? "active" : ""}>
                 <FaListAlt className="icon" /> Slider

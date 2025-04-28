@@ -12,20 +12,17 @@ import { toast, ToastContainer } from "react-toastify";
 import ColorNamer from "color-namer";
 
 function Addproduct() {
-  const [images, setImages] = useState([null, null, null, null]);
-  const [color, setColor] = useState("#000000");
-  const [colorName, setColorName] = useState("Black");
+  const [productName, setProductName] = useState("");
   const [brands, setBrands] = useState([]);
   const [selectedBrand, setSelectedBrand] = useState("");
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubCategories] = useState([]);
-  const [productName, setProductName] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [description, setDescription] = useState("");
   const [selectedSubCategory, setSelectedSubCategory] = useState("");
   const [selectedProductType, setSelectedProductType] = useState("");
-  const [wholesalePrice, setwholesalePrice] = useState("");
-  const [normalPrice, setNormalPrice] = useState("");
+  const [wholesalePrice, setWholesalePrice] = useState("");
+  const [price, setPrice] = useState("");
   const [soleMaterial, setSoleMaterial] = useState("");
   const [CODAvailable, setCODAvailable] = useState("");
   const [fit, setFit] = useState("");
@@ -38,10 +35,15 @@ function Addproduct() {
   const [material, setMaterial] = useState("");
   const adminID = localStorage.getItem("adminId");
 
+  // Current working variant
+  const [color, setColor] = useState("#000000");
+  const [colorName, setColorName] = useState("Black");
   const [sizeStocks, setSizeStocks] = useState({});
-  const [variants, setVariants] = useState([]);
-
   const [selectedSizes, setSelectedSizes] = useState([]);
+  const [variantImages, setVariantImages] = useState([null, null, null, null]);
+
+  // All variants for the product
+  const [variants, setVariants] = useState([]);
 
   const fetchCategories = async () => {
     try {
@@ -62,6 +64,7 @@ function Addproduct() {
   useEffect(() => {
     fetchCategories();
   }, []);
+
   useEffect(() => {
     if (color) {
       try {
@@ -69,7 +72,6 @@ function Addproduct() {
         const names = ColorNamer(color);
 
         // Use the first name from the 'ntc' list (Name That Color)
-        // You could also use names.basic[0].name for more basic names
         setColorName(names.ntc[0].name);
       } catch (error) {
         console.error("Error getting color name:", error);
@@ -77,6 +79,7 @@ function Addproduct() {
       }
     }
   }, [color]);
+
   const fetchBrands = async () => {
     try {
       const response = await getAllBrandsApi();
@@ -86,12 +89,12 @@ function Addproduct() {
         setBrands(response.data);
       } else {
         console.error(
-          "Failed to fetch categories:",
+          "Failed to fetch brands:",
           response.error || "Unknown error"
         );
       }
     } catch (error) {
-      console.error("Error fetching categories:", error.message);
+      console.error("Error fetching brands:", error.message);
     }
   };
 
@@ -103,7 +106,6 @@ function Addproduct() {
     try {
       const response = await getsubcategoryByID(categoryId);
       console.log("sub", response);
-      console.log("brands", response);
 
       if (response.success && Array.isArray(response.data)) {
         setSubCategories(response.data);
@@ -120,10 +122,6 @@ function Addproduct() {
     }
   };
 
-  useEffect(() => {
-    fetchSubCategories();
-  }, []);
-
   const handleCategoryChange = async (e) => {
     const selectedCategoryId = e.target.value;
     setSelectedCategory(selectedCategoryId);
@@ -138,6 +136,7 @@ function Addproduct() {
   const handleSubCategoryChange = (e) => {
     setSelectedSubCategory(e.target.value);
   };
+  
   const handleBrandChange = (e) => {
     setSelectedBrand(e.target.value);
   };
@@ -150,35 +149,10 @@ function Addproduct() {
       return;
     }
 
-    const formattedVariants = variants.map((variant) => ({
-      color: variant.color,
-      colorName: variant.colorName,
-      price: variant.normalPrice,
-      wholesalePrice: variant.wholesalePrice,
-      // offerPrice: variant.offerPrice,
-      sizes: variant.sizes.map(({ size, stock }) => ({
-        size,
-        stock,
-      })),
-    }));
-
-    const variantPayload = JSON.stringify(formattedVariants);
-
-    const features = {
-      material: selectedProductType === "Dress" ? material || "" : undefined,
-      soleMaterial:
-        selectedProductType === "Chappal" ? soleMaterial || "" : undefined,
-      netWeight: netWeight || "",
-      fit: fit || "",
-      sleevesType:
-        selectedProductType === "Dress" ? sleevesType || "" : undefined,
-      length: length || "",
-      occasion: occasion || "",
-    };
-
-    const cleanedFeatures = Object.fromEntries(
-      Object.entries(features).filter(([_, value]) => value !== undefined)
-    );
+    if (variants.length === 0) {
+      toast.error("At least one variant is required");
+      return;
+    }
 
     const formData = new FormData();
     formData.append("name", productName.trim());
@@ -186,31 +160,59 @@ function Addproduct() {
     formData.append("category", selectedCategory);
     formData.append("subcategory", selectedSubCategory || "");
     formData.append("brand", selectedBrand || "");
-    formData.append("wholesalePrice", wholesalePrice || "");
-    formData.append("normalPrice", normalPrice || "");
     formData.append("isReturnable", isReturnable || "false");
     formData.append("CODAvailable", CODAvailable || "false");
-
     formData.append("returnWithinDays", returnWithinDays || "");
-
-    // formData.append("offerPrice", offerPrice || "");
-    // formData.append("stock", stock || "");
-    // formData.append("coupon", coupon || "");
-    formData.append("type", occasion || "");
-    // formData.append("offer", offer || "");
     formData.append("productType", selectedProductType || "");
-    formData.append("material", material || "");
     formData.append("owner", adminID || "");
     formData.append("fileType", "product");
     formData.append("userType", "admin");
-    formData.append("variants", variantPayload);
+    
+    // Append main product images (first variant's images)
+    if (variants[0]?.images) {
+      variants[0].images.forEach((image, index) => {
+        if (image) {
+          formData.append("images", image);
+        }
+      });
+    }
+
+    // Prepare features
+    const features = {
+      material: selectedProductType === "Dress" ? material || "" : undefined,
+      soleMaterial: selectedProductType === "Chappal" ? soleMaterial || "" : undefined,
+      netWeight: netWeight || "",
+      fit: fit || "",
+      sleevesType: selectedProductType === "Dress" ? sleevesType || "" : undefined,
+      length: length || "",
+      occasion: occasion || "",
+    };
+
+    const cleanedFeatures = Object.fromEntries(
+      Object.entries(features).filter(([_, value]) => value !== undefined)
+    );
+    
     formData.append("features", JSON.stringify(cleanedFeatures));
 
-    // Append all images
-    images.forEach((image) => {
-      if (image) {
-        formData.append("images", image); // Append each image
-      }
+    // Format and append variants data
+    const formattedVariants = variants.map((variant, index) => {
+      // Need to exclude the actual image files from this JSON
+      const { images, ...variantData } = variant;
+      return {
+        ...variantData,
+        imageIndexes: Array(variant.images.length).fill().map((_, i) => `${index}_${i}`),
+      };
+    });
+
+    formData.append("variants", JSON.stringify(formattedVariants));
+
+    // Append variant images with special naming convention for the backend
+    variants.forEach((variant, variantIndex) => {
+      variant.images.forEach((image, imageIndex) => {
+        if (image) {
+          formData.append(`variantImages[${variantIndex}]`, image);
+        }
+      });
     });
 
     console.log("FormData being sent:");
@@ -225,6 +227,7 @@ function Addproduct() {
 
       if (response.success) {
         toast.success("Product created successfully");
+        // Reset form or redirect
       } else {
         toast.error(response.error || "Failed to create product");
       }
@@ -233,9 +236,45 @@ function Addproduct() {
     }
   };
 
+  const handleVariantImageChange = (index, event) => {
+    if (event.target.files && event.target.files[0]) {
+      const newImages = [...variantImages];
+      newImages[index] = event.target.files[0];
+      setVariantImages(newImages);
+    }
+  };
+
+  const handleSelectVariantImage = (index) => {
+    if (variantImages[index] && variantImages[0] !== variantImages[index]) {
+      const updatedImages = [...variantImages];
+      // Swap images instead of just copying
+      const temp = updatedImages[0];
+      updatedImages[0] = updatedImages[index];
+      updatedImages[index] = temp;
+      setVariantImages(updatedImages);
+    }
+  };
+
   const handleAddVariant = () => {
-    if (!color || !colorName || !Object.keys(sizeStocks).length) {
-      alert("Please fill in all required fields.");
+    if (!color || !colorName || Object.keys(sizeStocks).length === 0) {
+      toast.error("Please fill in all required fields for the variant");
+      return;
+    }
+
+    if (!variantImages[0]) {
+      toast.error("At least one image is required for each variant");
+      return;
+    }
+
+    // Validate price fields
+    if (!wholesalePrice || !price) {
+      toast.error("Please enter both wholesale and normal prices");
+      return;
+    }
+
+    // Check if prices are valid numbers
+    if (isNaN(Number(wholesalePrice)) || isNaN(Number(price))) {
+      toast.error("Prices must be valid numbers");
       return;
     }
 
@@ -251,26 +290,31 @@ function Addproduct() {
       0
     );
 
+    // Filter out null images
+    const filteredImages = variantImages.filter(img => img !== null);
+
     const newVariant = {
       color,
       colorName,
-      wholesalePrice,
-      normalPrice,
-      // offerPrice,
+      wholesalePrice: Number(wholesalePrice),
+      price: Number(price),
       stock: totalStock,
       sizes: formattedSizes,
+      images: filteredImages, // Store the actual File objects
     };
 
     setVariants((prevVariants) => [...prevVariants, newVariant]);
 
-    // Clear fields
-    setColor("");
-    setColor("#ffffff");
-    setColorName("");
-    setwholesalePrice("");
-    setNormalPrice("");
-    // setOfferPrice("");
+    // Clear fields for the next variant
+    setColor("#000000");
+    setColorName("Black");
+    setWholesalePrice("");
+    setPrice("");
     setSizeStocks({});
+    setSelectedSizes([]);
+    setVariantImages([null, null, null, null]);
+    
+    toast.success("Variant added successfully");
   };
 
   const handleSizeSelection = (size) => {
@@ -287,81 +331,69 @@ function Addproduct() {
   };
 
   const handleStockChange = (size, stock) => {
-    setSizeStocks((prev) => ({ ...prev, [size]: stock }));
-  };
-
-  const handleImageChange = (index, event) => {
-    const newImages = [...images];
-    newImages[index] = event.target.files[0];
-    setImages(newImages);
-  };
-
-  const handleSelectImage = (index) => {
-    const selectedImage = images[index];
-    if (selectedImage && images[0] !== selectedImage) {
-      const updatedImages = [...images];
-      updatedImages[0] = selectedImage; // Set selected small image as the large one
-      setImages(updatedImages);
+    if (stock === "" || (!isNaN(Number(stock)) && Number(stock) >= 0)) {
+      setSizeStocks((prev) => ({ ...prev, [size]: stock }));
     }
   };
 
   return (
-    <div className=" single-product">
+    <div className="single-product">
       <Row className="mb-4 align-items-center">
         <Col>
           <h2 className="single-product-title">Add Product</h2>
         </Col>
       </Row>
-      <Row>
-        <Col md={3}>
-          <div className="position-relative">
-            <div className="image-square large">
-              {images[0] ? (
-                <img
-                  src={URL.createObjectURL(images[0])}
-                  alt="Selected Product"
-                  className="img-fluid added-image"
-                />
-              ) : (
-                <div className="add-image-icon">+</div>
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                className="image-input"
-                onChange={(event) => handleImageChange(0, event)}
-              />
-            </div>
-          </div>
-          <Row className="mt-3">
-            {images.slice(1).map((image, index) => (
-              <Col key={index + 1} xs={3} className="position-relative">
-                <div
-                  className="image-square small"
-                  onClick={() => handleSelectImage(index + 1)}
-                >
-                  {image ? (
-                    <img
-                      src={URL.createObjectURL(image)}
-                      alt={`Product ${index + 2}`}
-                      className="img-fluid added-image"
-                    />
-                  ) : (
-                    <div className="add-image-icon">+</div>
-                  )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="image-input"
-                    onChange={(event) => handleImageChange(index + 1, event)}
+      <Form onSubmit={handleFormSubmit}>
+        <Row>
+          <Col md={3}>
+            <div className="position-relative">
+              <h4 className="mb-3">Current Variant Images</h4>
+              <div className="image-square large">
+                {variantImages[0] ? (
+                  <img
+                    src={URL.createObjectURL(variantImages[0])}
+                    alt="Selected Product"
+                    className="img-fluid added-image"
                   />
-                </div>
-              </Col>
-            ))}
-          </Row>
-        </Col>
-        <Col md={9} className="single-product-right-column">
-          <Form>
+                ) : (
+                  <div className="add-image-icon">+</div>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="image-input"
+                  onChange={(event) => handleVariantImageChange(0, event)}
+                />
+              </div>
+            </div>
+            <Row className="mt-3">
+              {[1, 2, 3].map((index) => (
+                <Col key={index} xs={4} className="position-relative">
+                  <div
+                    className="image-square small"
+                    onClick={() => handleSelectVariantImage(index)}
+                  >
+                    {variantImages[index] ? (
+                      <img
+                        src={URL.createObjectURL(variantImages[index])}
+                        alt={`Product ${index + 1}`}
+                        className="img-fluid added-image"
+                      />
+                    ) : (
+                      <div className="add-image-icon">+</div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="image-input"
+                      onChange={(event) => handleVariantImageChange(index, event)}
+                    />
+                  </div>
+                </Col>
+              ))}
+            </Row>
+          </Col>
+          <Col md={9} className="single-product-right-column">
             <Row className="mb-3">
               <Col md={4}>
                 <Form.Group>
@@ -374,6 +406,7 @@ function Addproduct() {
                     placeholder="Enter product name"
                     value={productName}
                     onChange={(e) => setProductName(e.target.value)}
+                    required
                   />
                 </Form.Group>
               </Col>
@@ -383,12 +416,12 @@ function Addproduct() {
                     Category
                   </Form.Label>
                   <div className="dropdown-wrapper">
-                    <Form.Control
+                    <Form.Select
                       className="single-product-form custom-dropdown"
-                      as="select"
                       value={selectedCategory}
                       onChange={handleCategoryChange}
                       aria-label="Select category"
+                      required
                     >
                       <option value="">Select category</option>
                       {categories.map((category) => (
@@ -396,31 +429,35 @@ function Addproduct() {
                           {category.name}
                         </option>
                       ))}
-                    </Form.Control>
+                    </Form.Select>
                     <FaChevronDown className="dropdown-icon" />
                   </div>
                 </Form.Group>
               </Col>
-              {/* <Col md={4}>
+              <Col md={4}>
                 <Form.Group>
                   <Form.Label className="single-product-form-label">
-                    Occasion
+                    Sub Category
                   </Form.Label>
                   <div className="dropdown-wrapper">
-                    <Form.Control
+                    <Form.Select
                       className="single-product-form custom-dropdown"
-                      as="select"
-                      defaultValue=""
-                      aria-label="Select Occasion"
+                      value={selectedSubCategory}
+                      onChange={handleSubCategoryChange}
+                      aria-label="Select subcategory"
+                      disabled={!selectedCategory}
                     >
-                      <option value="">Select Occasion</option>
-                      <option value="Casual">Casual</option>
-                      <option value="Formal">Formal</option>
-                    </Form.Control>
+                      <option value="">Select sub category</option>
+                      {subcategories.map((subcategory) => (
+                        <option key={subcategory._id} value={subcategory._id}>
+                          {subcategory.name}
+                        </option>
+                      ))}
+                    </Form.Select>
                     <FaChevronDown className="dropdown-icon" />
                   </div>
                 </Form.Group>
-              </Col> */}
+              </Col>
             </Row>
             <Row className="mb-3">
               <Col md={12}>
@@ -435,6 +472,7 @@ function Addproduct() {
                     placeholder="Enter description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
+                    required
                   />
                 </Form.Group>
               </Col>
@@ -443,36 +481,11 @@ function Addproduct() {
               <Col md={4}>
                 <Form.Group>
                   <Form.Label className="single-product-form-label">
-                    Sub Category
-                  </Form.Label>
-                  <div className="dropdown-wrapper">
-                    <Form.Control
-                      className="single-product-form custom-dropdown"
-                      as="select"
-                      value={selectedSubCategory}
-                      onChange={handleSubCategoryChange}
-                      aria-label="Select subcategory"
-                    >
-                      <option value="">Select sub category</option>
-                      {subcategories.map((subcategory) => (
-                        <option key={subcategory._id} value={subcategory._id}>
-                          {subcategory.name}
-                        </option>
-                      ))}
-                    </Form.Control>
-                    <FaChevronDown className="dropdown-icon" />
-                  </div>
-                </Form.Group>
-              </Col>
-              <Col md={4}>
-                <Form.Group>
-                  <Form.Label className="single-product-form-label">
                     Brand
                   </Form.Label>
                   <div className="dropdown-wrapper">
-                    <Form.Control
+                    <Form.Select
                       className="single-product-form custom-dropdown"
-                      as="select"
                       value={selectedBrand}
                       onChange={handleBrandChange}
                       aria-label="Select brand"
@@ -483,7 +496,7 @@ function Addproduct() {
                           {brand.name}
                         </option>
                       )) || <option disabled>No brands available</option>}
-                    </Form.Control>
+                    </Form.Select>
                     <FaChevronDown className="dropdown-icon" />
                   </div>
                 </Form.Group>
@@ -494,9 +507,8 @@ function Addproduct() {
                     Product Type
                   </Form.Label>
                   <div className="dropdown-wrapper">
-                    <Form.Control
+                    <Form.Select
                       className="single-product-form custom-dropdown"
-                      as="select"
                       aria-label="Select Product Type"
                       value={selectedProductType}
                       onChange={(e) => setSelectedProductType(e.target.value)}
@@ -504,51 +516,55 @@ function Addproduct() {
                       <option value="">Select Product Type</option>
                       <option value="Dress">Dress</option>
                       <option value="Chappal">Chappal</option>
-                    </Form.Control>
+                    </Form.Select>
                     <FaChevronDown className="dropdown-icon" />
                   </div>
                 </Form.Group>
               </Col>
             </Row>
+
+            {/* Variant details */}
+            <h4 className="mt-4 mb-3">Variant Details</h4>
             <Row className="mb-3">
-              <Form.Group>
-                <Form.Label className="single-product-form-label">
-                  Color
-                </Form.Label>
-                <div className="color-picker-container d-flex">
-                  <Form.Control
-                    className="single-product-form w-auto"
-                    type="text"
-                    disabled
-                    placeholder="Color Code"
-                    value={color}
-                    onChange={(e) => {
-                      setColor(e.target.value);
-                    }}
-                  />
+              <Col md={12}>
+                <Form.Group>
+                  <Form.Label className="single-product-form-label">
+                    Color
+                  </Form.Label>
+                  <div className="color-picker-container d-flex">
+                    <Form.Control
+                      className="single-product-form w-auto"
+                      type="text"
+                      disabled
+                      placeholder="Color Code"
+                      value={color}
+                    />
 
-                  <Form.Control
-                    className="single-product-form mx-2"
-                    type="color"
-                    value={color}
-                    style={{ padding: "5px" }}
-                    onChange={(e) => {
-                      const selectedColor = e.target.value;
-                      setColor(selectedColor);
-                    }}
-                  />
+                    <Form.Control
+                      className="single-product-form mx-2"
+                      type="color"
+                      value={color}
+                      style={{ padding: "5px" }}
+                      onChange={(e) => {
+                        const selectedColor = e.target.value;
+                        setColor(selectedColor);
+                      }}
+                    />
 
-                  <Form.Control
-                    className="single-product-form w-auto"
-                    type="text"
-                    placeholder="Enter color name"
-                    value={colorName}
-                    onChange={(e) => {
-                      setColorName(e.target.value);
-                    }}
-                  />
-                </div>
-              </Form.Group>
+                    <Form.Control
+                      className="single-product-form w-auto"
+                      type="text"
+                      placeholder="Enter color name"
+                      value={colorName}
+                      onChange={(e) => {
+                        setColorName(e.target.value);
+                      }}
+                    />
+                  </div>
+                </Form.Group>
+              </Col>
+            </Row>
+            <Row className="mb-3">
               <Col md={4}>
                 <Form.Group>
                   <Form.Label className="single-product-form-label">
@@ -556,10 +572,11 @@ function Addproduct() {
                   </Form.Label>
                   <Form.Control
                     className="single-product-form"
-                    type="text"
+                    type="number"
                     placeholder="Rs."
                     value={wholesalePrice}
-                    onChange={(e) => setwholesalePrice(e.target.value)}
+                    onChange={(e) => setWholesalePrice(e.target.value)}
+                    min="0"
                   />
                 </Form.Group>
               </Col>
@@ -570,27 +587,14 @@ function Addproduct() {
                   </Form.Label>
                   <Form.Control
                     className="single-product-form"
-                    type="text"
+                    type="number"
                     placeholder="Rs."
-                    value={normalPrice}
-                    onChange={(e) => setNormalPrice(e.target.value)}
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    min="0"
                   />
                 </Form.Group>
               </Col>
-              {/* <Col md={4}>
-                <Form.Group>
-                  <Form.Label className="single-product-form-label">
-                    Offer Price
-                  </Form.Label>
-                  <Form.Control
-                    className="single-product-form"
-                    type="text"
-                    placeholder="Rs."
-                    value={offerPrice}
-                    onChange={(e) => setOfferPrice(e.target.value)}
-                  />
-                </Form.Group>
-              </Col> */}
             </Row>
             <Row className="mb-3">
               <Col md={12}>
@@ -619,6 +623,7 @@ function Addproduct() {
                             onChange={(e) =>
                               handleStockChange(size, e.target.value)
                             }
+                            min="0"
                           />
                         )}
                       </div>
@@ -635,124 +640,171 @@ function Addproduct() {
             >
               Add Variant
             </button>
+
+            {/* Display added variants */}
             <div className="mt-4">
-              <p className="single-product-form-label">Variants</p>
+              <h4 className="mb-3">Added Variants ({variants.length})</h4>
+              {variants.length === 0 && (
+                <p className="text-muted">No variants added yet. Add at least one variant.</p>
+              )}
               {variants.map((variant, index) => (
                 <div
                   key={index}
                   className="variant-card p-4 border rounded shadow-sm mb-4"
                   style={{
                     backgroundColor: "#f9f9f9",
-                    borderLeft: "5px solid #000000",
+                    borderLeft: `5px solid ${variant.color}`,
                     borderRadius: "10px",
                   }}
                 >
-                  <p
-                    className="mb-2"
-                    style={{
-                      fontFamily: "'Poppins', sans-serif",
-                      fontSize: "16px",
-                      fontWeight: "600",
-                      color: "#000000",
-                    }}
-                  >
-                    <span>Color:</span>{" "}
-                    <span>
-                      {variant.color}{" "}
-                      <span
+                  <div className="d-flex justify-content-between align-items-start">
+                    <div>
+                      <p
+                        className="mb-2"
                         style={{
-                          display: "inline-block",
-                          width: "20px",
-                          height: "20px",
-                          backgroundColor: variant.color,
-                          borderRadius: "50%",
-                          marginLeft: "12px",
+                          fontFamily: "'Poppins', sans-serif",
+                          fontSize: "16px",
+                          fontWeight: "600",
+                          color: "#000000",
                         }}
-                      ></span>
-                    </span>
-                  </p>
-                  <p
-                    className="mb-2"
-                    style={{
-                      fontFamily: "'Poppins', sans-serif",
-                      fontSize: "16px",
-                      fontWeight: "600",
-                      color: "#000000",
-                    }}
-                  >
-                    <span>Stock:</span>{" "}
-                    <span style={{ fontWeight: "400", color: "#333333" }}>
-                      {variant.stock}
-                    </span>
-                  </p>
-                  <p
-                    className="mb-2"
-                    style={{
-                      fontFamily: "'Poppins', sans-serif",
-                      fontSize: "16px",
-                      fontWeight: "600",
-                      color: "#000000",
-                    }}
-                  >
-                    <span>Sizes:</span>{" "}
-                    <span style={{ fontWeight: "400", color: "#333333" }}>
-                      {variant.sizes
-                        .map(({ size, stock }) => `${size} (Stock: ${stock})`)
-                        .join(", ")}
-                    </span>
-                  </p>
-
-                  <p
-                    className="mb-2"
-                    style={{
-                      fontFamily: "'Poppins', sans-serif",
-                      fontSize: "16px",
-                      fontWeight: "600",
-                      color: "#000000",
-                    }}
-                  >
-                    <span>Wholesale Price:</span>{" "}
-                    <span style={{ fontWeight: "400", color: "#333333" }}>
-                      Rs. {variant.wholesalePrice}
-                    </span>
-                  </p>
-                  <p
-                    className="mb-2"
-                    style={{
-                      fontFamily: "'Poppins', sans-serif",
-                      fontSize: "16px",
-                      fontWeight: "600",
-                      color: "#000000",
-                    }}
-                  >
-                    <span>Normal Price:</span>{" "}
-                    <span style={{ fontWeight: "400", color: "#333333" }}>
-                      Rs. {variant.normalPrice}
-                    </span>
-                  </p>
-                  {/* <p
-                    className="mb-0"
-                    style={{
-                      fontFamily: "'Poppins', sans-serif",
-                      fontSize: "16px",
-                      fontWeight: "600",
-                      color: "#000000",
-                    }}
-                  >
-                    <span
-                     
-                    >
-                      Offer Price:
-                    </span>{" "}
-                    <span style={{ fontWeight: "400", color: "#333333" }}>
-                      Rs. {variant.offerPrice}
-                    </span>
-                  </p> */}
+                      >
+                        <span>Color:</span>{" "}
+                        <span>
+                          {variant.colorName}{" "}
+                          <span
+                            style={{
+                              display: "inline-block",
+                              width: "20px",
+                              height: "20px",
+                              backgroundColor: variant.color,
+                              borderRadius: "50%",
+                              marginLeft: "12px",
+                            }}
+                          ></span>
+                        </span>
+                      </p>
+                      <p
+                        className="mb-2"
+                        style={{
+                          fontFamily: "'Poppins', sans-serif",
+                          fontSize: "16px",
+                          fontWeight: "600",
+                          color: "#000000",
+                        }}
+                      >
+                        <span>Stock:</span>{" "}
+                        <span style={{ fontWeight: "400", color: "#333333" }}>
+                          {variant.stock}
+                        </span>
+                      </p>
+                      <p
+                        className="mb-2"
+                        style={{
+                          fontFamily: "'Poppins', sans-serif",
+                          fontSize: "16px",
+                          fontWeight: "600",
+                          color: "#000000",
+                        }}
+                      >
+                        <span>Sizes:</span>{" "}
+                        <span style={{ fontWeight: "400", color: "#333333" }}>
+                          {variant.sizes
+                            .map(({ size, stock }) => `${size} (Stock: ${stock})`)
+                            .join(", ")}
+                        </span>
+                      </p>
+                      <p
+                        className="mb-2"
+                        style={{
+                          fontFamily: "'Poppins', sans-serif",
+                          fontSize: "16px",
+                          fontWeight: "600",
+                          color: "#000000",
+                        }}
+                      >
+                        <span>Wholesale Price:</span>{" "}
+                        <span style={{ fontWeight: "400", color: "#333333" }}>
+                          Rs. {variant.wholesalePrice}
+                        </span>
+                      </p>
+                      <p
+                        className="mb-2"
+                        style={{
+                          fontFamily: "'Poppins', sans-serif",
+                          fontSize: "16px",
+                          fontWeight: "600",
+                          color: "#000000",
+                        }}
+                      >
+                        <span>Normal Price:</span>{" "}
+                        <span style={{ fontWeight: "400", color: "#333333" }}>
+                          Rs. {variant.price}
+                        </span>
+                      </p>
+                    </div>
+                    <div>
+                      <p
+                        className="mb-2"
+                        style={{
+                          fontFamily: "'Poppins', sans-serif",
+                          fontSize: "16px",
+                          fontWeight: "600",
+                          color: "#000000",
+                        }}
+                      >
+                        <span>Images:</span>{" "}
+                        <span style={{ fontWeight: "400", color: "#333333" }}>
+                          {variant.images.length} uploaded
+                        </span>
+                      </p>
+                      <div className="d-flex">
+                        {variant.images.slice(0, 3).map((img, imgIndex) => (
+                          <div
+                            key={imgIndex}
+                            style={{
+                              width: "50px",
+                              height: "50px",
+                              marginRight: "10px",
+                              border: "1px solid #ddd",
+                              borderRadius: "4px",
+                              overflow: "hidden",
+                            }}
+                          >
+                            <img
+                              src={URL.createObjectURL(img)}
+                              alt={`Variant ${index}Image ${imgIndex}`}
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                              }}
+                            />
+                          </div>
+                        ))}
+                        {variant.images.length > 3 && (
+                          <div
+                            style={{
+                              width: "50px",
+                              height: "50px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              backgroundColor: "#f0f0f0",
+                              borderRadius: "4px",
+                            }}
+                          >
+                            +{variant.images.length - 3}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
 
-            <Row className="mb-3">
+            {/* Features section */}
+            <Row className="mb-3 mt-4">
               <Col md={12}>
                 <h3 className="features-heading">Features</h3>
 
@@ -852,7 +904,9 @@ function Addproduct() {
                       />
                     </Form.Group>
                   </Col>
-                </Row>
+
+
+                  </Row>
 
                 <Row className="mb-4">
                   <Col md={4}>
@@ -873,36 +927,6 @@ function Addproduct() {
               </Col>
             </Row>
 
-            {/* <Row className="mb-3">
-              <Col md={12}>
-                <Row className="mb-3">
-                  <Col md={2}>
-                    <Form.Group>
-                      <Form.Label className="single-product-form-label">
-                        Offer
-                      </Form.Label>
-                      <Form.Control
-                        className="single-product-form"
-                        type="text"
-                        placeholder="Rs."
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={2}>
-                    <Form.Group>
-                      <Form.Label className="single-product-form-label">
-                        Coupon
-                      </Form.Label>
-                      <Form.Control
-                        className="single-product-form"
-                        type="text"
-                        placeholder="10%"
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
-              </Col>
-            </Row> */}
             <Row className="mb-4">
               <Col md={4}>
                 <Form.Group>
@@ -932,6 +956,8 @@ function Addproduct() {
                     placeholder="Enter number of days"
                     value={returnWithinDays}
                     onChange={(e) => setReturnWithinDays(e.target.value)}
+                    min="0"
+                    disabled={isReturnable !== "true"}
                   />
                 </Form.Group>
               </Col>
@@ -953,16 +979,17 @@ function Addproduct() {
                 </Form.Group>
               </Col>
             </Row>
-          </Form>
-          <button
-            className="w-25 category-model-cancel"
-            onClick={handleFormSubmit}
-          >
-            Add
-          </button>{" "}
-        </Col>
-      </Row>
-      <ToastContainer></ToastContainer>
+
+            <button
+              type="submit"
+              className="w-25 category-model-cancel"
+            >
+              Add
+            </button>
+          </Col>
+        </Row>
+      </Form>
+      <ToastContainer />
     </div>
   );
 }
