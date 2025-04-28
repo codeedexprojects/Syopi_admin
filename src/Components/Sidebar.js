@@ -42,6 +42,11 @@ function Sidebar({ isOpen }) {
                 <FaTags className="icon" /> Manage Users
               </li>
             </Link>
+            <Link to="/brand" style={{ textDecoration: "none" }}>
+              <li className={isActive("/brand") ? "active" : ""}>
+                <FaTags className="icon" /> Brands
+              </li>
+            </Link>
             <Link to="/category" style={{ textDecoration: "none" }}>
               <li className={isActive("/category") ? "active" : ""}>
                 <FaTags className="icon" /> Category

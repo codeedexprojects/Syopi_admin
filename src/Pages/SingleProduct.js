@@ -388,8 +388,8 @@ const [previewImages, setPreviewImages] = useState([]); // For preview URLs
     formData.append("owner", adminID || "");
     formData.append("fileType", "product");
     formData.append("userType", "admin");
-    formData.append("variants", variantPayload); // Add the variants
-    formData.append("features", JSON.stringify(cleanedFeatures)); // Add the cleaned features object
+    formData.append("variants", variantPayload); 
+    formData.append("features", JSON.stringify(cleanedFeatures)); 
 
     // Append all images
     // Append all images to FormData

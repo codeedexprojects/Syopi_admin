@@ -29,13 +29,19 @@ function Managevendors() {
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchQuery, setSearchQuery] = useState(""); // State for search query
+  const [searchQuery, setSearchQuery] = useState(""); 
+  const [currentPage, setCurrentPage] = useState(1);
+  const vendorsPerPage = 10;
+  const indexOfLastVendor = currentPage * vendorsPerPage;
+const indexOfFirstVendor = indexOfLastVendor - vendorsPerPage;
 
   const fetchvendors = async () => {
     setLoading(true);
     setError(null);
     try {
       const response = await getallVendors();
+      console.log(response);
+      
       if (response && response.data) {
         setVendors(response.data);
       }
@@ -50,13 +56,17 @@ function Managevendors() {
   useEffect(() => {
     fetchvendors();
   }, []);
-
+  
   // Filter vendors based on the search query
   const filteredVendors = vendors.filter(
     (vendor) =>
       vendor.businessname.toLowerCase().includes(searchQuery.toLowerCase()) ||
       vendor.businesslocation.toLowerCase().includes(searchQuery.toLowerCase())
   );
+  const currentVendors = filteredVendors.slice(indexOfFirstVendor, indexOfLastVendor);
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value);
+  };
 
   return (
     <div className="Products">
@@ -95,8 +105,8 @@ function Managevendors() {
 
       <Row className="mt-4">
         {/* Display filtered vendors or a 'No vendors' message if no vendors match the search */}
-        {filteredVendors.length > 0 ? (
-          filteredVendors.map((vendor) => (
+        {currentVendors.length > 0 ? (
+          currentVendors.map((vendor) => (
             <Col md={3} key={vendor.id} className="mb-4">
               <Card
                 className="vendor-card"
@@ -171,9 +181,15 @@ function Managevendors() {
         </Toast>
       ) : null}
 
-      <Row className="mt-4 pagination-row">
-        <Pagination className="pagination" count={10} variant="outlined" />
-      </Row>
+<Row className="mt-4 pagination-row">
+  <Pagination
+    className="pagination"
+    count={Math.ceil(filteredVendors.length / vendorsPerPage)}
+    page={currentPage}
+    onChange={handlePageChange}
+    variant="outlined"
+  />
+</Row>
     </div>
   );
 }

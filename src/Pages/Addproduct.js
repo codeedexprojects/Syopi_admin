@@ -6,16 +6,17 @@ import {
   createProductApi,
   getAllBrandsApi,
   getCategoriesApi,
-  getSubCategoriesApi,
+  getsubcategoryByID,
 } from "../services/allApi";
 import { toast, ToastContainer } from "react-toastify";
+import ColorNamer from "color-namer";
 
 function Addproduct() {
   const [images, setImages] = useState([null, null, null, null]);
-  const [color, setColor] = useState("");
+  const [color, setColor] = useState("#000000");
+  const [colorName, setColorName] = useState("Black");
   const [brands, setBrands] = useState([]);
   const [selectedBrand, setSelectedBrand] = useState("");
-  const [colorName, setColorName] = useState("White"); // Initialize with name for default color
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubCategories] = useState([]);
   const [productName, setProductName] = useState("");
@@ -26,6 +27,7 @@ function Addproduct() {
   const [wholesalePrice, setwholesalePrice] = useState("");
   const [normalPrice, setNormalPrice] = useState("");
   const [soleMaterial, setSoleMaterial] = useState("");
+  const [CODAvailable, setCODAvailable] = useState("");
   const [fit, setFit] = useState("");
   const [sleevesType, setSleevesType] = useState("");
   const [length, setLength] = useState("");
@@ -60,7 +62,21 @@ function Addproduct() {
   useEffect(() => {
     fetchCategories();
   }, []);
+  useEffect(() => {
+    if (color) {
+      try {
+        // Get color names from the package
+        const names = ColorNamer(color);
 
+        // Use the first name from the 'ntc' list (Name That Color)
+        // You could also use names.basic[0].name for more basic names
+        setColorName(names.ntc[0].name);
+      } catch (error) {
+        console.error("Error getting color name:", error);
+        setColorName(`Custom (${color})`);
+      }
+    }
+  }, [color]);
   const fetchBrands = async () => {
     try {
       const response = await getAllBrandsApi();
@@ -83,29 +99,42 @@ function Addproduct() {
     fetchBrands();
   }, []);
 
-  const fetchsubCategories = async () => {
+  const fetchSubCategories = async (categoryId) => {
     try {
-      const response = await getSubCategoriesApi();
-      if (response.success && Array.isArray(response.data.subCategories)) {
-        setSubCategories(response.data.subCategories);
+      const response = await getsubcategoryByID(categoryId);
+      console.log("sub", response);
+      console.log("brands", response);
+
+      if (response.success && Array.isArray(response.data)) {
+        setSubCategories(response.data);
       } else {
         console.error(
-          "Failed to fetch categories:",
+          "Failed to fetch subcategories:",
           response.error || "Unknown error"
         );
+        setSubCategories([]); // clear if failed
       }
     } catch (error) {
-      console.error("Error fetching categories:", error.message);
+      console.error("Error fetching subcategories:", error.message);
+      setSubCategories([]); // clear on error
     }
   };
 
   useEffect(() => {
-    fetchsubCategories();
+    fetchSubCategories();
   }, []);
 
-  const handleCategoryChange = (e) => {
-    setSelectedCategory(e.target.value);
+  const handleCategoryChange = async (e) => {
+    const selectedCategoryId = e.target.value;
+    setSelectedCategory(selectedCategoryId);
+
+    if (selectedCategoryId) {
+      await fetchSubCategories(selectedCategoryId);
+    } else {
+      setSubCategories([]); // No category selected, so clear subcategories
+    }
   };
+
   const handleSubCategoryChange = (e) => {
     setSelectedSubCategory(e.target.value);
   };
@@ -113,100 +142,28 @@ function Addproduct() {
     setSelectedBrand(e.target.value);
   };
 
-  const hexToRgb = (hex) => {
-    hex = hex.replace('#', '');
-    
-    // Parse the hex values
-    const r = parseInt(hex.substring(0, 2), 16);
-    const g = parseInt(hex.substring(2, 4), 16);
-    const b = parseInt(hex.substring(4, 6), 16);
-    
-    return { r, g, b };
-  };
-  const getColorName = (hex) => {
-    // Common named colors for exact matches
-    const commonColors = {
-      "#000000": "Black",
-      "#FFFFFF": "White",
-      "#FF0000": "Red",
-      "#00FF00": "Green",
-      "#0000FF": "Blue",
-      "#FFFF00": "Yellow",
-      "#800080": "Purple",
-      "#FFA500": "Orange",
-      "#FFC0CB": "Pink",
-      "#A52A2A": "Brown",
-      "#808080": "Gray",
-      "#C0C0C0": "Silver",
-      "#FFD700": "Gold",
-    };
-    
-    // Check for exact match first
-    const upperHex = hex.toUpperCase();
-    if (commonColors[upperHex]) {
-      return commonColors[upperHex];
-    }
-    
-    // If no exact match, generate a descriptive name
-    const { r, g, b } = hexToRgb(hex);
-    
-    // Determine brightness
-    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-    let brightnessDesc = "";
-    if (brightness < 64) brightnessDesc = "Very Dark ";
-    else if (brightness < 128) brightnessDesc = "Dark ";
-    else if (brightness > 220) brightnessDesc = "Light ";
-    else if (brightness > 240) brightnessDesc = "Very Light ";
-    
-    // Determine base color
-    let baseColor = "";
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    const delta = max - min;
-    
-    if (delta < 30 && max > 200) return "White";
-    if (delta < 30 && max < 60) return "Black";
-    if (delta < 30) return `${brightnessDesc}Gray`;
-    
-    if (r === max) {
-      if (g > 150 && b < 100) baseColor = "Orange";
-      else if (g > 200) baseColor = "Yellow";
-      else baseColor = "Red";
-    } else if (g === max) {
-      baseColor = "Green";
-    } else if (b === max) {
-      if (r > 120) baseColor = "Purple";
-      else baseColor = "Blue";
-    }
-    
-    return brightnessDesc + baseColor;
-  };
-  
   const handleFormSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate required fields
     if (!productName || !selectedCategory || !description) {
       toast.error("All fields are required");
       return;
     }
 
-    // Transform variants into the required format
     const formattedVariants = variants.map((variant) => ({
       color: variant.color,
-      colorName:variant.colorName,
+      colorName: variant.colorName,
       price: variant.normalPrice,
       wholesalePrice: variant.wholesalePrice,
       // offerPrice: variant.offerPrice,
       sizes: variant.sizes.map(({ size, stock }) => ({
-        size, // This ensures the `size` is a string
-        stock, // Stock remains as is
+        size,
+        stock,
       })),
     }));
 
     const variantPayload = JSON.stringify(formattedVariants);
 
-    // Prepare the features object
     const features = {
       material: selectedProductType === "Dress" ? material || "" : undefined,
       soleMaterial:
@@ -219,12 +176,10 @@ function Addproduct() {
       occasion: occasion || "",
     };
 
-    // Remove undefined keys from the features object
     const cleanedFeatures = Object.fromEntries(
       Object.entries(features).filter(([_, value]) => value !== undefined)
     );
 
-    // Initialize FormData
     const formData = new FormData();
     formData.append("name", productName.trim());
     formData.append("description", description.trim());
@@ -233,8 +188,10 @@ function Addproduct() {
     formData.append("brand", selectedBrand || "");
     formData.append("wholesalePrice", wholesalePrice || "");
     formData.append("normalPrice", normalPrice || "");
-    formData.append("isReturnable", isReturnable || "false"); 
-    formData.append("returnWithinDays", returnWithinDays || ""); 
+    formData.append("isReturnable", isReturnable || "false");
+    formData.append("CODAvailable", CODAvailable || "false");
+
+    formData.append("returnWithinDays", returnWithinDays || "");
 
     // formData.append("offerPrice", offerPrice || "");
     // formData.append("stock", stock || "");
@@ -277,7 +234,7 @@ function Addproduct() {
   };
 
   const handleAddVariant = () => {
-    if (!color ||!colorName || !Object.keys(sizeStocks).length) {
+    if (!color || !colorName || !Object.keys(sizeStocks).length) {
       alert("Please fill in all required fields.");
       return;
     }
@@ -300,8 +257,8 @@ function Addproduct() {
       wholesalePrice,
       normalPrice,
       // offerPrice,
-      stock: totalStock, 
-      sizes: formattedSizes, 
+      stock: totalStock,
+      sizes: formattedSizes,
     };
 
     setVariants((prevVariants) => [...prevVariants, newVariant]);
@@ -309,7 +266,7 @@ function Addproduct() {
     // Clear fields
     setColor("");
     setColor("#ffffff");
-    setColorName("white");
+    setColorName("");
     setwholesalePrice("");
     setNormalPrice("");
     // setOfferPrice("");
@@ -559,33 +516,39 @@ function Addproduct() {
                   Color
                 </Form.Label>
                 <div className="color-picker-container d-flex">
-                  {/* Color Name Input */}
+                  <Form.Control
+                    className="single-product-form w-auto"
+                    type="text"
+                    disabled
+                    placeholder="Color Code"
+                    value={color}
+                    onChange={(e) => {
+                      setColor(e.target.value);
+                    }}
+                  />
+
+                  <Form.Control
+                    className="single-product-form mx-2"
+                    type="color"
+                    value={color}
+                    style={{ padding: "5px" }}
+                    onChange={(e) => {
+                      const selectedColor = e.target.value;
+                      setColor(selectedColor);
+                    }}
+                  />
+
                   <Form.Control
                     className="single-product-form w-auto"
                     type="text"
                     placeholder="Enter color name"
-                    value={color}
+                    value={colorName}
                     onChange={(e) => {
-                      setColor(e.target.value); // Update color name
-                      // Optionally, you can convert the color name to hex, but it's not necessary if you only need the name.
-                      // You might want to add some logic to handle color name to hex conversion if needed.
-                    }}
-                  />
-
-                  {/* Color Picker Input */}
-                  <Form.Control
-                    className="single-product-form mx-2"
-                    type="color"
-                    value={color} // The color picker reflects the selected color's hex value
-                    style={{ padding: "5px" }}
-                    onChange={(e) => {
-                      const selectedColor = e.target.value;
-                      setColor(selectedColor); // Update hex color state
+                      setColorName(e.target.value);
                     }}
                   />
                 </div>
               </Form.Group>
-
               <Col md={4}>
                 <Form.Group>
                   <Form.Label className="single-product-form-label">
@@ -941,39 +904,55 @@ function Addproduct() {
               </Col>
             </Row> */}
             <Row className="mb-4">
-  <Col md={4}>
-    <Form.Group>
-      <Form.Label className="single-product-form-label">
-        Is Returnable
-      </Form.Label>
-      <Form.Select
-        className="single-product-form"
-        value={isReturnable}
-        onChange={(e) => setIsReturnable(e.target.value)}
-      >
-        <option value="">Select Option</option>
-        <option value="true">YES</option>
-        <option value="false">NO</option>
-      </Form.Select>
-    </Form.Group>
-  </Col>
+              <Col md={4}>
+                <Form.Group>
+                  <Form.Label className="single-product-form-label">
+                    Is Returnable
+                  </Form.Label>
+                  <Form.Select
+                    className="single-product-form"
+                    value={isReturnable}
+                    onChange={(e) => setIsReturnable(e.target.value)}
+                  >
+                    <option value="">Select Option</option>
+                    <option value="true">YES</option>
+                    <option value="false">NO</option>
+                  </Form.Select>
+                </Form.Group>
+              </Col>
 
-  <Col md={4}>
-    <Form.Group>
-      <Form.Label className="single-product-form-label">
-        Return Within (Days)
-      </Form.Label>
-      <Form.Control
-        className="single-product-form"
-        type="number"
-        placeholder="Enter number of days"
-        value={returnWithinDays}
-        onChange={(e) => setReturnWithinDays(e.target.value)}
-      />
-    </Form.Group>
-  </Col>
-</Row>
+              <Col md={4}>
+                <Form.Group>
+                  <Form.Label className="single-product-form-label">
+                    Return Within (Days)
+                  </Form.Label>
+                  <Form.Control
+                    className="single-product-form"
+                    type="number"
+                    placeholder="Enter number of days"
+                    value={returnWithinDays}
+                    onChange={(e) => setReturnWithinDays(e.target.value)}
+                  />
+                </Form.Group>
+              </Col>
 
+              <Col md={4}>
+                <Form.Group>
+                  <Form.Label className="single-product-form-label">
+                    Is COD Available
+                  </Form.Label>
+                  <Form.Select
+                    className="single-product-form"
+                    value={CODAvailable}
+                    onChange={(e) => setCODAvailable(e.target.value)}
+                  >
+                    <option value="">Select Option</option>
+                    <option value="true">YES</option>
+                    <option value="false">NO</option>
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+            </Row>
           </Form>
           <button
             className="w-25 category-model-cancel"

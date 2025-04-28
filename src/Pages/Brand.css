@@ -1,0 +1,451 @@
+/* BrandStyles.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --brand-primary: #2c3e50;
+  --brand-secondary: #34495e;
+  --brand-accent: #3498db;
+  --brand-light: #0d0d0e;
+  --brand-light2: #ecf0f1;
+
+  --brand-border: #dde1e3;
+  --brand-danger: #e74c3c;
+  --brand-success: #27ae60;
+  --brand-text: #2c3e50;
+  --brand-text-light: #7f8c8d;
+  --brand-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  --brand-radius: 6px;
+  --brand-transition: all 0.2s ease;
+}
+
+/* Global styles */
+.brand-dashboard {
+  font-family: 'Inter', sans-serif;
+  color: var(--brand-text);
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 30px 20px;
+  margin-top: 6%;
+}
+
+/* Header styles */
+.brand-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.brand-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--brand-primary);
+}
+
+.brand-actions {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.brand-search input {
+  border: 1px solid var(--brand-border);
+  border-radius: var(--brand-radius);
+  padding: 10px 15px;
+  font-size: 14px;
+  width: 250px;
+  transition: var(--brand-transition);
+  outline: none;
+}
+
+.brand-search input:focus {
+  border-color: var(--brand-accent);
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+}
+
+.brand-add-btn {
+  background-color: var(--brand-accent);
+  color: white;
+  border: none;
+  border-radius: var(--brand-radius);
+  padding: 10px 15px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--brand-transition);
+}
+
+.brand-add-btn:hover {
+  background-color: #2980b9;
+}
+
+/* Error and loading states */
+.brand-error-message {
+  background-color: #fef1f0;
+  color: var(--brand-danger);
+  padding: 12px 15px;
+  border-radius: var(--brand-radius);
+  margin-bottom: 20px;
+  border-left: 4px solid var(--brand-danger);
+  font-size: 14px;
+}
+
+.brand-form-error {
+  background-color: #fef1f0;
+  color: var(--brand-danger);
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  font-size: 13px;
+}
+
+.brand-loading {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--brand-text-light);
+  font-size: 15px;
+}
+
+/* Table styles */
+.brand-table-container {
+  background-color: white;
+  border-radius: var(--brand-radius);
+  box-shadow: var(--brand-shadow);
+  overflow: hidden;
+}
+
+.brand-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.brand-table th {
+  background-color: var(--brand-light2);
+  padding: 15px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.brand-table td {
+  padding: 15px;
+  border-bottom: 1px solid var(--brand-border);
+  font-size: 14px;
+  margin-top: 29px;
+}
+
+.brand-logo {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--brand-light);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.brand-logo img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.brand-image {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--brand-light);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.brand-image img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover;
+}
+
+.brand-no-image {
+  color: var(--brand-text-light);
+  font-size: 12px;
+  text-align: center;
+}
+
+.brand-name {
+  font-weight: 500;
+}
+
+.brand-description {
+  color: var(--brand-text-light);
+  max-width: 300px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.brand-date {
+  color: var(--brand-text-light);
+  font-size: 13px;
+}
+
+.brand-actions-cell {
+  display: flex;
+  gap: 8px;
+}
+
+.brand-edit-btn, .brand-delete-btn {
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--brand-transition);
+}
+
+.brand-edit-btn {
+  background-color: #f0f6fc;
+  color: var(--brand-accent);
+  border: 1px solid #dce9f5;
+}
+
+.brand-edit-btn:hover {
+  background-color: #e4f0fc;
+  border-color: #c1d9f0;
+}
+
+.brand-delete-btn {
+  background-color: #fef1f0;
+  color: var(--brand-danger);
+  border: 1px solid #fde0dd;
+}
+
+.brand-delete-btn:hover {
+  background-color: #fddfdd;
+  border-color: #fccdc9;
+}
+
+.brand-empty-state {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--brand-text-light);
+}
+
+/* Modal styles */
+.brand-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  overflow-y: scroll;
+}
+
+.brand-modal, .brand-delete-modal {
+    background-color: white;
+    border-radius: var(--brand-radius);
+    width: 700px;
+    max-width: 90%;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    overflow-y: auto; 
+    max-height: 90vh;
+    overflow-x: hidden; 
+  }
+  
+
+.brand-delete-modal {
+  width: 400px;
+}
+
+.brand-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid var(--brand-border);
+}
+
+.brand-modal-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.brand-modal-close {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: var(--brand-text-light);
+}
+
+.brand-modal-close:hover {
+  color: var(--brand-text);
+}
+
+.brand-modal-content {
+  padding: 20px;
+}
+
+.brand-form-group {
+  margin-bottom: 15px;
+}
+
+.brand-form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.brand-form-group input,
+.brand-form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--brand-border);
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: var(--brand-transition);
+}
+
+.brand-form-group input:focus,
+.brand-form-group textarea:focus {
+  border-color: var(--brand-accent);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+}
+
+.brand-form-group textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.brand-file-input {
+  position: relative;
+}
+
+.brand-file-input input[type=file] {
+  padding: 8px;
+  font-size: 13px;
+}
+
+.brand-file-name {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  color: var(--brand-text-light);
+}
+
+.brand-current-file {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-preview-img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: 4px;
+  border: 1px solid var(--brand-border);
+  background-color: var(--brand-light);
+}
+
+.brand-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.brand-cancel-btn, .brand-submit-btn, .brand-delete-confirm-btn {
+  padding: 10px 15px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--brand-transition);
+  border: none;
+}
+
+.brand-cancel-btn {
+  background-color: #f7f7f7;
+  color: var(--brand-text);
+  border: 1px solid var(--brand-border);
+}
+
+.brand-cancel-btn:hover:not(:disabled) {
+  background-color: #efefef;
+}
+
+.brand-submit-btn {
+  background-color: var(--brand-accent);
+  color: white;
+}
+
+.brand-submit-btn:hover:not(:disabled) {
+  background-color: #2980b9;
+}
+
+.brand-delete-confirm-btn {
+  background-color: var(--brand-danger);
+  color: white;
+}
+
+.brand-delete-confirm-btn:hover:not(:disabled) {
+  background-color: #c0392b;
+}
+
+.brand-delete-message {
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 15px;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .brand-description {
+    max-width: 150px;
+  }
+}
+
+@media (max-width: 768px) {
+  .brand-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .brand-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .brand-search input {
+    width: 100%;
+  }
+  
+  .brand-table th:nth-child(4),
+  .brand-table td:nth-child(4),
+  .brand-table th:nth-child(5),
+  .brand-table td:nth-child(5) {
+    display: none;
+  }
+}

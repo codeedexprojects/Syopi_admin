@@ -1,1 +1,1 @@
-export const BASE_URL="https://syopi-backend-1z08.onrender.com"
+export const BASE_URL="https://syopi.com/api"

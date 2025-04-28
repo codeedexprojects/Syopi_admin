@@ -40,6 +40,7 @@ import VendorAddProduct from './Pages/Vendor/VendorAddProduct';
 import VendorSingleProduct from './Pages/Vendor/VendorSingleProduct';
 import { setOnTokenExpired } from './services/commonApi';
 import TokenExpiredModal from './Components/TokenExpiredModal';
+import Brand from './Pages/Brand';
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -83,6 +84,8 @@ function App() {
         <Route path="/addproduct" element={<ProtectedRoute role="admin">{renderLayout(Addproduct)}</ProtectedRoute>} />
         <Route path="/userdetails" element={<ProtectedRoute role="admin">{renderLayout(UserDetails)}</ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute role="admin">{renderLayout(Orders)}</ProtectedRoute>} />
+        <Route path="/brand" element={<ProtectedRoute role="admin">{renderLayout(Brand)}</ProtectedRoute>} />
+
         <Route path="/usermanage" element={<ProtectedRoute role="admin">{renderLayout(UserManage)}</ProtectedRoute>} />
         <Route path="/offer" element={<ProtectedRoute role="admin">{renderLayout(Offer)}</ProtectedRoute>} />
         <Route path="/coupon" element={<ProtectedRoute role="admin">{renderLayout(Coupon)}</ProtectedRoute>} />

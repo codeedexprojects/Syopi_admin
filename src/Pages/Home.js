@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, Button, Row, Col } from 'react-bootstrap';
 import { FaClipboardList, FaTshirt } from 'react-icons/fa';
 import { MdRemoveShoppingCart } from 'react-icons/md';
@@ -13,13 +13,48 @@ import Weekly from '../Components/Weekly';
 import Leaderboard from '../Components/Leaderboard';
 import RecTransaction from '../Components/RecTransaction';
 import OrderStatistics from '../Components/OrderStatistics';
+import { getDashboardContentApi } from '../services/allApi';
 
 function Home() {
+  const [dashboardData, setDashboardData] = useState(null);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+  const fetchDashboardData = async () => {
+    const result = await getDashboardContentApi();
+    if (result.success) {
+      setDashboardData(result.data); 
+    } else {
+      console.error(result.error);
+    }
+  };
+
   const cardsData = [
-    { title: 'All Product', count: 120, icon: <FaTshirt style={{ color: '#495DD9' }} />, color: '#495DD9' },
-    { title: 'Current Orders', count: 45, icon: <FaClipboardList style={{ color: '#66BB6A' }} />, color: '#66BB6A' },
-    { title: 'Out of Stock', count: 15, icon: <MdRemoveShoppingCart style={{ color: '#FB544B' }} />, color: '#FB544B' },
-    { title: 'Limited Stock', count: 8, icon: <IoMdCart style={{ color: '#FFA425' }} />, color: '#FFA425' },
+    {
+      title: 'All Product',
+      count: dashboardData?.totalProducts || 0,
+      icon: <FaTshirt style={{ color: '#495DD9' }} />,
+      color: '#495DD9',
+    },
+    {
+      title: 'Current Orders',
+      count: dashboardData?.currentOrders || 0,
+      icon: <FaClipboardList style={{ color: '#66BB6A' }} />,
+      color: '#66BB6A',
+    },
+    {
+      title: 'Out of Stock',
+      count: dashboardData?.outOfStock || 0,
+      icon: <MdRemoveShoppingCart style={{ color: '#FB544B' }} />,
+      color: '#FB544B',
+    },
+    {
+      title: 'Limited Stock',
+      count: dashboardData?.limitedStock || 0,
+      icon: <IoMdCart style={{ color: '#FFA425' }} />,
+      color: '#FFA425',
+    },
   ];
 
   return (

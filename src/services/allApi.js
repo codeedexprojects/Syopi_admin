@@ -52,6 +52,64 @@ export const getCategoriesApi = async () => {
     }
 };
   
+export const getDashboardContentApi = async () => {
+  const url = `${BASE_URL}/admin/dashboard`;
+
+  const accessToken = localStorage.getItem('accessToken');
+
+  if (!accessToken) {
+    return { success: false, error: "No token provided" };
+  }
+
+  try {
+    const response = await commonApi("GET", url, null, {
+      Authorization: `Bearer ${accessToken}`,
+    });
+
+    return response;
+  } catch (error) {
+    return { success: false, error: error.message || "Error fetching dashboard content" };
+  }
+};
+export const getAdminOrdersApi = async () => {
+  const url = `${BASE_URL}/admin/orders`;
+
+  const accessToken = localStorage.getItem('accessToken');
+
+  if (!accessToken) {
+    return { success: false, error: "No token provided" };
+  }
+
+  try {
+    const response = await commonApi("GET", url, null, {
+      Authorization: `Bearer ${accessToken}`,
+    });
+
+    return response;
+  } catch (error) {
+    return { success: false, error: error.message || "Error fetching admin orders" };
+  }
+};
+export const updateAdminOrderStatusApi = async (orderData) => {
+  const url = `${BASE_URL}/admin/orders/`;
+
+  const accessToken = localStorage.getItem('accessToken');
+
+  if (!accessToken) {
+    return { success: false, error: "No token provided" };
+  }
+
+  try {
+    const response = await commonApi("PATCH", url, orderData, {
+      Authorization: `Bearer ${accessToken}`,
+    });
+
+    return response;
+  } catch (error) {
+    return { success: false, error: error.message || "Error updating order status" };
+  }
+};
+
 
 
   export const createCategoryApi = async (categoryData) => {
@@ -205,7 +263,7 @@ export const getCategoriesApi = async () => {
     if (!accessToken) return { success: false, error: "No token provided" };
   
     try {
-      const response = await commonApi("PUT", url, data, {
+      const response = await commonApi("PATCH", url, data, {
         Authorization: `Bearer ${accessToken}`,
       });
       return response;
