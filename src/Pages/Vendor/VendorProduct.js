@@ -214,7 +214,7 @@ useEffect(() => {
   
 
   const handlenavigation = () => {
-    window.location.href = "/addvendorproducts";
+    navigate("/addvendorproducts")
   };
 
   const handlenavigatesingleproduct = (id) => {

@@ -7,12 +7,16 @@ import { PiGreaterThanBold } from "react-icons/pi";
 import { adminLoginApi, venodorLoginApi } from "../services/allApi";
 import { toast, ToastContainer } from "react-toastify";
 import HashLoader from "react-spinners/HashLoader";
+import { useNavigate } from "react-router-dom";
 
 function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isAdminLogin, setIsAdminLogin] = useState(true); // Toggle between Admin and Vendor
+  const [isAdminLogin, setIsAdminLogin] = useState(true); 
+  const navigate = useNavigate();
+
+
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -28,13 +32,13 @@ function AdminLogin() {
       const apiCall = isAdminLogin ? adminLoginApi : venodorLoginApi;
       const response = await apiCall({ email, password });
   
-      console.log("Response:", response); // Debugging the full response object
+      console.log("Response:", response);
   
       setLoading(false);
   
       // Check for response success and save appropriate IDs and roles
       if (response && response.success && response.data) {
-        localStorage.setItem("accessToken", response.data.accessToken);
+        localStorage.setItem("accessToken", response.data.accessToken);                
         localStorage.setItem("refreshToken", response.data.refreshToken);
   
         // Save the role
@@ -49,14 +53,15 @@ function AdminLogin() {
           // Save vendor ID
           localStorage.setItem("vendorId", response.data.vendorId);
           localStorage.removeItem("adminId")
-
         }
   
         // Navigate to the appropriate page based on role
         if (role === "admin") {
-          window.location.href = "/"; // Admin dashboard
+          navigate("/admin/admindashboard", { replace: true });
+
         } else if (role === "vendor") {
-          window.location.href = "/vendordashboard"; // Vendor dashboard
+          navigate("/admin/vendordashboard", { replace: true });
+
         }
       } else {
         // Handle case when response.success is false or data is missing

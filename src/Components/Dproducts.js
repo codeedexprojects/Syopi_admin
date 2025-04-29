@@ -9,6 +9,7 @@ import Paper from '@mui/material/Paper';
 import img from '../images/e222d69f48d84cb3db37ef787f201fdc.png';
 import  './dproduct.css'
 import { Col, Row } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 function createData(name, calories, fat, carbs, protein) {
   return { name, calories, fat, carbs, protein };
 }
@@ -19,11 +20,15 @@ const rows = [
   createData('Eclair', 262, 16.0, 24, 6.0),
   createData('Cupcake', 305, 3.7, 67, 4.3),
 ];
-const productnavigate =()=>{
-  window.location.href = "/products";
-}
+
 
 export default function Dproduct() {
+  const navigate = useNavigate();
+
+const productnavigate =()=>{
+  navigate("/products", { replace: true });
+
+}
   return (
    <div>
     <Row>

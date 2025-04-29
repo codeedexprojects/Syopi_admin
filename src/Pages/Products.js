@@ -183,7 +183,7 @@ function Products() {
   }, []);
 
   const handlenavigation = () => {
-    window.location.href = "/addproduct";
+    navigate('/addproduct')
   };
 
   const handlenavigatesingleproduct = (id) => {

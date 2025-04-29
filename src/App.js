@@ -1,5 +1,5 @@
-import React, {  useState } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Route, Routes, Navigate } from 'react-router-dom';
 import './App.css';
 import Header from './Components/Header';
 import Sidebar from './Components/Sidebar';
@@ -47,15 +47,34 @@ function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showTokenModal, setShowTokenModal] = useState(false);
 
-    // Set the callback function when the app loads
-    setOnTokenExpired(() => {
-        setShowTokenModal(true);
-    });
+  // Check authentication status on component mount
+  useEffect(() => {
+    // Redirect to login if no token
+    const checkAuth = () => {
+      const token = localStorage.getItem('accessToken');
+      const role = localStorage.getItem('role');
+      
+      // If on the root path and authenticated, redirect to appropriate dashboard
+      if (window.location.pathname === '/admin' || window.location.pathname === '/admin/') {
+        if (token && role === 'admin') {
+          window.location.href = '/admin/admindashboard';
+        } else if (token && role === 'vendor') {
+          window.location.href = '/admin/vendordashboard';
+        }
+      }
+    };
+    
+    checkAuth();
+  }, []);
+
+  // Set the callback function when the app loads
+  setOnTokenExpired(() => {
+    setShowTokenModal(true);
+  });
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
-
 
   const renderLayout = (Component) => (
     <>
@@ -67,18 +86,34 @@ function App() {
     </>
   );
 
+  // Get user role
+  const userRole = localStorage.getItem('role');
+
   return (
     <div className={`App d-flex ${isSidebarOpen ? 'sidebar-open' : ''}`}>
       <Routes>
+        {/* Public routes */}
         <Route path="/login" element={<AdminLogin />} />
+        
+        {/* Root path redirects to appropriate dashboard or login */}
+        <Route path="/" element={
+          localStorage.getItem('accessToken') 
+            ? (userRole === 'admin' 
+                ? <Navigate to="/admindashboard" /> 
+                : <Navigate to="/vendordashboard" />)
+            : <Navigate to="/login" />
+        } />
+
+        {/* Admin routes */}
         <Route
-    path="/"
-    element={
-      <ProtectedRoute role="admin">
-        {renderLayout(Home)}
-      </ProtectedRoute>
-    }
-  />        <Route path="/products" element={<ProtectedRoute role="admin">{renderLayout(Products)}</ProtectedRoute>} />
+          path="/admindashboard"
+          element={
+            <ProtectedRoute role="admin">
+              {renderLayout(Home)}
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/products" element={<ProtectedRoute role="admin">{renderLayout(Products)}</ProtectedRoute>} />
         <Route path="/flagged" element={<ProtectedRoute role="admin">{renderLayout(Flagged)}</ProtectedRoute>} />
         <Route path="/review" element={<ProtectedRoute role="admin">{renderLayout(Productreview)}</ProtectedRoute>} />
         <Route path="/singleproduct/:id" element={<ProtectedRoute role="admin">{renderLayout(SingleProduct)}</ProtectedRoute>} />
@@ -86,7 +121,6 @@ function App() {
         <Route path="/userdetails" element={<ProtectedRoute role="admin">{renderLayout(UserDetails)}</ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute role="admin">{renderLayout(Orders)}</ProtectedRoute>} />
         <Route path="/brand" element={<ProtectedRoute role="admin">{renderLayout(Brand)}</ProtectedRoute>} />
-
         <Route path="/usermanage" element={<ProtectedRoute role="admin">{renderLayout(UserManage)}</ProtectedRoute>} />
         <Route path="/offer" element={<ProtectedRoute role="admin">{renderLayout(Offer)}</ProtectedRoute>} />
         <Route path="/coupon" element={<ProtectedRoute role="admin">{renderLayout(Coupon)}</ProtectedRoute>} />
@@ -95,17 +129,12 @@ function App() {
         <Route path="/category" element={<ProtectedRoute role="admin">{renderLayout(Category)}</ProtectedRoute>} />
         <Route path="/subcategory" element={<ProtectedRoute role="admin">{renderLayout(Subcategory)}</ProtectedRoute>} />
         <Route path="/subcategorybyid/:categoryid" element={<ProtectedRoute role="admin">{renderLayout(SubcategoriesbyCategoryId)}</ProtectedRoute>} />
-
         <Route path="/managevendors" element={<ProtectedRoute role="admin">{renderLayout(Managevendors)}</ProtectedRoute>} />
         <Route path="/vendorprofile/:id" element={<ProtectedRoute role="admin">{renderLayout(VendorProfile)}</ProtectedRoute>} />
         <Route path="/shopdetails" element={<ProtectedRoute role="admin">{renderLayout(Shopdetails)}</ProtectedRoute>} />
         <Route path="/addvendor" element={<ProtectedRoute role="admin">{renderLayout(Addvendors)}</ProtectedRoute>} />
 
-
-
-
-
-
+        {/* Vendor routes */}
         <Route path="/vendordashboard" element={<ProtectedRoute role="vendor">{renderLayout(VendorDashboard)}</ProtectedRoute>} />
         <Route path="/vendorcategory" element={<ProtectedRoute role="vendor">{renderLayout(VendorCategory)}</ProtectedRoute>} />
         <Route path="/vendorsubcategory" element={<ProtectedRoute role="vendor">{renderLayout(VendorSubcategory)}</ProtectedRoute>} />
@@ -118,14 +147,17 @@ function App() {
         <Route path="/addvendorproducts" element={<ProtectedRoute role="vendor">{renderLayout(VendorAddProduct)}</ProtectedRoute>} />
         <Route path="/singlevendorproduct/:id" element={<ProtectedRoute role="vendor">{renderLayout(VendorSingleProduct)}</ProtectedRoute>} />
         <Route path="/vendororders" element={<ProtectedRoute role="vendor">{renderLayout(VendorOrder)}</ProtectedRoute>} />
-
         
-
-        
-        
+        {/* Catch-all route for 404s - redirect to login or dashboard */}
+        <Route path="*" element={
+          localStorage.getItem('accessToken') 
+            ? (userRole === 'admin' 
+                ? <Navigate to="/admindashboard" /> 
+                : <Navigate to="/vendordashboard" />)
+            : <Navigate to="/login" />
+        } />
       </Routes>
       <TokenExpiredModal show={showTokenModal} onHide={() => setShowTokenModal(false)} />
-
     </div>
   );
 }
