@@ -22,8 +22,8 @@ function Sidebar({ isOpen }) {
       <ul className="sidebar-content">
         {userRole === "admin" && (
           <>
-            <Link to="/" style={{ textDecoration: "none" }}>
-              <li className={isActive("/") ? "active" : ""}>
+            <Link to="/admindashboard" style={{ textDecoration: "none" }}>
+              <li className={isActive("/admindashboard") ? "active" : ""}>
                 <FaTachometerAlt className="icon" /> Dashboard
               </li>
             </Link>
@@ -35,6 +35,11 @@ function Sidebar({ isOpen }) {
             <Link to="/products" style={{ textDecoration: "none" }}>
               <li className={isActive("/products") ? "active" : ""}>
                 <FaBox className="icon" /> Manage Products
+              </li>
+            </Link>
+            <Link to="/homepage" style={{ textDecoration: "none" }}>
+              <li className={isActive("/homepage") ? "active" : ""}>
+                <FaBox className="icon" /> Manage homepage
               </li>
             </Link>
             <Link to="/usermanage" style={{ textDecoration: "none" }}>

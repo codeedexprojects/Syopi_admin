@@ -90,6 +90,233 @@ export const getAdminOrdersApi = async () => {
     return { success: false, error: error.message || "Error fetching admin orders" };
   }
 };
+
+export const createAffordableProductApi = async (formData) => {
+  const url = `${BASE_URL}/admin/homepageedit/affordable/create`;
+  const accessToken = localStorage.getItem("accessToken");
+
+  if (!accessToken) {
+    return { success: false, error: "No token provided" };
+  }
+
+  try {
+    const response = await commonApi("POST", url, formData, {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "multipart/form-data",
+    });
+
+    return response;
+  } catch (error) {
+    return { success: false, error: error.message || "Error creating product" };
+  }
+};
+
+
+export const getAllAffordableProductsApi = async () => {
+  const url = `${BASE_URL}/admin/homepageedit/view`;
+  const accessToken = localStorage.getItem("accessToken");
+
+  if (!accessToken) {
+    return { success: false, error: "No token provided" };
+  }
+
+  try {
+    const response = await commonApi("GET", url, null, {
+      Authorization: `Bearer ${accessToken}`,
+    });
+
+    return response;
+  } catch (error) {
+    return { success: false, error: error.message || "Error fetching products" };
+  }
+};
+
+
+export const updateAffordableProductApi = async (id, formData) => {
+  const url = `${BASE_URL}/admin/homepageedit/affordable/update/${id}`;
+  const accessToken = localStorage.getItem("accessToken");
+
+  if (!accessToken) {
+    return { success: false, error: "No token provided" };
+  }
+
+  try {
+    const response = await commonApi("PATCH", url, formData, {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "multipart/form-data",
+    });
+
+    return response;
+  } catch (error) {
+    return { success: false, error: error.message || "Error updating product" };
+  }
+};
+
+
+
+export const deleteAffordableProductApi = async (id) => {
+  const url = `${BASE_URL}/admin/homepageedit/affordable/delete/${id}`;
+  const accessToken = localStorage.getItem("accessToken");
+
+  if (!accessToken) {
+    return { success: false, error: "No token provided" };
+  }
+
+  try {
+    const response = await commonApi("DELETE", url, null, {
+      Authorization: `Bearer ${accessToken}`,
+    });
+
+    return response;
+  } catch (error) {
+    return { success: false, error: error.message || "Error deleting product" };
+  }
+};
+
+export const createLowestPriceProductApi = async (formData) => {
+  const url = `${BASE_URL}/admin/homepageedit/lowest-price/create`;
+  const accessToken = localStorage.getItem("accessToken");
+
+  if (!accessToken) return { success: false, error: "No token provided" };
+
+  try {
+    const response = await commonApi("POST", url, formData, {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "multipart/form-data",
+    });
+    return response;
+  } catch (error) {
+    return { success: false, error: error.message || "Error creating product" };
+  }
+};
+
+export const deleteLowestPriceProductApi = async (id) => {
+  const url = `${BASE_URL}/admin/homepageedit/lowest-price/delete/${id}`;
+  const accessToken = localStorage.getItem("accessToken");
+
+  if (!accessToken) return { success: false, error: "No token provided" };
+
+  try {
+    const response = await commonApi("DELETE", url, null, {
+      Authorization: `Bearer ${accessToken}`,
+    });
+    return response;
+  } catch (error) {
+    return { success: false, error: error.message || "Error deleting product" };
+  }
+};
+export const updateLowestPriceProductApi = async (id, formData) => {
+  const url = `${BASE_URL}/admin/homepageedit/lowest-price/update/${id}`;
+  const accessToken = localStorage.getItem("accessToken");
+
+  if (!accessToken) return { success: false, error: "No token provided" };
+
+  try {
+    const response = await commonApi("PATCH", url, formData, {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "multipart/form-data",
+    });
+    return response;
+  } catch (error) {
+    return { success: false, error: error.message || "Error updating product" };
+  }
+};
+export const createTopPickProductApi = async (formData) => {
+  const url = `${BASE_URL}/admin/homepageedit/top-pick/create`;
+  const accessToken = localStorage.getItem("accessToken");
+
+  if (!accessToken) return { success: false, error: "No token provided" };
+
+  try {
+    const response = await commonApi("POST", url, formData, {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "multipart/form-data",
+    });
+    return response;
+  } catch (error) {
+    return { success: false, error: error.message || "Error creating product" };
+  }
+};
+export const updateTopPickProductApi = async (id, formData) => {
+  const url = `${BASE_URL}/admin/homepageedit/top-pick/update/${id}`;
+  const accessToken = localStorage.getItem("accessToken");
+
+  if (!accessToken) return { success: false, error: "No token provided" };
+
+  try {
+    const response = await commonApi("PATCH", url, formData, {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "multipart/form-data",
+    });
+    return response;
+  } catch (error) {
+    return { success: false, error: error.message || "Error updating product" };
+  }
+};
+export const getAllTopPickProductsApi = async () => {
+  const url = `${BASE_URL}/admin/homepageedit/top-pick/view`;
+  const accessToken = localStorage.getItem("accessToken");
+
+  if (!accessToken) return { success: false, error: "No token provided" };
+
+  try {
+    const response = await commonApi("GET", url, null, {
+      Authorization: `Bearer ${accessToken}`,
+    });
+    return response;
+  } catch (error) {
+    return { success: false, error: error.message || "Error fetching top picks" };
+  }
+};
+export const createTopSaleProductApi = async (formData) => {
+  const url = `${BASE_URL}/admin/homepageedit/top-sale/create`;
+  const accessToken = localStorage.getItem("accessToken");
+
+  if (!accessToken) return { success: false, error: "No token provided" };
+
+  try {
+    const response = await commonApi("POST", url, formData, {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "multipart/form-data",
+    });
+    return response;
+  } catch (error) {
+    return { success: false, error: error.message || "Error creating top sale product" };
+  }
+};
+export const updateTopSaleProductApi = async (id, formData) => {
+  const url = `${BASE_URL}/admin/homepageedit/top-sale/update/${id}`;
+  const accessToken = localStorage.getItem("accessToken");
+
+  if (!accessToken) return { success: false, error: "No token provided" };
+
+  try {
+    const response = await commonApi("PATCH", url, formData, {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "multipart/form-data",
+    });
+    return response;
+  } catch (error) {
+    return { success: false, error: error.message || "Error updating top sale product" };
+  }
+};
+export const getAllTopSaleProductsApi = async () => {
+  const url = `${BASE_URL}/admin/homepageedit/top-sale/view`;
+  const accessToken = localStorage.getItem("accessToken");
+
+  if (!accessToken) return { success: false, error: "No token provided" };
+
+  try {
+    const response = await commonApi("GET", url, null, {
+      Authorization: `Bearer ${accessToken}`,
+    });
+    return response;
+  } catch (error) {
+    return { success: false, error: error.message || "Error fetching top sale products" };
+  }
+};
+
+
 export const updateAdminOrderStatusApi = async (orderData) => {
   const url = `${BASE_URL}/admin/orders/`;
 

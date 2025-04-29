@@ -292,7 +292,7 @@ function Offer() {
       toast.error("Please fill in all required fields, including the image.");
       return;
     }
-    const ownerId = localStorage.getItem('adminId')
+    const ownerId = localStorage.getItem("adminId");
 
     const offerData = {
       offerName,
@@ -304,7 +304,7 @@ function Offer() {
       subcategory: selectedSubCategory.map(
         (subcategories) => subcategories.value
       ),
-      ownerId:ownerId,
+      ownerId: ownerId,
       products: selectedProduct.map((product) => product.value),
     };
     console.log(selectedProduct);
@@ -419,6 +419,8 @@ function Offer() {
             <Table aria-label="simple table">
               <TableHead>
                 <TableRow>
+                  <TableCell className="dproduct-tablehead">#</TableCell>{" "}
+                  {/* Serial Number */}
                   <TableCell className="dproduct-tablehead">Name</TableCell>
                   <TableCell className="dproduct-tablehead" align="left">
                     Status
@@ -435,13 +437,14 @@ function Offer() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {rows.map((row) => (
+                {rows.map((row, index) => (
                   <TableRow
                     key={row._id}
-                    sx={{
-                      "&:last-child td, &:last-child th": { border: 0 },
-                    }}
+                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                   >
+                    <TableCell align="left" className="dproduct-tabledata">
+                      {index + 1}
+                    </TableCell>
                     <TableCell
                       align="left"
                       className="dproduct-tabledata"
@@ -459,13 +462,13 @@ function Offer() {
                     <TableCell align="left" className="dproduct-tabledata">
                       {row.amount}
                     </TableCell>
-                    <TableCell align="left" className="">
+                    <TableCell align="left">
                       <span
                         className="edit-offer"
                         onClick={() => handleEditShow(row)}
                       >
                         Edit
-                      </span>{" "}
+                      </span>
                       <span
                         className="ms-3 remove-offer"
                         onClick={() => handleDeleteModalShow()}

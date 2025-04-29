@@ -57,10 +57,10 @@ function AdminLogin() {
   
         // Navigate to the appropriate page based on role
         if (role === "admin") {
-          navigate("/admin/admindashboard", { replace: true });
+          navigate("/admindashboard", { replace: true });
 
         } else if (role === "vendor") {
-          navigate("/admin/vendordashboard", { replace: true });
+          navigate("/vendordashboard", { replace: true });
 
         }
       } else {

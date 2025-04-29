@@ -12,7 +12,7 @@ import { Col, Form, FormControl, Modal, Row, Toast } from "react-bootstrap";
 import { CiSearch } from "react-icons/ci";
 import { Pagination } from "@mui/material";
 import { useEffect } from "react";
-import { getallProducts } from "../services/allApi";
+import { getAllBrandsApi, getallProducts } from "../services/allApi";
 import { useState } from "react";
 import HashLoader from "react-spinners/HashLoader";
 import { BASE_URL } from "../services/baseUrl";
@@ -20,13 +20,18 @@ import { useNavigate } from "react-router-dom";
 import { FaEdit, FaEye, FaFlag } from "react-icons/fa";
 
 function Products() {
+  // State for products data
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  
+  // State for modals
   const [showModal, setShowModal] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [show, setShow] = useState(false);
+  
+  // Filter states
   const [activeFilter, setActiveFilter] = useState(null);
   const [filters, setFilters] = useState({
     brand: [],
@@ -36,14 +41,27 @@ function Products() {
     size: [],
     product_type: [],
   });
+  
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  // Brand list from API
+  const [brandsList, setBrandsList] = useState([]);
+  
+  // Pagination states
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 10;
 
-  const brands = ["Nike", "Adidas", "Puma"];
+  // Filter options
   const stocks = ["In Stock", "Out of Stock"];
   const sizes = ["S", "M", "L", "XL"];
-  const product_type = ["Dress", "Chappal"];
+  const product_type = ["Dress", "Chappal", "Shoes", "T-Shirt"];
+  
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
 
+  // Toggle checkbox in filters
   const toggleCheckbox = (filterType, value) => {
     setFilters((prevFilters) => {
       const updatedValues = prevFilters[filterType].includes(value)
@@ -53,34 +71,53 @@ function Products() {
     });
   };
 
+  // Fetch brands from API
+  const fetchBrands = async () => {
+    try {
+      const response = await getAllBrandsApi();
+      console.log(response);
+      
+      if (response && response.data) {
+        setBrandsList(response.data || []);
+      }
+    } catch (err) {
+      console.error("Error fetching brands:", err);
+    }
+  };
+
+  // Render right section of filter modal based on active filter
   const renderRightSection = () => {
     switch (activeFilter) {
       case "brand":
         return (
           <>
             <p className="single-product-form-label">Select Brand</p>
-            {brands.map((brand) => (
-              <Form.Check
-                key={brand}
-                type="checkbox"
-                label={brand}
-                checked={filters.brand.includes(brand)}
-                onChange={() => toggleCheckbox("brand", brand)}
-              />
-            ))}
+            {brandsList.length > 0 ? (
+              brandsList.map((brand) => (
+                <Form.Check
+                  key={brand._id || brand}
+                  type="checkbox"
+                  label={brand.name || brand}
+                  checked={filters.brand.includes(brand.name || brand)}
+                  onChange={() => toggleCheckbox("brand", brand.name || brand)}
+                />
+              ))
+            ) : (
+              <p>Loading brands...</p>
+            )}
           </>
         );
       case "product_type":
         return (
           <>
             <p className="single-product-form-label">Select product type</p>
-            {product_type.map((product_type) => (
+            {product_type.map((type) => (
               <Form.Check
-                key={product_type}
+                key={type}
                 type="checkbox"
-                label={product_type}
-                checked={filters.product_type.includes(product_type)}
-                onChange={() => toggleCheckbox("product_type", product_type)}
+                label={type}
+                checked={filters.product_type.includes(type)}
+                onChange={() => toggleCheckbox("product_type", type)}
               />
             ))}
           </>
@@ -124,7 +161,7 @@ function Products() {
               name="minPrice"
               value={filters.minPrice}
               onChange={(e) =>
-                setFilters({ ...filters, minPrice: e.target.value })
+                setFilters({ ...filters, minPrice: parseInt(e.target.value) || 0 })
               }
             />
           </>
@@ -138,7 +175,7 @@ function Products() {
               name="maxPrice"
               value={filters.maxPrice}
               onChange={(e) =>
-                setFilters({ ...filters, maxPrice: e.target.value })
+                setFilters({ ...filters, maxPrice: parseInt(e.target.value) || 1000 })
               }
             />
           </>
@@ -147,20 +184,81 @@ function Products() {
         return (
           <>
             <p className="single-product-form-label">Select Brand</p>
-            {brands.map((brand) => (
-              <Form.Check
-                key={brand}
-                type="checkbox"
-                label={brand}
-                checked={filters.brand.includes(brand)}
-                onChange={() => toggleCheckbox("brand", brand)}
-              />
-            ))}
+            {brandsList.length > 0 ? (
+              brandsList.map((brand) => (
+                <Form.Check
+                  key={brand._id || brand}
+                  type="checkbox"
+                  label={brand.name || brand}
+                  checked={filters.brand.includes(brand.name || brand)}
+                  onChange={() => toggleCheckbox("brand", brand.name || brand)}
+                />
+              ))
+            ) : (
+              <p>Loading brands...</p>
+            )}
           </>
         );
     }
   };
 
+  // Apply filters to the products
+  const applyFilters = (products) => {
+    return products.filter(product => {
+      // Filter by brand
+      if (filters.brand.length > 0 && !filters.brand.includes(product.brand)) {
+        return false;
+      }
+      
+      // Filter by product type
+      if (filters.product_type.length > 0 && !filters.product_type.includes(product.productType)) {
+        return false;
+      }
+      
+      // Filter by stock
+      if (filters.stock.length > 0) {
+        const stockStatus = product.totalStock > 0 ? "In Stock" : "Out of Stock";
+        if (!filters.stock.includes(stockStatus)) {
+          return false;
+        }
+      }
+      
+      // Filter by size
+      if (filters.size.length > 0) {
+        const productSizes = product.variants.flatMap(v => v.sizes || []);
+        if (!filters.size.some(size => productSizes.includes(size))) {
+          return false;
+        }
+      }
+      
+      // Filter by price range
+      let hasPriceInRange = false;
+      for (const variant of product.variants) {
+        if (variant.price >= filters.minPrice && variant.price <= filters.maxPrice) {
+          hasPriceInRange = true;
+          break;
+        }
+      }
+      if (!hasPriceInRange) {
+        return false;
+      }
+      
+      // Filter by search query
+      if (searchQuery) {
+        const searchLower = searchQuery.toLowerCase();
+        return (
+          product.name.toLowerCase().includes(searchLower) ||
+          product.brand.toLowerCase().includes(searchLower) ||
+          product.productCode.toLowerCase().includes(searchLower) ||
+          product.supplierName.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      return true;
+    });
+  };
+
+  // Fetch products from API
   const fetchProducts = async () => {
     setLoading(true);
     setError(null);
@@ -170,20 +268,58 @@ function Products() {
 
       if (response && response.data) {
         setRows(response.data.products);
+        setTotalPages(Math.ceil(response.data.products.length / itemsPerPage));
       }
     } catch (err) {
-      setError("Failed to fetch user. Please try again.");
-      console.error("Error fetching user data:", err);
+      setError("Failed to fetch products. Please try again.");
+      console.error("Error fetching product data:", err);
     } finally {
       setLoading(false);
     }
   };
+
+  // Handle page change for pagination
+  const handlePageChange = (event, value) => {
+    setPage(value);
+  };
+
+  // Get paginated data
+  const getPaginatedData = (data) => {
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return data.slice(startIndex, endIndex);
+  };
+
+  // Apply filters and handle search
+  const handleFiltersApply = () => {
+    // All filtering is done in the render now
+    handleClose();
+  };
+
+  // Handle search input
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+    setPage(1); // Reset to first page when searching
+  };
+
   useEffect(() => {
     fetchProducts();
+    fetchBrands();
   }, []);
 
+  // Recalculate total pages when filters change
+  useEffect(() => {
+    if (rows.length > 0) {
+      const filteredData = applyFilters(rows);
+      setTotalPages(Math.ceil(filteredData.length / itemsPerPage));
+      if (page > Math.ceil(filteredData.length / itemsPerPage)) {
+        setPage(1);
+      }
+    }
+  }, [filters, searchQuery, rows]);
+
   const handlenavigation = () => {
-    navigate('/addproduct')
+    navigate('/addproduct');
   };
 
   const handlenavigatesingleproduct = (id) => {
@@ -200,12 +336,15 @@ function Products() {
     setSelectedId(null);
   };
 
+  // Filter and paginate the data
+  const filteredData = rows.length > 0 ? applyFilters(rows) : [];
+  const paginatedData = getPaginatedData(filteredData);
+
   return (
     <div className="Products">
       <p className="Product-heading">Manage Products</p>
       <Row>
         <Col md={8}>
-          {" "}
           <Form className="d-flex position-relative product-search-container">
             <CiSearch
               size={20}
@@ -214,8 +353,10 @@ function Products() {
             <FormControl
               type="search"
               placeholder="Search"
-              className=" product-search-input"
+              className="product-search-input"
               aria-label="Search"
+              value={searchQuery}
+              onChange={handleSearchChange}
             />
           </Form>
         </Col>
@@ -223,7 +364,7 @@ function Products() {
           <button onClick={handleShow} className="w-100 add-product-dd">
             Filter
           </button>
-        </Col>{" "}
+        </Col>
         <Col md={3}>
           <button
             onClick={handlenavigation}
@@ -241,7 +382,7 @@ function Products() {
         ) : error ? (
           <Toast>
             <Toast.Body className="text-danger">
-              {error} {/* Show the error message in a Toast */}
+              {error}
             </Toast.Body>
           </Toast>
         ) : (
@@ -249,6 +390,7 @@ function Products() {
             <Table aria-label="simple table">
               <TableHead>
                 <TableRow>
+                  <TableCell className="product-tablehead">SI No</TableCell>
                   <TableCell className="product-tablehead">Product</TableCell>
                   <TableCell className="product-tablehead" align="left">
                     Supplier
@@ -274,78 +416,95 @@ function Products() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {rows.map((row) => (
-                  <TableRow
-                    key={row._id}
-                    style={{ cursor: "pointer" }}
-                    sx={{
-                      "&:last-child td, &:last-child th": { border: 0 },
-                    }}
-                    onClick={() => handlenavigatesingleproduct(row._id)}
-                  >
-                    <TableCell component="th" scope="row">
-                      <img
-                        src={`${BASE_URL}/uploads/${row.images[0]}`}
-                        alt={row.name}
-                        style={{
-                          width: "40px",
-                          height: "40px",
-                          borderRadius: "8px",
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell align="left" className="product-tabledata">
-                      {row.supplierName}
-                    </TableCell>
-                    <TableCell align="left" className="product-tabledata">
-                      {row.name}
-                    </TableCell>
-                    <TableCell align="left" className="product-tabledata">
-                      {row.brand}
-                    </TableCell>
-                    <TableCell align="left" className="product-tabledata">
-                      {row.productCode}
-                    </TableCell>
-                    <TableCell align="left" className="product-tabledata">
-                      {row.totalStock}
-                    </TableCell>
-                    <TableCell align="left" className="product-tabledata">
-                      <ul style={{ listStyleType: "none", padding: 0 }}>
-                        {row.variants.map((variant) => (
-                          <li key={variant._id} style={{ marginBottom: "5px" }}>
-                            <strong>Color:</strong> {variant.color} <br />
-                            <strong>Price:</strong> ${variant.price} <br />
-                          </li>
-                        ))}
-                      </ul>
-                    </TableCell>
-                    <TableCell
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        handleOpen(row._id);
+                {paginatedData.length > 0 ? (
+                  paginatedData.map((row, index) => (
+                    <TableRow
+                      key={row._id}
+                      style={{ cursor: "pointer" }}
+                      sx={{
+                        "&:last-child td, &:last-child th": { border: 0 },
                       }}
-                      align="left"
-                      className="product-tablemore"
+                      onClick={() => handlenavigatesingleproduct(row._id)}
                     >
-                      <IoEllipsisVertical />
+                      <TableCell component="th" scope="row" className="product-tabledata">
+                        {(page - 1) * itemsPerPage + index + 1}
+                      </TableCell>
+                      <TableCell component="th" scope="row">
+                        <img
+                          src={`${BASE_URL}/uploads/${row.images[0]}`}
+                          alt={row.name}
+                          style={{
+                            width: "40px",
+                            height: "40px",
+                            borderRadius: "8px",
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell align="left" className="product-tabledata">
+                        {row.supplierName}
+                      </TableCell>
+                      <TableCell align="left" className="product-tabledata">
+                        {row.name}
+                      </TableCell>
+                      <TableCell align="left" className="product-tabledata">
+                        {row.brand}
+                      </TableCell>
+                      <TableCell align="left" className="product-tabledata">
+                        {row.productCode}
+                      </TableCell>
+                      <TableCell align="left" className="product-tabledata">
+                        {row.totalStock}
+                      </TableCell>
+                      <TableCell align="left" className="product-tabledata">
+                        <ul style={{ listStyleType: "none", padding: 0 }}>
+                          {row.variants.map((variant) => (
+                            <li key={variant._id} style={{ marginBottom: "5px" }}>
+                              <strong>Color:</strong> {variant.color} <br />
+                              <strong>Price:</strong> ${variant.price} <br />
+                            </li>
+                          ))}
+                        </ul>
+                      </TableCell>
+                      <TableCell
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleOpen(row._id);
+                        }}
+                        align="left"
+                        className="product-tablemore"
+                      >
+                        <IoEllipsisVertical />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={9} align="center" className="product-tabledata">
+                      No products found
                     </TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
           </TableContainer>
         )}
       </div>
       <Row className="mt-4 pagination-row">
-        {" "}
-        <Pagination className="pagination" count={10} variant="outlined" />
+        <Pagination 
+          className="pagination" 
+          count={totalPages} 
+          page={page}
+          onChange={handlePageChange}
+          variant="outlined" 
+        />
       </Row>
 
+      {/* Actions Modal */}
       <Modal
         show={showModal}
         onHide={handleModalClose}
         centered
-        ClassName="custom-modal-width"
+        className="custom-modal-width"
       >
         <Modal.Body className="modal-body-with-scroll">
           <div
@@ -372,6 +531,7 @@ function Products() {
         </Modal.Body>
       </Modal>
 
+      {/* Filter Modal */}
       <Modal show={show} onHide={handleClose} centered size="lg">
         <Modal.Header closeButton>
           <Modal.Title className="category-modal-title">
@@ -385,54 +545,72 @@ function Products() {
               <Form>
                 <div className="filter-group">
                   <p
-                    className="  single-product-form-label"
+                    className="single-product-form-label"
                     onClick={() => setActiveFilter("brand")}
-                    style={{ cursor: "pointer" }}
+                    style={{ 
+                      cursor: "pointer",
+                      fontWeight: activeFilter === "brand" ? "bold" : "normal"
+                    }}
                   >
                     Brand
                   </p>
                 </div>
                 <div className="filter-group">
                   <p
-                    className="  single-product-form-label"
+                    className="single-product-form-label"
                     onClick={() => setActiveFilter("minPrice")}
-                    style={{ cursor: "pointer" }}
+                    style={{ 
+                      cursor: "pointer",
+                      fontWeight: activeFilter === "minPrice" ? "bold" : "normal"
+                    }}
                   >
                     Min Price
                   </p>
                 </div>
                 <div className="filter-group">
                   <p
-                    className="  single-product-form-label"
+                    className="single-product-form-label"
                     onClick={() => setActiveFilter("maxPrice")}
-                    style={{ cursor: "pointer" }}
+                    style={{ 
+                      cursor: "pointer",
+                      fontWeight: activeFilter === "maxPrice" ? "bold" : "normal"
+                    }}
                   >
                     Max Price
                   </p>
                 </div>
                 <div className="filter-group">
                   <p
-                    className="  single-product-form-label"
+                    className="single-product-form-label"
                     onClick={() => setActiveFilter("stock")}
-                    style={{ cursor: "pointer" }}
+                    style={{ 
+                      cursor: "pointer",
+                      fontWeight: activeFilter === "stock" ? "bold" : "normal"
+                    }}
                   >
                     Stock
                   </p>
                 </div>
                 <div className="filter-group">
                   <p
-                    className="  single-product-form-label"
+                    className="single-product-form-label"
                     onClick={() => setActiveFilter("size")}
-                    style={{ cursor: "pointer" }}
+                    style={{ 
+                      cursor: "pointer",
+                      fontWeight: activeFilter === "size" ? "bold" : "normal"
+                    }}
                   >
                     Size
                   </p>
                 </div>
                 <div className="filter-group">
                   <p
-                    className="  single-product-form-label"
+                    className="single-product-form-label"
                     onClick={() => setActiveFilter("product_type")}
-                    style={{ cursor: "pointer" }}
+                    style={{ 
+                      cursor: "pointer",
+                      fontWeight: activeFilter === "product_type" ? "bold" : "normal"
+                    }}
                   >
                     Product Type
                   </p>
@@ -447,10 +625,24 @@ function Products() {
           </Row>
         </Modal.Body>
         <Modal.Footer>
-          <button className="w-25 category-model-cancel" onClick={handleClose}>
-            Close
+          <button 
+            className="w-25 category-model-cancel" 
+            onClick={() => {
+              // Reset filters
+              setFilters({
+                brand: [],
+                minPrice: 0,
+                maxPrice: 1000,
+                stock: [],
+                size: [],
+                product_type: [],
+              });
+              handleClose();
+            }}
+          >
+            Reset
           </button>
-          <button className="w-25 category-model-add" onClick={handleClose}>
+          <button className="w-25 category-model-add" onClick={handleFiltersApply}>
             Apply Filters
           </button>
         </Modal.Footer>

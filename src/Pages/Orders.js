@@ -5,6 +5,7 @@ import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
+import TablePagination from "@mui/material/TablePagination";
 import Paper from "@mui/material/Paper";
 import { Col, Form, Row, Badge, Card } from "react-bootstrap";
 import "./order.css";
@@ -20,6 +21,11 @@ function Orders() {
   const [error, setError] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showDetailView, setShowDetailView] = useState(false);
+  
+  // Pagination states
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [paginatedOrders, setPaginatedOrders] = useState([]);
 
   // Fetch orders from API
   useEffect(() => {
@@ -44,10 +50,18 @@ function Orders() {
 
     fetchOrders();
   }, []);
+  
+  // Update paginated orders when filtered orders or pagination settings change
+  useEffect(() => {
+    const startIndex = page * rowsPerPage;
+    const endIndex = startIndex + rowsPerPage;
+    setPaginatedOrders(filteredOrders.slice(startIndex, endIndex));
+  }, [filteredOrders, page, rowsPerPage]);
 
   // Filter orders based on status
   const filterOrders = (statusFilter) => {
     setCurrentFilter(statusFilter);
+    setPage(0); // Reset to first page when filter changes
     
     if (statusFilter === "All") {
       setFilteredOrders(orders);
@@ -95,6 +109,16 @@ function Orders() {
   const handleBackToList = () => {
     setShowDetailView(false);
     setSelectedOrder(null);
+  };
+  
+  // Pagination handlers
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
   };
 
   // Function to format date
@@ -421,6 +445,8 @@ function Orders() {
             <Table aria-label="orders table">
               <TableHead>
                 <TableRow>
+                <TableCell className="dproduct-tablehead" align="left">SI No</TableCell>
+
                   <TableCell className="dproduct-tablehead">Color</TableCell>
                   <TableCell className="dproduct-tablehead" align="left">Order Date</TableCell>
                   <TableCell className="dproduct-tablehead" align="left">Customer ID</TableCell>
@@ -431,9 +457,12 @@ function Orders() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredOrders.length > 0 ? (
-                  filteredOrders.map((order) => (
+                {paginatedOrders.length > 0 ? (
+                  paginatedOrders.map((order,index) => (
                     <TableRow key={order._id} hover>
+                      <TableCell align="left" className="dorder-tabledata">
+      {page * rowsPerPage + index + 1}
+    </TableCell>
                       <TableCell component="th" scope="row">
                         <div
                           style={{
@@ -515,6 +544,18 @@ function Orders() {
                 )}
               </TableBody>
             </Table>
+            
+            {/* Pagination Control */}
+            <TablePagination
+              rowsPerPageOptions={[10, 50, 100]}
+              component="div"
+              count={filteredOrders.length}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+              labelRowsPerPage="Items per page:"
+            />
           </TableContainer>
 
           {/* Order Statistics */}
