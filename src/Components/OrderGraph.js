@@ -1,30 +1,11 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import ReactApexChart from 'react-apexcharts';
-import './ordergraph.css'
-const ApexChart = () => {
-  const [state, setState] = React.useState({
-    series: [
-      {
-        name: 'Pending Order',
-        data: [10, 41, 35, 51, 49, 62, 69, 91, 148],
-      },
-      {
-        name: 'Proceeded Order',
-        data: [15, 32, 45, 50, 60, 70, 85, 100, 120],
-      },
-      {
-        name: 'Cancelled',
-        data: [2, 3, 4, 0, 80, 10, 11, 15, 150],
-      },
-      {
-        name: 'Shipped',
-        data: [15, 18, 25, 37, 48, 54, 25, 125, 50],
-      },
-      {
-        name: 'Delivered',
-        data: [19, 3, 8, 34, 80, 100, 110, 125, 150],
-      },
-    ],
+import './ordergraph.css';
+
+const ApexChart = ({ dashboardData }) => {
+  // Default state with empty data
+  const [state, setState] = useState({
+    series: [],
     options: {
       chart: {
         type: 'area',
@@ -56,7 +37,7 @@ const ApexChart = () => {
             colors: '#8e8da4',
           },
           formatter: function (val) {
-            return val.toFixed(0); // Adjust as needed
+            return val.toFixed(0);
           },
         },
         axisBorder: {
@@ -89,10 +70,49 @@ const ApexChart = () => {
     },
   });
 
+  useEffect(() => {
+    if (dashboardData && dashboardData.orderStatusCount) {
+      // Generate random historical data for each status
+      // In a real app, you would fetch this data from your API
+      const generateHistoricalData = (currentValue) => {
+        const data = [];
+        // Generate a somewhat realistic trend leading up to the current value
+        for (let i = 0; i < 8; i++) {
+          // Make the trend somewhat increasing towards the current value
+          const value = Math.floor(Math.random() * (currentValue * 0.8)) + 
+                        Math.floor((i / 7) * currentValue * 0.5);
+          data.push(value);
+        }
+        // Add the current value as the last point
+        data.push(currentValue);
+        return data;
+      };
+
+      // Map the order status counts to series data
+      const seriesData = dashboardData.orderStatusCount.map(status => {
+        return {
+          name: status._id,
+          data: generateHistoricalData(status.count)
+        };
+      });
+
+      // Update the state with the new series data
+      setState(prevState => ({
+        ...prevState,
+        series: seriesData
+      }));
+    }
+  }, [dashboardData]);
+
   return (
     <div>
-      <div id="chart" className='order-graph'>
-        <ReactApexChart options={state.options} series={state.series} type="area" />
+      <div id="chart" className="order-graph">
+        <ReactApexChart 
+          options={state.options} 
+          series={state.series} 
+          type="area" 
+          height={350} 
+        />
       </div>
     </div>
   );

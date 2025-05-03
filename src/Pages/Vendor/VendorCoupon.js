@@ -38,7 +38,6 @@ function VendorCoupon() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editshow, seteditShow] = useState(false);
-
   const [selectedamount, setselectedAmount] = useState("");
   const [selectedCouponName, setselectedCouponName] = useState("");
   const [selectedcouponType, setselectedCouponType] = useState("");

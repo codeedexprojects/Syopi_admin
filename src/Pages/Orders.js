@@ -9,7 +9,8 @@ import TablePagination from "@mui/material/TablePagination";
 import Paper from "@mui/material/Paper";
 import { Col, Form, Row, Badge, Card } from "react-bootstrap";
 import "./order.css";
-import { getAdminOrdersApi } from "../services/allApi";
+import { getAdminOrdersApi, updateAdminOrderStatusApi } from "../services/allApi";
+import { toast, ToastContainer } from "react-toastify";
 
 function Orders() {
   const [orders, setOrders] = useState([]);
@@ -21,7 +22,7 @@ function Orders() {
   const [error, setError] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showDetailView, setShowDetailView] = useState(false);
-  
+
   // Pagination states
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -34,7 +35,7 @@ function Orders() {
         setLoading(true);
         const response = await getAdminOrdersApi();
         console.log(response);
-        
+
         if (response.success) {
           setOrders(response.data.orders);
           setFilteredOrders(response.data.orders);
@@ -50,7 +51,7 @@ function Orders() {
 
     fetchOrders();
   }, []);
-  
+
   // Update paginated orders when filtered orders or pagination settings change
   useEffect(() => {
     const startIndex = page * rowsPerPage;
@@ -62,11 +63,11 @@ function Orders() {
   const filterOrders = (statusFilter) => {
     setCurrentFilter(statusFilter);
     setPage(0); // Reset to first page when filter changes
-    
+
     if (statusFilter === "All") {
       setFilteredOrders(orders);
     } else {
-      const filtered = orders.filter(order => order.status === statusFilter);
+      const filtered = orders.filter((order) => order.status === statusFilter);
       setFilteredOrders(filtered);
     }
   };
@@ -76,26 +77,46 @@ function Orders() {
   };
 
   const handleSaveClick = async (id) => {
-    // Here you would implement the API call to update the order status
-    // For example:
-    // await updateOrderStatusApi(id, status[id]);
-    
-    // Update local state to reflect the change
-    const updatedOrders = orders.map(order => {
-      if (order._id === id) {
-        return { ...order, status: status[id] || order.status };
+    const newStatus = status[id];
+  
+    if (!newStatus) {
+      toast.warn("Please select a status before saving.");
+      return;
+    }
+  
+    try {
+      const response = await updateAdminOrderStatusApi({
+        orderId: id,
+        status: newStatus,
+      });
+  
+      console.log("API Response:", response);
+  
+      if (!response.success) {
+        toast.error(response.message || "Failed to update status");
+        return;
       }
-      return order;
-    });
-    
-    setOrders(updatedOrders);
-    setFilteredOrders(
-      currentFilter === "All" 
-        ? updatedOrders 
-        : updatedOrders.filter(order => order.status === currentFilter)
-    );
-    setEditRowId(null);
+  
+      toast.success("Order status updated!");
+  
+      const updatedOrders = orders.map((order) =>
+        order._id === id ? { ...order, status: newStatus } : order
+      );
+  
+      setOrders(updatedOrders);
+      setFilteredOrders(
+        currentFilter === "All"
+          ? updatedOrders
+          : updatedOrders.filter((order) => order.status === currentFilter)
+      );
+      setEditRowId(null);
+    } catch (err) {
+      toast.error("Unexpected error occurred");
+      console.error("Error updating status:", err);
+    }
   };
+  
+  
 
   const handleStatusChange = (event, id) => {
     setStatus({ ...status, [id]: event.target.value });
@@ -110,7 +131,7 @@ function Orders() {
     setShowDetailView(false);
     setSelectedOrder(null);
   };
-  
+
   // Pagination handlers
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -124,21 +145,21 @@ function Orders() {
   // Function to format date
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-IN'); // Indian date format
+    return date.toLocaleDateString("en-IN"); // Indian date format
   };
 
   // Status color mapping
   const getStatusColor = (status) => {
     const statusColors = {
-      "Confirmed": "primary",
-      "Processing": "info",
-      "Pending": "warning",
-      "Cancelled": "danger",
-      "Shipped": "secondary",
-      "Delivered": "success",
-      "Not_requested": "light"
+      Returned: "primary",
+      Processing: "info",
+      Pending: "warning",
+      Cancelled: "danger",
+      Shipped: "secondary",
+      Delivered: "success",
+      Not_requested: "light",
     };
-    
+
     return statusColors[status] || "light";
   };
 
@@ -155,7 +176,7 @@ function Orders() {
         borderRadius: "4px",
         display: "inline-block",
         marginRight: "8px",
-        border: "1px solid #ddd"
+        border: "1px solid #ddd",
       }}
     />
   );
@@ -168,7 +189,10 @@ function Orders() {
       <div className="order-detail-view">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h4>Order Details</h4>
-          <button className="btn btn-outline-secondary" onClick={handleBackToList}>
+          <button
+            className="btn btn-outline-secondary"
+            onClick={handleBackToList}
+          >
             Back to Orders
           </button>
         </div>
@@ -182,7 +206,7 @@ function Orders() {
               <Card.Body>
                 <Row>
                   <Col md={3}>
-                    <div 
+                    <div
                       className="product-color-preview"
                       style={{
                         width: "100px",
@@ -194,7 +218,7 @@ function Orders() {
                         justifyContent: "center",
                         color: "#fff",
                         textShadow: "0 0 2px rgba(0,0,0,0.5)",
-                        marginBottom: "10px"
+                        marginBottom: "10px",
                       }}
                     >
                       {order.colorName}
@@ -204,28 +228,44 @@ function Orders() {
                     <table className="table table-borderless">
                       <tbody>
                         <tr>
-                          <td style={{width: "150px"}}><strong>Order ID:</strong></td>
+                          <td style={{ width: "150px" }}>
+                            <strong>Order ID:</strong>
+                          </td>
                           <td>{order.orderId}</td>
                         </tr>
                         <tr>
-                          <td><strong>Product ID:</strong></td>
+                          <td>
+                            <strong>Product ID:</strong>
+                          </td>
                           <td>{order.productId}</td>
                         </tr>
                         <tr>
-                          <td><strong>Size:</strong></td>
+                          <td>
+                            <strong>Size:</strong>
+                          </td>
                           <td>{order.size}</td>
                         </tr>
                         <tr>
-                          <td><strong>Color:</strong></td>
-                          <td><ColorBox color={order.color} /> {order.colorName}</td>
+                          <td>
+                            <strong>Color:</strong>
+                          </td>
+                          <td>
+                            <ColorBox color={order.color} /> {order.colorName}
+                          </td>
                         </tr>
                         <tr>
-                          <td><strong>Quantity:</strong></td>
+                          <td>
+                            <strong>Quantity:</strong>
+                          </td>
                           <td>{order.quantity}</td>
                         </tr>
                         <tr>
-                          <td><strong>Price:</strong></td>
-                          <td className="fw-bold">₹{order.price.toLocaleString('en-IN')}</td>
+                          <td>
+                            <strong>Price:</strong>
+                          </td>
+                          <td className="fw-bold">
+                            ₹{order.price.toLocaleString("en-IN")}
+                          </td>
                         </tr>
                       </tbody>
                     </table>
@@ -244,7 +284,10 @@ function Orders() {
                     <div className="timeline-marker bg-primary"></div>
                     <div className="timeline-content">
                       <h6>Order Created</h6>
-                      <p className="text-muted">{formatDate(order.createdAt)} {new Date(order.createdAt).toLocaleTimeString('en-IN')}</p>
+                      <p className="text-muted">
+                        {formatDate(order.createdAt)}{" "}
+                        {new Date(order.createdAt).toLocaleTimeString("en-IN")}
+                      </p>
                     </div>
                   </div>
                   {order.status !== "Pending" && (
@@ -252,7 +295,9 @@ function Orders() {
                       <div className="timeline-marker bg-info"></div>
                       <div className="timeline-content">
                         <h6>Order Confirmed</h6>
-                        <p className="text-muted">Status updated to {order.status}</p>
+                        <p className="text-muted">
+                          Status updated to {order.status}
+                        </p>
                       </div>
                     </div>
                   )}
@@ -261,7 +306,10 @@ function Orders() {
                       <div className="timeline-marker bg-success"></div>
                       <div className="timeline-content">
                         <h6>Delivery Scheduled</h6>
-                        <p className="text-muted">Expected delivery on {order.deliveryDetails.deliveryDate}</p>
+                        <p className="text-muted">
+                          Expected delivery on{" "}
+                          {order.deliveryDetails.deliveryDate}
+                        </p>
                       </div>
                     </div>
                   )}
@@ -277,25 +325,29 @@ function Orders() {
               </Card.Header>
               <Card.Body>
                 <div className="d-flex flex-column align-items-center">
-                  <Badge bg={getStatusColor(order.status)} className="px-4 py-2 mb-3" style={{fontSize: "1rem"}}>
+                  <Badge
+                    bg={getStatusColor(order.status)}
+                    className="px-4 py-2 mb-3"
+                    style={{ fontSize: "1rem" }}
+                  >
                     {order.status}
                   </Badge>
-                  
+
                   <Form.Select
                     className="mb-3"
                     value={status[order._id] || order.status}
                     onChange={(event) => handleStatusChange(event, order._id)}
                   >
-                    <option value="Confirmed">Confirmed</option>
+                    <option value="In-Transit">In-Transit</option>
                     <option value="Processing">Processing</option>
                     <option value="Pending">Pending</option>
-                    <option value="Shipped">Shipped</option>
                     <option value="Delivered">Delivered</option>
+                    <option value="Returned">Returned</option>
                     <option value="Cancelled">Cancelled</option>
                   </Form.Select>
-                  
-                  <button 
-                    className="btn btn-primary mt-2" 
+
+                  <button
+                    className="btn btn-primary mt-2"
                     onClick={() => handleSaveClick(order._id)}
                   >
                     Update Status
@@ -312,17 +364,34 @@ function Orders() {
                 <table className="table table-borderless">
                   <tbody>
                     <tr>
-                      <td><strong>Delivery Date:</strong></td>
-                      <td>{order.deliveryDetails?.deliveryDate || "Not specified"}</td>
-                    </tr>
-                    <tr>
-                      <td><strong>Message:</strong></td>
-                      <td>{order.deliveryDetails?.deliveryMessage || "Not specified"}</td>
-                    </tr>
-                    <tr>
-                      <td><strong>Return Status:</strong></td>
                       <td>
-                        <Badge bg={order.returnStatus === "Not_requested" ? "success" : "warning"}>
+                        <strong>Delivery Date:</strong>
+                      </td>
+                      <td>
+                        {order.deliveryDetails?.deliveryDate || "Not specified"}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <strong>Message:</strong>
+                      </td>
+                      <td>
+                        {order.deliveryDetails?.deliveryMessage ||
+                          "Not specified"}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <strong>Return Status:</strong>
+                      </td>
+                      <td>
+                        <Badge
+                          bg={
+                            order.returnStatus === "Not_requested"
+                              ? "success"
+                              : "warning"
+                          }
+                        >
                           {order.returnStatus}
                         </Badge>
                       </td>
@@ -337,9 +406,15 @@ function Orders() {
                 <h5 className="mb-0">Customer Information</h5>
               </Card.Header>
               <Card.Body>
-                <p><strong>Customer ID:</strong> {order.userId}</p>
-                <p><strong>Address ID:</strong> {order.addressId}</p>
-                <p><strong>Vendor ID:</strong> {order.vendorId}</p>
+                <p>
+                  <strong>Customer ID:</strong> {order.userId}
+                </p>
+                <p>
+                  <strong>Address ID:</strong> {order.addressId}
+                </p>
+                <p>
+                  <strong>Vendor ID:</strong> {order.vendorId}
+                </p>
               </Card.Body>
             </Card>
           </Col>
@@ -367,7 +442,12 @@ function Orders() {
               <Card className="shadow-sm">
                 <Card.Body>
                   <h5>Total Sales</h5>
-                  <h3>₹{orders.reduce((sum, order) => sum + order.itemTotal, 0).toLocaleString('en-IN')}</h3>
+                  <h3>
+                    ₹
+                    {orders
+                      .reduce((sum, order) => sum + order.itemTotal, 0)
+                      .toLocaleString("en-IN")}
+                  </h3>
                 </Card.Body>
               </Card>
             </Col>
@@ -375,7 +455,12 @@ function Orders() {
               <Card className="shadow-sm">
                 <Card.Body>
                   <h5>Confirmed Orders</h5>
-                  <h3>{orders.filter(order => order.status === "Confirmed").length}</h3>
+                  <h3>
+                    {
+                      orders.filter((order) => order.status === "Confirmed")
+                        .length
+                    }
+                  </h3>
                 </Card.Body>
               </Card>
             </Col>
@@ -383,7 +468,12 @@ function Orders() {
               <Card className="shadow-sm">
                 <Card.Body>
                   <h5>Delivered Orders</h5>
-                  <h3>{orders.filter(order => order.status === "Delivered").length}</h3>
+                  <h3>
+                    {
+                      orders.filter((order) => order.status === "Delivered")
+                        .length
+                    }
+                  </h3>
                 </Card.Body>
               </Card>
             </Col>
@@ -395,47 +485,61 @@ function Orders() {
               <h6 className="mb-0 me-3">Filter by Status:</h6>
             </div>
             <div className="d-flex flex-wrap">
-              <button 
-                className={`order-status-button mx-2 mb-2 ${currentFilter === "All" ? "active" : ""}`} 
+              <button
+                className={`order-status-button mx-2 mb-2 ${
+                  currentFilter === "All" ? "active" : ""
+                }`}
                 onClick={() => filterOrders("All")}
               >
                 All
               </button>
-              <button 
-                className={`order-status-button mx-2 mb-2 ${currentFilter === "Confirmed" ? "active" : ""}`} 
-                onClick={() => filterOrders("Confirmed")}
+              <button
+                className={`order-status-button mx-2 mb-2 ${
+                  currentFilter === "Delivered" ? "active" : ""
+                }`}
+                onClick={() => filterOrders("Delivered")}
               >
-                Confirmed
+                Delivered
               </button>
-              <button 
-                className={`order-status-button mx-2 mb-2 ${currentFilter === "Processing" ? "active" : ""}`} 
+              <button
+                className={`order-status-button mx-2 mb-2 ${
+                  currentFilter === "Processing" ? "active" : ""
+                }`}
                 onClick={() => filterOrders("Processing")}
               >
                 Processing
               </button>
-              <button 
-                className={`order-status-button mx-2 mb-2 ${currentFilter === "Pending" ? "active" : ""}`} 
+              <button
+                className={`order-status-button mx-2 mb-2 ${
+                  currentFilter === "Pending" ? "active" : ""
+                }`}
                 onClick={() => filterOrders("Pending")}
               >
                 Pending
               </button>
-              <button 
-                className={`order-status-button mx-2 mb-2 ${currentFilter === "Cancelled" ? "active" : ""}`} 
+              <button
+                className={`order-status-button mx-2 mb-2 ${
+                  currentFilter === "Cancelled" ? "active" : ""
+                }`}
                 onClick={() => filterOrders("Cancelled")}
               >
                 Cancelled
               </button>
-              <button 
-                className={`order-status-button mx-2 mb-2 ${currentFilter === "Shipped" ? "active" : ""}`} 
-                onClick={() => filterOrders("Shipped")}
+              <button
+                className={`order-status-button mx-2 mb-2 ${
+                  currentFilter === "In-Transit" ? "active" : ""
+                }`}
+                onClick={() => filterOrders("In-Transit")}
               >
-                Shipped
+                In-Transit
               </button>
-              <button 
-                className={`order-status-button mx-2 mb-2 ${currentFilter === "Delivered" ? "active" : ""}`} 
-                onClick={() => filterOrders("Delivered")}
+              <button
+                className={`order-status-button mx-2 mb-2 ${
+                  currentFilter === "Returned" ? "active" : ""
+                }`}
+                onClick={() => filterOrders("Returned")}
               >
-                Delivered
+                Returned
               </button>
             </div>
           </div>
@@ -445,24 +549,38 @@ function Orders() {
             <Table aria-label="orders table">
               <TableHead>
                 <TableRow>
-                <TableCell className="dproduct-tablehead" align="left">SI No</TableCell>
+                  <TableCell className="dproduct-tablehead" align="left">
+                    SI No
+                  </TableCell>
 
                   <TableCell className="dproduct-tablehead">Color</TableCell>
-                  <TableCell className="dproduct-tablehead" align="left">Order Date</TableCell>
-                  <TableCell className="dproduct-tablehead" align="left">Customer ID</TableCell>
-                  <TableCell className="dproduct-tablehead" align="left">Details</TableCell>
-                  <TableCell className="dproduct-tablehead" align="left">Status</TableCell>
-                  <TableCell className="dproduct-tablehead" align="right">Price</TableCell>
-                  <TableCell className="dproduct-tablehead" align="center">Actions</TableCell>
+                  <TableCell className="dproduct-tablehead" align="left">
+                    Order Date
+                  </TableCell>
+                  <TableCell className="dproduct-tablehead" align="left">
+                    Customer ID
+                  </TableCell>
+                  <TableCell className="dproduct-tablehead" align="left">
+                    Details
+                  </TableCell>
+                  <TableCell className="dproduct-tablehead" align="left">
+                    Status
+                  </TableCell>
+                  <TableCell className="dproduct-tablehead" align="right">
+                    Price
+                  </TableCell>
+                  <TableCell className="dproduct-tablehead" align="center">
+                    Actions
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {paginatedOrders.length > 0 ? (
-                  paginatedOrders.map((order,index) => (
+                  paginatedOrders.map((order, index) => (
                     <TableRow key={order._id} hover>
                       <TableCell align="left" className="dorder-tabledata">
-      {page * rowsPerPage + index + 1}
-    </TableCell>
+                        {page * rowsPerPage + index + 1}
+                      </TableCell>
                       <TableCell component="th" scope="row">
                         <div
                           style={{
@@ -482,31 +600,46 @@ function Orders() {
                       </TableCell>
                       <TableCell align="left" className="dorder-tabledata">
                         <div>
-                          <small>Size: <strong>{order.size}</strong></small><br/>
-                          <small>Color: <strong>{order.colorName}</strong></small><br/>
-                          <small>Qty: <strong>{order.quantity}</strong></small>
+                          <small>
+                            Size: <strong>{order.size}</strong>
+                          </small>
+                          <br />
+                          <small>
+                            Color: <strong>{order.colorName}</strong>
+                          </small>
+                          <br />
+                          <small>
+                            Qty: <strong>{order.quantity}</strong>
+                          </small>
                         </div>
                       </TableCell>
                       <TableCell align="left" className="dorder-tabledata">
                         {editRowId === order._id ? (
                           <Form.Select
                             value={status[order._id] || order.status}
-                            onChange={(event) => handleStatusChange(event, order._id)}
+                            onChange={(event) =>
+                              handleStatusChange(event, order._id)
+                            }
                             className="form-select-sm order-dropdown"
                           >
-                            <option value="Confirmed">Confirmed</option>
-                            <option value="Processing">Processing</option>
                             <option value="Pending">Pending</option>
-                            <option value="Shipped">Shipped</option>
+                            <option value="Processing">Processing</option>
+                            <option value="In-Transit">In-Transit</option>
                             <option value="Delivered">Delivered</option>
                             <option value="Cancelled">Cancelled</option>
+                            <option value="Returned">Returned</option>
                           </Form.Select>
                         ) : (
-                          <Badge bg={getStatusColor(order.status)}>{order.status}</Badge>
+                          <Badge bg={getStatusColor(order.status)}>
+                            {order.status}
+                          </Badge>
                         )}
                       </TableCell>
-                      <TableCell align="right" className="dorder-tabledata fw-bold">
-                        ₹{order.itemTotal.toLocaleString('en-IN')}
+                      <TableCell
+                        align="right"
+                        className="dorder-tabledata fw-bold"
+                      >
+                        ₹{order.itemTotal.toLocaleString("en-IN")}
                       </TableCell>
                       <TableCell align="center" className="dorder-tabledata">
                         <div className="d-flex justify-content-center">
@@ -544,7 +677,7 @@ function Orders() {
                 )}
               </TableBody>
             </Table>
-            
+
             {/* Pagination Control */}
             <TablePagination
               rowsPerPageOptions={[10, 50, 100]}
@@ -570,25 +703,47 @@ function Orders() {
                     <Col md={3} className="text-center mb-3">
                       <div className="stat-card">
                         <h6>Pending Orders</h6>
-                        <h2>{orders.filter(order => order.status === "Pending").length}</h2>
+                        <h2>
+                          {
+                            orders.filter((order) => order.status === "Pending")
+                              .length
+                          }
+                        </h2>
                       </div>
                     </Col>
                     <Col md={3} className="text-center mb-3">
                       <div className="stat-card">
                         <h6>Processing Orders</h6>
-                        <h2>{orders.filter(order => order.status === "Processing").length}</h2>
+                        <h2>
+                          {
+                            orders.filter(
+                              (order) => order.status === "Processing"
+                            ).length
+                          }
+                        </h2>
                       </div>
                     </Col>
                     <Col md={3} className="text-center mb-3">
                       <div className="stat-card">
                         <h6>Shipped Orders</h6>
-                        <h2>{orders.filter(order => order.status === "Shipped").length}</h2>
+                        <h2>
+                          {
+                            orders.filter((order) => order.status === "Shipped")
+                              .length
+                          }
+                        </h2>
                       </div>
                     </Col>
                     <Col md={3} className="text-center mb-3">
                       <div className="stat-card">
                         <h6>Cancelled Orders</h6>
-                        <h2>{orders.filter(order => order.status === "Cancelled").length}</h2>
+                        <h2>
+                          {
+                            orders.filter(
+                              (order) => order.status === "Cancelled"
+                            ).length
+                          }
+                        </h2>
                       </div>
                     </Col>
                   </Row>
@@ -603,9 +758,9 @@ function Orders() {
               position: relative;
               padding: 20px 0;
             }
-            
+
             .timeline::before {
-              content: '';
+              content: "";
               position: absolute;
               top: 0;
               bottom: 0;
@@ -613,13 +768,13 @@ function Orders() {
               width: 2px;
               background: #e9ecef;
             }
-            
+
             .timeline-item {
               position: relative;
               padding-left: 40px;
               margin-bottom: 20px;
             }
-            
+
             .timeline-marker {
               position: absolute;
               left: 0;
@@ -630,7 +785,7 @@ function Orders() {
               line-height: 30px;
               color: white;
             }
-            
+
             .order-status-button {
               border: 1px solid #dee2e6;
               background-color: #f8f9fa;
@@ -639,17 +794,17 @@ function Orders() {
               cursor: pointer;
               transition: all 0.2s;
             }
-            
+
             .order-status-button.active {
               background-color: #0d6efd;
               color: white;
               border-color: #0d6efd;
             }
-            
+
             .order-status-button:hover:not(.active) {
               background-color: #e9ecef;
             }
-            
+
             .stat-card {
               padding: 15px;
               border-radius: 8px;
@@ -659,6 +814,7 @@ function Orders() {
           `}</style>
         </>
       )}
+      <ToastContainer></ToastContainer>
     </div>
   );
 }

@@ -19,12 +19,13 @@ import { FaEllipsis } from "react-icons/fa6";
 import {
   createsliderApi,
   deletesliderApi,
-  getCategoriesApi,
+  getallProducts,
   getSliderApi,
   updatesliderApi,
 } from "../services/allApi";
 import HashLoader from "react-spinners/HashLoader";
 import { toast, ToastContainer } from "react-toastify";
+import { BASE_URL } from "../services/baseUrl";
 
 function Carousel() {
   const [show, setShow] = useState(false);
@@ -32,12 +33,12 @@ function Carousel() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [categories, setCategories] = useState([]);
+  const [products, setProducts] = useState([]);
   const [title, setTitle] = useState("");
   const [link, setLink] = useState("");
   const [imageFile, setImageFile] = useState(null);
   const [date, setDate] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState("");
   const [selectedId, setSelectedId] = useState("");
   const [showeditModal, setShoweditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -58,21 +59,90 @@ function Carousel() {
   const popoverRef = useRef(null);
 
   const handleActionClick = (slider, event) => {
+    // Prevent event bubbling
+    event.stopPropagation();
+    
+    // Get click position
     const { pageX, pageY } = event;
-    setPopover({
-      visible: !popover.visible,
-      x: pageX,
-      y: pageY - 50,
-    });
-
-    // Set individual states from the selected offer
+    
+    // First toggle visibility - this will help with measuring the popover dimensions
+    setPopover((prev) => ({
+      visible: !prev.visible,
+      x: pageX, 
+      y: pageY,
+      // Add temporary values that will be updated after render
+      anchorPoint: 'bottom'
+    }));
+  
+    // Set other slider data
     setTitle(slider.title);
-    setSelectedCategory(slider.cate);
-    setLink(slider.link || ""); // Ensure a default value
-    setDate(slider.date || null); // Set date if available
-    setUploadedImage(slider.image || ""); // Set image if available
+    setSelectedProduct(slider.cate);
+    setLink(slider.link || "");
+    setDate(slider.date || null);
+    setUploadedImage(`${BASE_URL}/uploads/${slider.image}` || "");
     setSelectedId(slider._id);
   };
+  
+  // Add this effect to adjust position after popover becomes visible
+  useEffect(() => {
+    if (popover.visible && popoverRef.current) {
+      const popoverElement = popoverRef.current;
+      const popoverRect = popoverElement.getBoundingClientRect();
+      const windowWidth = window.innerWidth;
+      const windowHeight = window.innerHeight;
+      
+      // Calculate adjusted position to keep popover fully visible
+      let adjustedX = popover.x;
+      let adjustedY = popover.y;
+      let anchorPoint = 'bottom';
+      
+      // Adjust horizontal position if too close to right edge
+      if (popover.x + popoverRect.width > windowWidth) {
+        adjustedX = popover.x - popoverRect.width;
+      }
+      
+      // Position popover above the click point if there's not enough space below
+      if (popover.y + popoverRect.height > windowHeight) {
+        adjustedY = popover.y - popoverRect.height;
+        anchorPoint = 'top';
+      } else {
+        // Add a small offset to position below the click point
+        adjustedY = popover.y + 10;
+      }
+      
+      // Ensure popover doesn't go off the left edge
+      if (adjustedX < 0) {
+        adjustedX = 10;
+      }
+      
+      // Update popover position with calculated values
+      setPopover(prev => ({
+        ...prev,
+        x: adjustedX,
+        y: adjustedY,
+        anchorPoint
+      }));
+    }
+  }, [popover.visible]);
+  
+  // Click handler for document to close popover when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (popoverRef.current && !popoverRef.current.contains(event.target)) {
+        setPopover(prev => ({ ...prev, visible: false }));
+      }
+    };
+    
+    if (popover.visible) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [popover.visible]);
+  
+  
 
   const handleClosePopover = () => {
     setPopover({ visible: false, x: 0, y: 0 });
@@ -111,34 +181,36 @@ function Carousel() {
   useEffect(() => {
     fetchslider();
   }, []);
-  const handleCategoryChange = (e) => {
-    setSelectedCategory(e.target.value);
+  const handleProductChange = (e) => {
+    setSelectedProduct(e.target.value);
   };
 
-  const fetchCategories = async () => {
+  const fetchProducts = async () => {
     try {
-      const response = await getCategoriesApi();
-      if (response.success && Array.isArray(response.data)) {
-        setCategories(response.data);
+      const response = await getallProducts();
+      console.log("products", response);
+
+      if (response.success) {
+        setProducts(response.data.products);
       } else {
         console.error(
-          "Failed to fetch categories:",
+          "Failed to fetch products:",
           response.error || "Unknown error"
         );
       }
     } catch (error) {
-      console.error("Error fetching categories:", error.message);
+      console.error("Error fetching products:", error.message);
     }
   };
   useEffect(() => {
-    fetchCategories();
+    fetchProducts();
   }, []);
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
 
     // Validate fields
-    if (!title || !link || !selectedCategory || !imageFile || !date) {
+    if (!title || !link || !selectedProduct || !imageFile || !date) {
       toast.error("All fields are required");
       return;
     }
@@ -146,9 +218,8 @@ function Carousel() {
     const formData = new FormData();
     formData.append("title", title.trim());
     formData.append("link", link.trim());
-    formData.append("category", selectedCategory);
+    formData.append("productId", selectedProduct);
     formData.append("date", new Date(date).toISOString()); // Ensure date formatting
-    formData.append("fileType", "category"); // Assuming this is required
     formData.append("userType", "admin"); // Assuming this is required
     formData.append("image", imageFile); // Attach the actual file
 
@@ -197,27 +268,27 @@ function Carousel() {
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
-  
+
     // Validation
-    if (!title || !link || !selectedCategory || !date || !imageFile) {
+    if (!title || !link || !selectedProduct || !date || !imageFile) {
       toast.error("All fields are required");
       return;
     }
-  
+
     // Prepare FormData
     const formData = new FormData();
     formData.append("title", title.trim());
     formData.append("link", link.trim());
-    formData.append("category", selectedCategory);
+    formData.append("productId", selectedProduct);
     formData.append("date", date); // Ensure date is in "YYYY-MM-DD" format
-    formData.append("fileType", "category");
+    // formData.append("fileType", "category");
     formData.append("userType", "admin");
     formData.append("image", imageFile);
-  
+
     try {
       const response = await updatesliderApi(selectedId, formData);
       console.log(response); // Debug response for issues
-  
+
       if (response.success) {
         toast.success("Carousel updated successfully");
         fetchslider();
@@ -230,62 +301,67 @@ function Carousel() {
       toast.error("An unexpected error occurred");
     }
   };
-  
 
-
-  
   const handleDeleteModalClose = () => setShowDeleteModal(false);
   const handleDeleteModalShow = () => {
     setShowDeleteModal(true);
   };
 
   const handleDeleteConfirm = async () => {
-      if (!selectedId) {
-        toast.error("No notification selected for deletion");
-        return;
+    if (!selectedId) {
+      toast.error("No notification selected for deletion");
+      return;
+    }
+
+    try {
+      const response = await deletesliderApi(selectedId);
+
+      if (response.success) {
+        toast.success("Notification deleted successfully");
+        fetchslider(); // Refresh the list after deletion
+        handleDeleteModalClose();
+      } else {
+        toast.error(response.error || "Failed to delete Notification");
       }
-  
-      try {
-        const response = await deletesliderApi(selectedId);
-  
-        if (response.success) {
-          toast.success("Notification deleted successfully");
-          fetchslider(); // Refresh the list after deletion
-          handleDeleteModalClose();
-        } else {
-          toast.error(response.error || "Failed to delete Notification");
-        }
-      } catch (err) {
-        toast.error(err.message || "An unexpected error occurred");
-      }
-    };
+    } catch (err) {
+      toast.error(err.message || "An unexpected error occurred");
+    }
+  };
   const deleteModal = (
-      <Modal show={showDeleteModal} onHide={handleDeleteModalClose} centered>
-    <Modal.Header closeButton>
-      <Modal.Title className="category-modal-title">Confirm Deletion</Modal.Title>
-    </Modal.Header>
-    <Modal.Body className="modal-body-with-scroll">
-      <p className="delete-modal-text">
-        Are you sure you want to delete this sub-category? This action cannot be undone.
-      </p>
-    </Modal.Body>
-    <Modal.Footer>
-      <Row className="w-100">
-        <Col>
-          <button className="w-100 category-model-cancel" onClick={handleDeleteModalClose}>
-            Cancel
-          </button>
-        </Col>
-        <Col>
-          <button className="w-100 category-model-add" onClick={handleDeleteConfirm}>
-            Delete
-          </button>
-        </Col>
-      </Row>
-    </Modal.Footer>
-  </Modal>
-  
-    );
+    <Modal show={showDeleteModal} onHide={handleDeleteModalClose} centered>
+      <Modal.Header closeButton>
+        <Modal.Title className="category-modal-title">
+          Confirm Deletion
+        </Modal.Title>
+      </Modal.Header>
+      <Modal.Body className="modal-body-with-scroll">
+        <p className="delete-modal-text">
+          Are you sure you want to delete this Carousel? This action cannot be
+          undone.
+        </p>
+      </Modal.Body>
+      <Modal.Footer>
+        <Row className="w-100">
+          <Col>
+            <button
+              className="w-100 category-model-cancel"
+              onClick={handleDeleteModalClose}
+            >
+              Cancel
+            </button>
+          </Col>
+          <Col>
+            <button
+              className="w-100 category-model-add"
+              onClick={handleDeleteConfirm}
+            >
+              Delete
+            </button>
+          </Col>
+        </Row>
+      </Modal.Footer>
+    </Modal>
+  );
   return (
     <div className="carousel">
       <Row className="d-flex justify-content-between">
@@ -322,7 +398,7 @@ function Carousel() {
                     Date
                   </TableCell>
                   <TableCell className="dproduct-tablehead" align="left">
-                    Product/Category
+                    Product
                   </TableCell>
                   <TableCell className="dproduct-tablehead" align="left">
                     Action
@@ -339,7 +415,7 @@ function Carousel() {
                   >
                     <TableCell component="th" scope="row">
                       <img
-                        src={row.image}
+                        src={`${BASE_URL}/uploads/${row.image}`}
                         alt="Product"
                         style={{ width: "100px", height: "40px" }}
                       />
@@ -351,8 +427,9 @@ function Carousel() {
                       {row.createdAt}
                     </TableCell>
                     <TableCell align="left" className="dproduct-tabledata">
-                      {row.category.name}
+                      {row.productId?.name || "N/A"}
                     </TableCell>
+
                     <TableCell align="left" className="dproduct-tabledata">
                       <FaEllipsis
                         style={{ cursor: "pointer" }}
@@ -367,34 +444,38 @@ function Carousel() {
         )}
       </div>
       {popover.visible && (
-        <div
-          ref={popoverRef}
-          className="custom-popover"
-          style={{
-            position: "absolute",
-            top: popover.y,
-            left: popover.x,
-            backgroundColor: "#fff",
-            border: "1px solid #ccc",
-            borderRadius: "5px",
-            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-            zIndex: 1000,
-          }}
-        >
-          <ul className="popover-list">
-            <li className="popover-item" onClick={handleeditModalShow}>
-              Edit
-            </li>
-            <li className="popover-item" onClick={handleClosePopover}>
-              View
-            </li>
-            <li className="popover-item" onClick={handleDeleteModalShow}>
-              Remove
-            </li>
-          </ul>
-        </div>
-      )}
-{deleteModal}
+  <div
+    ref={popoverRef}
+    className="custom-popover"
+    style={{
+      position: "fixed",
+      top: popover.y,
+      left: popover.x,
+      backgroundColor: "#fff",
+      border: "1px solid #ccc",
+      borderRadius: "5px",
+      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+      zIndex: 1000,
+      // Add transform origin based on anchor point
+      transformOrigin: popover.anchorPoint === 'top' ? 'center bottom' : 'center top',
+      // Add subtle animation
+      animation: "popoverFadeIn 0.2s ease-out forwards"
+    }}
+  >
+    <ul className="popover-list">
+      <li className="popover-item" onClick={handleeditModalShow}>
+        Edit
+      </li>
+      <li className="popover-item" onClick={handleClosePopover}>
+        View
+      </li>
+      <li className="popover-item" onClick={handleDeleteModalShow}>
+        Remove
+      </li>
+    </ul>
+  </div>
+)}
+      {deleteModal}
       <Modal
         show={show}
         onHide={handleClose}
@@ -475,20 +556,20 @@ function Carousel() {
                   <Col md={12}>
                     <Form.Group>
                       <Form.Label className="single-product-form-label">
-                        Product / Category
+                        Product
                       </Form.Label>
                       <div className="dropdown-wrapper">
                         <Form.Control
                           className="single-product-form custom-dropdown"
                           as="select"
-                          value={selectedCategory}
-                          onChange={handleCategoryChange}
-                          aria-label="Select category"
+                          value={selectedProduct}
+                          onChange={handleProductChange}
+                          aria-label="Select Product"
                         >
-                          <option value="">Select category</option>
-                          {categories.map((category) => (
-                            <option key={category._id} value={category._id}>
-                              {category.name}
+                          <option value="">Select Product</option>
+                          {products.map((products) => (
+                            <option key={products._id} value={products._id}>
+                              {products.name}
                             </option>
                           ))}
                         </Form.Control>
@@ -564,11 +645,6 @@ function Carousel() {
           </Row>
         </Modal.Footer>
       </Modal>
-
-
-
-
-
 
       <Modal
         show={showeditModal}
@@ -650,20 +726,20 @@ function Carousel() {
                   <Col md={12}>
                     <Form.Group>
                       <Form.Label className="single-product-form-label">
-                        Product / Category
+                        Product
                       </Form.Label>
                       <div className="dropdown-wrapper">
                         <Form.Control
                           className="single-product-form custom-dropdown"
                           as="select"
-                          value={selectedCategory}
-                          onChange={handleCategoryChange}
+                          value={selectedProduct}
+                          onChange={handleProductChange}
                           aria-label="Select category"
                         >
-                          <option value="">Select category</option>
-                          {categories.map((category) => (
-                            <option key={category._id} value={category._id}>
-                              {category.name}
+                          <option value="">Select Product</option>
+                          {products.map((products) => (
+                            <option key={products._id} value={products._id}>
+                              {products.name}
                             </option>
                           ))}
                         </Form.Control>
@@ -739,8 +815,6 @@ function Carousel() {
           </Row>
         </Modal.Footer>
       </Modal>
-
-
 
       <ToastContainer></ToastContainer>
     </div>

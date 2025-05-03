@@ -331,9 +331,13 @@ useEffect(() => {
                     <TableCell align="left" className="product-tabledata">
                       {row.name}
                     </TableCell>
-                    <TableCell align="left" className="product-tabledata">
-                      {row.brand}
-                    </TableCell>
+                     <TableCell align="left" className="product-tabledata">
+                                            {row.brand &&
+                                            typeof row.brand === "string" &&
+                                            row.brand.trim() !== ""
+                                              ? row.brand
+                                              : "-"}
+                                          </TableCell>
                     <TableCell align="left" className="product-tabledata">
                       {row.productCode}
                     </TableCell>

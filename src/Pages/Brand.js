@@ -225,6 +225,7 @@ function Brand() {
             <table className="brand-table">
               <thead>
                 <tr>
+                <th>SI NO</th>
                   <th>Logo</th>
                   <th>Brand Image</th>
                   <th>Brand</th>
@@ -234,8 +235,9 @@ function Brand() {
                 </tr>
               </thead>
               <tbody>
-                {filteredBrands.map((brand) => (
+                {filteredBrands.map((brand,index) => (
                   <tr key={brand._id}>
+                    <td>{index+1}</td>
                     <td>
                       <div className="brand-logo">
                         {brand.logo ? (

@@ -5,9 +5,10 @@ import { FaChevronDown } from "react-icons/fa";
 import {
   deleteProductapi,
   deleteProductImageApi,
+  getAllBrandsApi,
   getCategoriesApi,
   getproductByID,
-  getSubCategoriesApi,
+  getsubcategoryByID,
   updateproductapi,
 } from "../services/allApi";
 import { useNavigate, useParams } from "react-router-dom";
@@ -16,7 +17,6 @@ import { BASE_URL } from "../services/baseUrl";
 
 function SingleProduct() {
   const { id } = useParams();
-
   const [images, setImages] = useState([null, null, null, null]);
   const [color, setColor] = useState("");
   const [categories, setCategories] = useState([]);
@@ -35,10 +35,10 @@ function SingleProduct() {
   const [selectedProductType, setSelectedProductType] = useState("");
   const [wholesalePrice, setwholesalePrice] = useState("");
   const [price, setPrice] = useState("");
-  // const [offerPrice, setOfferPrice] = useState("");
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [soleMaterial, setSoleMaterial] = useState("");
   const [fit, setFit] = useState("");
+  const [brands, setBrands] = useState([]);
   const [sleevesType, setSleevesType] = useState("");
   const [length, setLength] = useState("");
   const [netWeight, setNetWeight] = useState("");
@@ -46,11 +46,11 @@ function SingleProduct() {
   const [material, setMaterial] = useState("");
   const [variants, setVariants] = useState([]);
   const [sizeStocks, setSizeStocks] = useState({});
-  const [editingIndex, setEditingIndex] = useState(null); 
+  const [editingIndex, setEditingIndex] = useState(null);
   const [productId, setProductId] = useState("");
   const adminID = localStorage.getItem("adminId");
-  const [previewImages, setPreviewImages] = useState([]); 
-
+  const [previewImages, setPreviewImages] = useState([]);
+  const [selectedBrand, setSelectedBrand] = useState("");
 
   useEffect(() => {
     const fetchproductData = async () => {
@@ -60,14 +60,14 @@ function SingleProduct() {
 
         if (response && response.data) {
           const product = response.data;
-          setProducts(product); 
+          setProducts(product);
           setImages(products.images || [null, null, null, null]);
           setProductName(product.name || "");
           setDescription(product.description || "");
           setBrand(product.brand || "");
           setStock(product.totalStock || "");
-          setSelectedProductType(product.productType || ""); // Automatically set Product Type
-          setVariants(product.variants || ""); // Automatically set Product Type
+          setSelectedProductType(product.productType || "");
+          setVariants(product.variants || "");
           setMaterial(product.features.material);
           setSleevesType(product.features.sleevesType || "");
           setSoleMaterial(product.features.soleMaterial || "");
@@ -76,7 +76,6 @@ function SingleProduct() {
           setOccasion(product.features.occasion || "");
           setNetWeight(product.features.netWeight || "");
           setProductId(product._id);
-
           setSelectedCategory(product.category._id);
           setSelectedSubCategory(product.subcategory._id);
         } else {
@@ -111,28 +110,59 @@ function SingleProduct() {
   useEffect(() => {
     fetchCategories();
   }, []);
-  const fetchsubCategories = async () => {
+  const fetchsubCategories = async (categoryId) => {
     try {
-      const response = await getSubCategoriesApi();
-      if (response.success && Array.isArray(response.data.subCategories)) {
-        setSubCategories(response.data.subCategories);
+      const response = await getsubcategoryByID(categoryId);
+      console.log("subcategories", response);
+
+      if (response.success && Array.isArray(response.data)) {
+        setSubCategories(response.data);
       } else {
         console.error(
           "Failed to fetch categories:",
           response.error || "Unknown error"
         );
+        setSubCategories([]);
       }
     } catch (error) {
       console.error("Error fetching categories:", error.message);
+      setSubCategories([]);
     }
   };
 
   useEffect(() => {
     fetchsubCategories();
   }, []);
+  const fetchBrands = async () => {
+    try {
+      const response = await getAllBrandsApi();
+      console.log("brands", response);
 
-  const handleCategoryChange = (e) => {
-    setSelectedCategory(e.target.value);
+      if (response.status === 200) {
+        setBrands(response.data);
+      } else {
+        console.error(
+          "Failed to fetch brands:",
+          response.error || "Unknown error"
+        );
+      }
+    } catch (error) {
+      console.error("Error fetching brands:", error.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchBrands();
+  }, []);
+  const handleCategoryChange = async (e) => {
+    const selectedCategoryId = e.target.value;
+
+    setSelectedCategory(selectedCategoryId);
+    if (selectedCategoryId) {
+      await fetchsubCategories(selectedCategoryId);
+    } else {
+      setSubCategories([]);
+    }
   };
   const handleSubCategoryChange = (e) => {
     setSelectedSubCategory(e.target.value);
@@ -158,30 +188,29 @@ function SingleProduct() {
   const handleImageChange = (index, event) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
-  
+
       // Update the files array
       const newImages = [...images];
       newImages[index] = file;
       setImages(newImages);
-  
-      // Update the preview URLs array
+
       const newPreviewImages = [...previewImages];
       newPreviewImages[index] = URL.createObjectURL(file);
       setPreviewImages(newPreviewImages);
     }
   };
-  
 
-  // Remove Uploaded Image
   const handleRemoveImage = (index) => {
     const newImages = [...images];
-    newImages[index] = null; // Remove the selected image
+    newImages[index] = null;
     setImages(newImages);
   };
 
   const handleDeleteModalOpen = () => setShowDeleteModal(true);
   const handleDeleteModalClose = () => setShowDeleteModal(false);
-
+  const handleBrandChange = (e) => {
+    setSelectedBrand(e.target.value);
+  };
   const handleDeleteConfirm = async () => {
     try {
       await deleteProductapi(id);
@@ -199,12 +228,12 @@ function SingleProduct() {
   };
 
   const openDeleteModal = (imageIndex) => {
-    const imageName = products?.images?.[imageIndex]; // Access image name by index
-    console.log("Selected image name:", imageName); // Debug log for the image name
+    const imageName = products?.images?.[imageIndex];
+    console.log("Selected image name:", imageName);
 
     if (imageName) {
-      setImageToDelete(imageName); // Set the selected image name
-      setIsModalOpen(true); // Open the delete confirmation modal
+      setImageToDelete(imageName);
+      setIsModalOpen(true);
     } else {
       console.error("Image not found at the specified index.");
     }
@@ -212,16 +241,14 @@ function SingleProduct() {
 
   const confirmDeleteImage = async () => {
     if (!imageToDelete) {
-      console.error("Image not found in product."); // Corrected message
+      console.error("Image not found in product.");
       setIsModalOpen(false);
       return;
     }
 
-    // Assuming `_id` is available in `products`
     const productId = products?._id;
 
     try {
-      // Make the API call to delete the image
       const response = await deleteProductImageApi(productId, {
         imageName: imageToDelete,
       });
@@ -229,7 +256,6 @@ function SingleProduct() {
       if (response.success) {
         toast.success("Image deleted successfully!");
 
-        // Update the product images in state after deletion
         setProducts((prevData) => ({
           ...prevData,
           images: prevData.images.filter((image) => image !== imageToDelete),
@@ -244,7 +270,7 @@ function SingleProduct() {
       toast.error("An error occurred while deleting the image.");
     } finally {
       setIsModalOpen(false);
-      setImageToDelete(null); // Clear the image name after deletion
+      setImageToDelete(null);
     }
   };
 
@@ -259,13 +285,11 @@ function SingleProduct() {
       return;
     }
 
-    // Map sizeStocks object into an array of sizes
     const formattedSizes = Object.entries(sizeStocks).map(([size, stock]) => ({
       size,
       stock: Number(stock),
     }));
 
-    // Calculate the total stock
     const totalStock = formattedSizes.reduce(
       (sum, { stock }) => sum + stock,
       0
@@ -281,31 +305,25 @@ function SingleProduct() {
     };
 
     if (editingIndex !== null) {
-      // Update an existing variant
       setVariants((prevVariants) =>
         prevVariants.map((variant, index) =>
           index === editingIndex ? newVariant : variant
         )
       );
-      setEditingIndex(null); // Reset the editing index
+      setEditingIndex(null);
     } else {
-      // Add a new variant
       setVariants((prevVariants) => [...prevVariants, newVariant]);
     }
 
-    // Clear fields
     clearFormFields();
   };
 
-  // Handles editing a variant
   const handleEditVariant = (index) => {
     const variant = variants[index];
     setColor(variant.color);
     setwholesalePrice(variant.wholesalePrice);
     setPrice(variant.price);
-    // setOfferPrice(variant.offerPrice);
 
-    // Populate sizeStocks and selectedSizes
     const sizeStockObj = {};
     variant.sizes.forEach(({ size, stock }) => {
       sizeStockObj[size] = stock;
@@ -313,16 +331,14 @@ function SingleProduct() {
     setSizeStocks(sizeStockObj);
     setSelectedSizes(variant.sizes.map(({ size }) => size));
 
-    setEditingIndex(index); // Set the index of the variant being edited
+    setEditingIndex(index);
   };
 
-  // Clears the form fields
   const clearFormFields = () => {
     setColor("");
     setColor("#ffffff");
     setwholesalePrice("");
     setPrice("");
-    // setOfferPrice("");
     setSizeStocks({});
     setSelectedSizes([]);
   };
@@ -330,13 +346,11 @@ function SingleProduct() {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate required fields
     if (!productName || !selectedCategory || !description) {
       toast.error("All fields are required");
       return;
     }
 
-    // Transform variants into the required format
     const formattedVariants = variants.map((variant) => ({
       color: variant.color,
       price: variant.normalPrice,
@@ -350,7 +364,6 @@ function SingleProduct() {
 
     const variantPayload = JSON.stringify(formattedVariants);
 
-    // Prepare the features object
     const features = {
       material: selectedProductType === "Dress" ? material || "" : undefined,
       soleMaterial:
@@ -363,12 +376,10 @@ function SingleProduct() {
       occasion: occasion || "",
     };
 
-    // Remove undefined keys from the features object
     const cleanedFeatures = Object.fromEntries(
       Object.entries(features).filter(([_, value]) => value !== undefined)
     );
 
-    // Initialize FormData
     const formData = new FormData();
     formData.append("name", productName.trim());
     formData.append("description", description.trim());
@@ -377,29 +388,22 @@ function SingleProduct() {
     formData.append("brand", brand.trim() || "");
     formData.append("wholesalePrice", wholesalePrice || "");
     formData.append("normalPrice", price || "");
-    // formData.append("offerPrice", offerPrice || "");
     formData.append("stock", stock || "");
     formData.append("sizes", selectedSizes || "");
-    // formData.append("coupon", coupon || "");
     formData.append("type", occasion || "");
-    // formData.append("colors", selectedcolors || "");
-    // formData.append("offer", offer || "");
     formData.append("productType", selectedProductType || "");
     formData.append("material", material || "");
     formData.append("owner", adminID || "");
     formData.append("fileType", "product");
     formData.append("userType", "admin");
-    formData.append("variants", variantPayload); 
-    formData.append("features", JSON.stringify(cleanedFeatures)); 
+    formData.append("variants", variantPayload);
+    formData.append("features", JSON.stringify(cleanedFeatures));
 
-    // Append all images
-    // Append all images to FormData
-images.forEach((image) => {
-  if (image) {
-    formData.append("images", image); // Append each file
-  }
-});
-
+    images.forEach((image) => {
+      if (image) {
+        formData.append("images", image);
+      }
+    });
 
     console.log("FormData being sent:");
     for (let [key, value] of formData.entries()) {
@@ -407,7 +411,6 @@ images.forEach((image) => {
     }
 
     try {
-      // Send API request
       const response = await updateproductapi(productId, formData);
 
       if (response.success) {
@@ -437,14 +440,13 @@ images.forEach((image) => {
       </Row>
       <Row>
         <Col md={3}>
-          {/* Main Vendor Image or Placeholder */}
           <div className="position-relative single-product-wrapper">
             {products?.images?.[0] || images[0] ? (
               <img
                 src={
                   products.images?.[0]
                     ? `${BASE_URL}/uploads/${products.images[0]}`
-                    : previewImages[0] || 'placeholder-image-path'
+                    : previewImages[0] || "placeholder-image-path"
                 }
                 alt="Vendor Logo"
                 className="single-product-img"
@@ -472,7 +474,6 @@ images.forEach((image) => {
             )}
           </div>
 
-          {/* Additional Images (Up to 4) */}
           <Row className="mt-3">
             {[...Array(4)].map((_, index) => (
               <Col key={index} xs={3} className="position-relative">
@@ -538,12 +539,12 @@ images.forEach((image) => {
                     Category
                   </Form.Label>
                   <div className="dropdown-wrapper">
-                    <Form.Control
+                    <Form.Select
                       className="single-product-form custom-dropdown"
-                      as="select"
                       value={selectedCategory}
                       onChange={handleCategoryChange}
                       aria-label="Select category"
+                      required
                     >
                       <option value="">Select category</option>
                       {categories.map((category) => (
@@ -551,7 +552,7 @@ images.forEach((image) => {
                           {category.name}
                         </option>
                       ))}
-                    </Form.Control>
+                    </Form.Select>
                     <FaChevronDown className="dropdown-icon" />
                   </div>
                 </Form.Group>
@@ -581,12 +582,12 @@ images.forEach((image) => {
                     Sub Category
                   </Form.Label>
                   <div className="dropdown-wrapper">
-                    <Form.Control
+                    <Form.Select
                       className="single-product-form custom-dropdown"
-                      as="select"
                       value={selectedSubCategory}
                       onChange={handleSubCategoryChange}
                       aria-label="Select subcategory"
+                      disabled={!selectedCategory}
                     >
                       <option value="">Select sub category</option>
                       {subcategories.map((subcategory) => (
@@ -594,7 +595,7 @@ images.forEach((image) => {
                           {subcategory.name}
                         </option>
                       ))}
-                    </Form.Control>
+                    </Form.Select>
                     <FaChevronDown className="dropdown-icon" />
                   </div>
                 </Form.Group>
@@ -604,13 +605,22 @@ images.forEach((image) => {
                   <Form.Label className="single-product-form-label">
                     Brand
                   </Form.Label>
-                  <Form.Control
-                    className="single-product-form"
-                    type="text"
-                    placeholder="Enter brand"
-                    value={brand}
-                    onChange={(e) => setBrand(e.target.value)}
-                  />
+                  <div className="dropdown-wrapper">
+                    <Form.Select
+                      className="single-product-form custom-dropdown"
+                      value={selectedBrand}
+                      onChange={handleBrandChange}
+                      aria-label="Select brand"
+                    >
+                      <option value="">Select Brand</option>
+                      {brands?.map?.((brand) => (
+                        <option key={brand._id} value={brand._id}>
+                          {brand.name}
+                        </option>
+                      )) || <option disabled>No brands available</option>}
+                    </Form.Select>
+                    <FaChevronDown className="dropdown-icon" />
+                  </div>
                 </Form.Group>
               </Col>
 
@@ -643,24 +653,22 @@ images.forEach((image) => {
                   Color
                 </Form.Label>
                 <div className="color-picker-container d-flex">
-                  {/* Color Name Input */}
                   <Form.Control
                     className="single-product-form w-auto"
                     type="text"
                     placeholder="Enter color name"
                     value={color}
-                    onChange={(e) => setColor(e.target.value)} // Update state on manual input
+                    onChange={(e) => setColor(e.target.value)}
                   />
 
-                  {/* Color Picker Input */}
                   <Form.Control
                     className="single-product-form mx-2"
                     type="color"
-                    value={color} // The color picker reflects the selected color's hex value
+                    value={color}
                     style={{ padding: "5px" }}
                     onChange={(e) => {
                       const selectedColor = e.target.value;
-                      setColor(selectedColor); // Update state with the hex value
+                      setColor(selectedColor);
                     }}
                   />
                 </div>
@@ -691,20 +699,6 @@ images.forEach((image) => {
                     placeholder="Rs."
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={4}>
-                <Form.Group>
-                  <Form.Label className="single-product-form-label">
-                    Offer Price
-                  </Form.Label>
-                  <Form.Control
-                    className="single-product-form"
-                    type="text"
-                    placeholder="Rs."
-                    // value={offerPrice}
-                    // onChange={(e) => setOfferPrice(e.target.value)}
                   />
                 </Form.Group>
               </Col>
@@ -754,7 +748,6 @@ images.forEach((image) => {
             <div className="mt-4">
               <p className="single-product-form-label">Variants</p>
               {variants.map((variant, index) => {
-                // Calculate total stock across all sizes
                 const totalStock = variant.sizes.reduce(
                   (sum, { stock }) => sum + stock,
                   0
@@ -770,7 +763,6 @@ images.forEach((image) => {
                       borderRadius: "10px",
                     }}
                   >
-                    {/* Edit Icon */}
                     <span
                       className="position-absolute"
                       style={{
@@ -892,10 +884,8 @@ images.forEach((image) => {
 
             <Row className="mb-3">
               <Col md={12}>
-                {/* Features Heading */}
                 <h3 className="features-heading">Features</h3>
 
-                {/* Conditional Form Fields */}
                 <Row className="mb-4">
                   {selectedProductType === "Dress" && (
                     <>
@@ -948,7 +938,6 @@ images.forEach((image) => {
                   )}
                 </Row>
 
-                {/* Fields Shown for Both */}
                 <Row className="mb-4">
                   <Col md={4}>
                     <Form.Group>
@@ -1012,8 +1001,6 @@ images.forEach((image) => {
                 </Row>
               </Col>
             </Row>
-
-       
           </Form>
           <button
             className="w-25 category-model-cancel"

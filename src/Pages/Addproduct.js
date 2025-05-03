@@ -136,7 +136,7 @@ function Addproduct() {
   const handleSubCategoryChange = (e) => {
     setSelectedSubCategory(e.target.value);
   };
-  
+
   const handleBrandChange = (e) => {
     setSelectedBrand(e.target.value);
   };
@@ -167,7 +167,7 @@ function Addproduct() {
     formData.append("owner", adminID || "");
     formData.append("fileType", "product");
     formData.append("userType", "admin");
-    
+
     // Append main product images (first variant's images)
     if (variants[0]?.images) {
       variants[0].images.forEach((image, index) => {
@@ -180,10 +180,12 @@ function Addproduct() {
     // Prepare features
     const features = {
       material: selectedProductType === "Dress" ? material || "" : undefined,
-      soleMaterial: selectedProductType === "Chappal" ? soleMaterial || "" : undefined,
+      soleMaterial:
+        selectedProductType === "Chappal" ? soleMaterial || "" : undefined,
       netWeight: netWeight || "",
       fit: fit || "",
-      sleevesType: selectedProductType === "Dress" ? sleevesType || "" : undefined,
+      sleevesType:
+        selectedProductType === "Dress" ? sleevesType || "" : undefined,
       length: length || "",
       occasion: occasion || "",
     };
@@ -191,7 +193,7 @@ function Addproduct() {
     const cleanedFeatures = Object.fromEntries(
       Object.entries(features).filter(([_, value]) => value !== undefined)
     );
-    
+
     formData.append("features", JSON.stringify(cleanedFeatures));
 
     // Format and append variants data
@@ -200,7 +202,9 @@ function Addproduct() {
       const { images, ...variantData } = variant;
       return {
         ...variantData,
-        imageIndexes: Array(variant.images.length).fill().map((_, i) => `${index}_${i}`),
+        imageIndexes: Array(variant.images.length)
+          .fill()
+          .map((_, i) => `${index}_${i}`),
       };
     });
 
@@ -227,6 +231,26 @@ function Addproduct() {
 
       if (response.success) {
         toast.success("Product created successfully");
+        setProductName("");
+        setDescription("");
+        setSelectedCategory("");
+        setSelectedSubCategory("");
+        setSelectedBrand("");
+        setIsReturnable(false);
+        setCODAvailable(false);
+        setReturnWithinDays("");
+        setSelectedProductType("");
+        setNetWeight("");
+        setFit("");
+        setMaterial("");
+        setSoleMaterial("");
+        setSleevesType("");
+        setLength("");
+        setOccasion("");
+        setVariants([
+          { size: "", color: "", price: "", stock: "", images: [] },
+        ]);
+
         // Reset form or redirect
       } else {
         toast.error(response.error || "Failed to create product");
@@ -291,7 +315,7 @@ function Addproduct() {
     );
 
     // Filter out null images
-    const filteredImages = variantImages.filter(img => img !== null);
+    const filteredImages = variantImages.filter((img) => img !== null);
 
     const newVariant = {
       color,
@@ -313,7 +337,7 @@ function Addproduct() {
     setSizeStocks({});
     setSelectedSizes([]);
     setVariantImages([null, null, null, null]);
-    
+
     toast.success("Variant added successfully");
   };
 
@@ -386,7 +410,9 @@ function Addproduct() {
                       type="file"
                       accept="image/*"
                       className="image-input"
-                      onChange={(event) => handleVariantImageChange(index, event)}
+                      onChange={(event) =>
+                        handleVariantImageChange(index, event)
+                      }
                     />
                   </div>
                 </Col>
@@ -645,7 +671,9 @@ function Addproduct() {
             <div className="mt-4">
               <h4 className="mb-3">Added Variants ({variants.length})</h4>
               {variants.length === 0 && (
-                <p className="text-muted">No variants added yet. Add at least one variant.</p>
+                <p className="text-muted">
+                  No variants added yet. Add at least one variant.
+                </p>
               )}
               {variants.map((variant, index) => (
                 <div
@@ -709,7 +737,9 @@ function Addproduct() {
                         <span>Sizes:</span>{" "}
                         <span style={{ fontWeight: "400", color: "#333333" }}>
                           {variant.sizes
-                            .map(({ size, stock }) => `${size} (Stock: ${stock})`)
+                            .map(
+                              ({ size, stock }) => `${size} (Stock: ${stock})`
+                            )
                             .join(", ")}
                         </span>
                       </p>
@@ -904,9 +934,7 @@ function Addproduct() {
                       />
                     </Form.Group>
                   </Col>
-
-
-                  </Row>
+                </Row>
 
                 <Row className="mb-4">
                   <Col md={4}>
@@ -980,10 +1008,7 @@ function Addproduct() {
               </Col>
             </Row>
 
-            <button
-              type="submit"
-              className="w-25 category-model-cancel"
-            >
+            <button type="submit" className="w-25 category-model-cancel">
               Add
             </button>
           </Col>

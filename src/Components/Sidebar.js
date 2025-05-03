@@ -42,6 +42,11 @@ function Sidebar({ isOpen }) {
                 <FaBox className="icon" /> Manage homepage
               </li>
             </Link>
+            <Link to="/coin" style={{ textDecoration: "none" }}>
+              <li className={isActive("/coin") ? "active" : ""}>
+                <FaBox className="icon" /> Coin
+              </li>
+            </Link>
             <Link to="/usermanage" style={{ textDecoration: "none" }}>
               <li className={isActive("/usermanage") ? "active" : ""}>
                 <FaTags className="icon" /> Manage Users

@@ -25,14 +25,17 @@ function Products() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-  
+
   // State for modals
   const [showModal, setShowModal] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [show, setShow] = useState(false);
-  
+
+  // State to track if filters are applied
+  const [filtersApplied, setFiltersApplied] = useState(false);
+
   // Filter states
-  const [activeFilter, setActiveFilter] = useState(null);
+  const [activeFilter, setActiveFilter] = useState("brand");
   const [filters, setFilters] = useState({
     brand: [],
     minPrice: 0,
@@ -41,23 +44,23 @@ function Products() {
     size: [],
     product_type: [],
   });
-  
+
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   // Brand list from API
   const [brandsList, setBrandsList] = useState([]);
-  
+
   // Pagination states
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 10; // Show 10 items per page
 
   // Filter options
   const stocks = ["In Stock", "Out of Stock"];
   const sizes = ["S", "M", "L", "XL"];
   const product_type = ["Dress", "Chappal", "Shoes", "T-Shirt"];
-  
+
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
 
@@ -75,8 +78,7 @@ function Products() {
   const fetchBrands = async () => {
     try {
       const response = await getAllBrandsApi();
-      console.log(response);
-      
+
       if (response && response.data) {
         setBrandsList(response.data || []);
       }
@@ -161,7 +163,10 @@ function Products() {
               name="minPrice"
               value={filters.minPrice}
               onChange={(e) =>
-                setFilters({ ...filters, minPrice: parseInt(e.target.value) || 0 })
+                setFilters({
+                  ...filters,
+                  minPrice: parseInt(e.target.value) || 0,
+                })
               }
             />
           </>
@@ -175,7 +180,10 @@ function Products() {
               name="maxPrice"
               value={filters.maxPrice}
               onChange={(e) =>
-                setFilters({ ...filters, maxPrice: parseInt(e.target.value) || 1000 })
+                setFilters({
+                  ...filters,
+                  maxPrice: parseInt(e.target.value) || 1000,
+                })
               }
             />
           </>
@@ -204,58 +212,89 @@ function Products() {
 
   // Apply filters to the products
   const applyFilters = (products) => {
-    return products.filter(product => {
+    // If no filters are applied and no search query, return all products
+    if (!filtersApplied && !searchQuery) {
+      return products;
+    }
+
+    return products.filter((product) => {
       // Filter by brand
       if (filters.brand.length > 0 && !filters.brand.includes(product.brand)) {
         return false;
       }
-      
+
       // Filter by product type
-      if (filters.product_type.length > 0 && !filters.product_type.includes(product.productType)) {
+      if (
+        filters.product_type.length > 0 &&
+        !filters.product_type.includes(product.productType)
+      ) {
         return false;
       }
-      
+
       // Filter by stock
       if (filters.stock.length > 0) {
-        const stockStatus = product.totalStock > 0 ? "In Stock" : "Out of Stock";
+        const stockStatus =
+          product.totalStock > 0 ? "In Stock" : "Out of Stock";
         if (!filters.stock.includes(stockStatus)) {
           return false;
         }
       }
-      
+
       // Filter by size
       if (filters.size.length > 0) {
-        const productSizes = product.variants.flatMap(v => v.sizes || []);
-        if (!filters.size.some(size => productSizes.includes(size))) {
+        const productSizes = product.variants
+          ? product.variants.flatMap((v) => v.sizes || [])
+          : [];
+        if (!filters.size.some((size) => productSizes.includes(size))) {
           return false;
         }
       }
-      
-      // Filter by price range
-      let hasPriceInRange = false;
-      for (const variant of product.variants) {
-        if (variant.price >= filters.minPrice && variant.price <= filters.maxPrice) {
-          hasPriceInRange = true;
-          break;
+
+      // Filter by price range - only apply if min or max has been changed from defaults
+      if (
+        (filters.minPrice > 0 || filters.maxPrice < 1000) &&
+        product.variants &&
+        product.variants.length > 0
+      ) {
+        let hasPriceInRange = false;
+        for (const variant of product.variants) {
+          if (
+            variant.price >= filters.minPrice &&
+            variant.price <= filters.maxPrice
+          ) {
+            hasPriceInRange = true;
+            break;
+          }
+        }
+        if (!hasPriceInRange) {
+          return false;
         }
       }
-      if (!hasPriceInRange) {
-        return false;
-      }
-      
+
       // Filter by search query
       if (searchQuery) {
         const searchLower = searchQuery.toLowerCase();
         return (
           product.name.toLowerCase().includes(searchLower) ||
-          product.brand.toLowerCase().includes(searchLower) ||
-          product.productCode.toLowerCase().includes(searchLower) ||
-          product.supplierName.toLowerCase().includes(searchLower)
+          (product.brand &&
+            product.brand.toLowerCase().includes(searchLower)) ||
+          (product.productCode &&
+            product.productCode.toLowerCase().includes(searchLower)) ||
+          (product.supplierName &&
+            product.supplierName.toLowerCase().includes(searchLower))
         );
       }
-      
+
       return true;
     });
+  };
+
+  // Get the base price for a product (first variant or fallback)
+  const getBasePrice = (product) => {
+    if (product.variants && product.variants.length > 0) {
+      return product.variants[0].price;
+    }
+    return "-";
   };
 
   // Fetch products from API
@@ -264,10 +303,11 @@ function Products() {
     setError(null);
     try {
       const response = await getallProducts();
-      console.log(response);
+      console.log("products", response);
 
       if (response && response.data) {
-        setRows(response.data.products);
+        console.log("Received products:", response.data.products.length);
+        setRows(response.data.products.reverse());
         setTotalPages(Math.ceil(response.data.products.length / itemsPerPage));
       }
     } catch (err) {
@@ -281,9 +321,10 @@ function Products() {
   // Handle page change for pagination
   const handlePageChange = (event, value) => {
     setPage(value);
+    // Scroll to top of the page when changing pages
+    window.scrollTo(0, 0);
   };
 
-  // Get paginated data
   const getPaginatedData = (data) => {
     const startIndex = (page - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
@@ -292,7 +333,30 @@ function Products() {
 
   // Apply filters and handle search
   const handleFiltersApply = () => {
-    // All filtering is done in the render now
+    // Check if any filters are actually set
+    const isFilterSet =
+      filters.brand.length > 0 ||
+      filters.product_type.length > 0 ||
+      filters.stock.length > 0 ||
+      filters.size.length > 0 ||
+      filters.minPrice > 0 ||
+      filters.maxPrice < 1000;
+
+    setFiltersApplied(isFilterSet);
+    handleClose();
+  };
+
+  // Reset filters
+  const handleResetFilters = () => {
+    setFilters({
+      brand: [],
+      minPrice: 0,
+      maxPrice: 1000,
+      stock: [],
+      size: [],
+      product_type: [],
+    });
+    setFiltersApplied(false);
     handleClose();
   };
 
@@ -307,7 +371,6 @@ function Products() {
     fetchBrands();
   }, []);
 
-  // Recalculate total pages when filters change
   useEffect(() => {
     if (rows.length > 0) {
       const filteredData = applyFilters(rows);
@@ -316,10 +379,10 @@ function Products() {
         setPage(1);
       }
     }
-  }, [filters, searchQuery, rows]);
+  }, [filters, searchQuery, rows, filtersApplied]);
 
   const handlenavigation = () => {
-    navigate('/addproduct');
+    navigate("/addproduct");
   };
 
   const handlenavigatesingleproduct = (id) => {
@@ -336,9 +399,16 @@ function Products() {
     setSelectedId(null);
   };
 
-  // Filter and paginate the data
+  // Calculate filtered and paginated data
   const filteredData = rows.length > 0 ? applyFilters(rows) : [];
   const paginatedData = getPaginatedData(filteredData);
+
+  // Debug information
+  console.log("Total products:", rows.length);
+  console.log("Filtered products:", filteredData.length);
+  console.log("Paginated products:", paginatedData.length);
+  console.log("Current page:", page, "of", totalPages);
+  console.log("Filters applied:", filtersApplied);
 
   return (
     <div className="Products">
@@ -362,7 +432,7 @@ function Products() {
         </Col>
         <Col md={1}>
           <button onClick={handleShow} className="w-100 add-product-dd">
-            Filter
+            Filter {filtersApplied && <span className="ms-1">•</span>}
           </button>
         </Col>
         <Col md={3}>
@@ -381,9 +451,7 @@ function Products() {
           </div>
         ) : error ? (
           <Toast>
-            <Toast.Body className="text-danger">
-              {error}
-            </Toast.Body>
+            <Toast.Body className="text-danger">{error}</Toast.Body>
           </Toast>
         ) : (
           <TableContainer component={Paper} className="product mt-4">
@@ -426,44 +494,54 @@ function Products() {
                       }}
                       onClick={() => handlenavigatesingleproduct(row._id)}
                     >
-                      <TableCell component="th" scope="row" className="product-tabledata">
+                      <TableCell
+                        component="th"
+                        scope="row"
+                        className="product-tabledata"
+                      >
                         {(page - 1) * itemsPerPage + index + 1}
                       </TableCell>
                       <TableCell component="th" scope="row">
                         <img
-                          src={`${BASE_URL}/uploads/${row.images[0]}`}
+                          src={
+                            row.images && row.images.length > 0
+                              ? `${BASE_URL}/uploads/${row.images[0]}`
+                              : "/placeholder.jpg"
+                          }
                           alt={row.name}
                           style={{
                             width: "40px",
                             height: "40px",
                             borderRadius: "8px",
                           }}
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "/placeholder.jpg";
+                          }}
                         />
                       </TableCell>
                       <TableCell align="left" className="product-tabledata">
-                        {row.supplierName}
+                        {row.supplierName || "-"}
                       </TableCell>
                       <TableCell align="left" className="product-tabledata">
-                        {row.name}
+                        {row.name || "-"}
                       </TableCell>
                       <TableCell align="left" className="product-tabledata">
-                        {row.brand}
+                        {row.brand &&
+                        typeof row.brand === "string" &&
+                        row.brand.trim() !== ""
+                          ? row.brand
+                          : "-"}
+                      </TableCell>
+
+                      <TableCell align="left" className="product-tabledata">
+                        {row.productCode || "-"}
                       </TableCell>
                       <TableCell align="left" className="product-tabledata">
-                        {row.productCode}
+                        {row.totalStock || 0}
                       </TableCell>
                       <TableCell align="left" className="product-tabledata">
-                        {row.totalStock}
-                      </TableCell>
-                      <TableCell align="left" className="product-tabledata">
-                        <ul style={{ listStyleType: "none", padding: 0 }}>
-                          {row.variants.map((variant) => (
-                            <li key={variant._id} style={{ marginBottom: "5px" }}>
-                              <strong>Color:</strong> {variant.color} <br />
-                              <strong>Price:</strong> ${variant.price} <br />
-                            </li>
-                          ))}
-                        </ul>
+                        ${getBasePrice(row)}
                       </TableCell>
                       <TableCell
                         onClick={(event) => {
@@ -479,7 +557,11 @@ function Products() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={9} align="center" className="product-tabledata">
+                    <TableCell
+                      colSpan={9}
+                      align="center"
+                      className="product-tabledata"
+                    >
                       No products found
                     </TableCell>
                   </TableRow>
@@ -490,13 +572,19 @@ function Products() {
         )}
       </div>
       <Row className="mt-4 pagination-row">
-        <Pagination 
-          className="pagination" 
-          count={totalPages} 
-          page={page}
-          onChange={handlePageChange}
-          variant="outlined" 
-        />
+        <div className="d-flex justify-content-between align-items-center w-100">
+          <div>
+            Showing {paginatedData.length} of {filteredData.length} products
+          </div>
+          <Pagination
+            className="pagination"
+            count={totalPages}
+            page={page}
+            onChange={handlePageChange}
+            variant="outlined"
+            color="primary"
+          />
+        </div>
       </Row>
 
       {/* Actions Modal */}
@@ -547,9 +635,9 @@ function Products() {
                   <p
                     className="single-product-form-label"
                     onClick={() => setActiveFilter("brand")}
-                    style={{ 
+                    style={{
                       cursor: "pointer",
-                      fontWeight: activeFilter === "brand" ? "bold" : "normal"
+                      fontWeight: activeFilter === "brand" ? "bold" : "normal",
                     }}
                   >
                     Brand
@@ -559,9 +647,10 @@ function Products() {
                   <p
                     className="single-product-form-label"
                     onClick={() => setActiveFilter("minPrice")}
-                    style={{ 
+                    style={{
                       cursor: "pointer",
-                      fontWeight: activeFilter === "minPrice" ? "bold" : "normal"
+                      fontWeight:
+                        activeFilter === "minPrice" ? "bold" : "normal",
                     }}
                   >
                     Min Price
@@ -571,9 +660,10 @@ function Products() {
                   <p
                     className="single-product-form-label"
                     onClick={() => setActiveFilter("maxPrice")}
-                    style={{ 
+                    style={{
                       cursor: "pointer",
-                      fontWeight: activeFilter === "maxPrice" ? "bold" : "normal"
+                      fontWeight:
+                        activeFilter === "maxPrice" ? "bold" : "normal",
                     }}
                   >
                     Max Price
@@ -583,9 +673,9 @@ function Products() {
                   <p
                     className="single-product-form-label"
                     onClick={() => setActiveFilter("stock")}
-                    style={{ 
+                    style={{
                       cursor: "pointer",
-                      fontWeight: activeFilter === "stock" ? "bold" : "normal"
+                      fontWeight: activeFilter === "stock" ? "bold" : "normal",
                     }}
                   >
                     Stock
@@ -595,9 +685,9 @@ function Products() {
                   <p
                     className="single-product-form-label"
                     onClick={() => setActiveFilter("size")}
-                    style={{ 
+                    style={{
                       cursor: "pointer",
-                      fontWeight: activeFilter === "size" ? "bold" : "normal"
+                      fontWeight: activeFilter === "size" ? "bold" : "normal",
                     }}
                   >
                     Size
@@ -607,9 +697,10 @@ function Products() {
                   <p
                     className="single-product-form-label"
                     onClick={() => setActiveFilter("product_type")}
-                    style={{ 
+                    style={{
                       cursor: "pointer",
-                      fontWeight: activeFilter === "product_type" ? "bold" : "normal"
+                      fontWeight:
+                        activeFilter === "product_type" ? "bold" : "normal",
                     }}
                   >
                     Product Type
@@ -625,24 +716,16 @@ function Products() {
           </Row>
         </Modal.Body>
         <Modal.Footer>
-          <button 
-            className="w-25 category-model-cancel" 
-            onClick={() => {
-              // Reset filters
-              setFilters({
-                brand: [],
-                minPrice: 0,
-                maxPrice: 1000,
-                stock: [],
-                size: [],
-                product_type: [],
-              });
-              handleClose();
-            }}
+          <button
+            className="w-25 category-model-cancel"
+            onClick={handleResetFilters}
           >
             Reset
           </button>
-          <button className="w-25 category-model-add" onClick={handleFiltersApply}>
+          <button
+            className="w-25 category-model-add"
+            onClick={handleFiltersApply}
+          >
             Apply Filters
           </button>
         </Modal.Footer>

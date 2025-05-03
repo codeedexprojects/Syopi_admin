@@ -14,6 +14,7 @@ import Leaderboard from '../Components/Leaderboard';
 import RecTransaction from '../Components/RecTransaction';
 import OrderStatistics from '../Components/OrderStatistics';
 import { getDashboardContentApi } from '../services/allApi';
+import { Link } from 'react-router-dom';
 
 function Home() {
   const [dashboardData, setDashboardData] = useState(null);
@@ -23,6 +24,8 @@ function Home() {
   }, []);
   const fetchDashboardData = async () => {
     const result = await getDashboardContentApi();
+    console.log("dashboard",result);
+    
     if (result.success) {
       setDashboardData(result.data); 
     } else {
@@ -36,26 +39,31 @@ function Home() {
       count: dashboardData?.totalProducts || 0,
       icon: <FaTshirt style={{ color: '#495DD9' }} />,
       color: '#495DD9',
+      path: '/products',
     },
     {
       title: 'Current Orders',
       count: dashboardData?.currentOrders || 0,
       icon: <FaClipboardList style={{ color: '#66BB6A' }} />,
       color: '#66BB6A',
+      path: '/orders',
     },
     {
       title: 'Out of Stock',
       count: dashboardData?.outOfStock || 0,
       icon: <MdRemoveShoppingCart style={{ color: '#FB544B' }} />,
       color: '#FB544B',
+      path: '/products',
     },
     {
       title: 'Limited Stock',
       count: dashboardData?.limitedStock || 0,
       icon: <IoMdCart style={{ color: '#FFA425' }} />,
       color: '#FFA425',
+      path: '/products',
     },
   ];
+  
 
   return (
     <div className="p-4 dashboard-container">
@@ -73,7 +81,9 @@ function Home() {
                 </div>
                 <div className="dashboard-card-footer">
                   <Button variant="link" className="view-btn p-0 dashboard-card-view">
-                    View <span className="arrow-icon mt-1 ms-2"><PiGreaterThanBold /></span>
+                  <Link to={card.path} className="view-btn p-0 dashboard-card-view">
+  View <span className="arrow-icon mt-1 ms-2"><PiGreaterThanBold /></span>
+</Link>
                   </Button>
                 </div>
               </Card.Body>
@@ -83,7 +93,7 @@ function Home() {
       </Row>
       <Row className="mt-5">
         <Col md={7}>
-          <OrderGraph />
+          <OrderGraph dashboardData={dashboardData} />
         </Col>
         <Col md={5}>
           <Storevisitors />

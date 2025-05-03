@@ -1,72 +1,141 @@
-import * as React from 'react';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
-import img from '../images/e222d69f48d84cb3db37ef787f201fdc.png';
-import  './dproduct.css'
-import { Col, Row } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
-function createData(name, calories, fat, carbs, protein) {
-  return { name, calories, fat, carbs, protein };
-}
-
-const rows = [
-  createData('Frozen', 159, 6.0, 24, 4.0),
-  createData('Ice cream', 237, 9.0, 37, 4.3),
-  createData('Eclair', 262, 16.0, 24, 6.0),
-  createData('Cupcake', 305, 3.7, 67, 4.3),
-];
-
+import * as React from "react";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import Paper from "@mui/material/Paper";
+import "./dproduct.css";
+import { Col, Row } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { getallProducts } from "../services/allApi";
+import { useEffect } from "react";
+import { BASE_URL } from "../services/baseUrl";
 
 export default function Dproduct() {
   const navigate = useNavigate();
+  const [products, setProducts] = useState([]);
+  const fetchProducts = async () => {
+    try {
+      const response = await getallProducts();
+      console.log("products", response);
 
-const productnavigate =()=>{
-  navigate("/products", { replace: true });
+      if (response && response.data) {
+        const products = response.data.products.reverse();
+        const latest = products.slice(0, 4);
+        console.log("Latest 6 products:", latest.length);
+        setProducts(latest);
+      }
+    } catch (err) {
+      console.error("Error fetching product data:", err);
+    }
+  };
 
-}
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+  const productnavigate = () => {
+    navigate("/products", { replace: true });
+  };
   return (
-   <div>
-    <Row>
-        <Col className='text-start d-product-heading'><p>Products</p></Col>
-        <Col className='text-end d-product-subheading' onClick={productnavigate}><p>View all</p></Col>
+    <div>
+      <Row>
+        <Col className="text-start d-product-heading">
+          <p>Products</p>
+        </Col>
+        <Col
+          className="text-end d-product-subheading"
+          onClick={productnavigate}
+        >
+          <p>View all</p>
+        </Col>
+      </Row>
+      <TableContainer component={Paper} className="Dproduct">
+        <Table aria-label="simple table">
+          <TableHead>
+            <TableRow>
+              <TableCell className="product-tablehead">SI No</TableCell>
+              <TableCell className="product-tablehead">Product</TableCell>
 
-    </Row>
-        <TableContainer component={Paper} className='Dproduct'>
-          <Table  aria-label="simple table">
-            <TableHead>
-              <TableRow>
-                <TableCell className='dproduct-tablehead'>Product</TableCell>
-                <TableCell className='dproduct-tablehead' align="left">Name</TableCell>
-                <TableCell className='dproduct-tablehead' align="left">Code</TableCell>
-                <TableCell className='dproduct-tablehead' align="left">Stock</TableCell>
-                <TableCell className='dproduct-tablehead' align="left">Price</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {rows.map((row) => (
-                <TableRow
-                  key={row.name}
-                  sx={{
-                    '&:last-child td, &:last-child th': { border: 0 },
-                  }}
+              <TableCell className="product-tablehead" align="left">
+                Brand
+              </TableCell>
+              <TableCell className="product-tablehead" align="left">
+                Code
+              </TableCell>
+              <TableCell className="product-tablehead" align="left">
+                Stock
+              </TableCell>
+              <TableCell className="product-tablehead" align="left">
+                Price
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {products.map((row, index) => (
+              <TableRow
+                key={row._id}
+                style={{ cursor: "pointer" }}
+                sx={{
+                  "&:last-child td, &:last-child th": { border: 0 },
+                }}
+              >
+                <TableCell
+                  component="th"
+                  scope="row"
+                  className="product-tabledata"
                 >
-                  <TableCell component="th" scope="row" >
-                    <img src={img} alt="Product" style={{ width: '40px', height: '40px',borderRadius:'8px' }} />
-                  </TableCell>
-                  <TableCell align="left" className='dproduct-tabledata'>{row.calories}</TableCell>
-                  <TableCell align="left" className='dproduct-tabledata'>{row.fat}</TableCell>
-                  <TableCell align="left" className='dproduct-tabledata'>{row.carbs}</TableCell>
-                  <TableCell align="left" className='dproduct-tabledata'>{row.protein}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-   </div>
+                  {index + 1}
+                </TableCell>
+ 
+                <TableCell component="th" scope="row">
+                  <img
+                    src={
+                      row.images && row.images.length > 0
+                        ? `${BASE_URL}/uploads/${row.images[0]}`
+                        : "/placeholder.jpg"
+                    }
+                    alt={row.name}
+                    style={{
+                      width: "40px",
+                      height: "40px",
+                      borderRadius: "8px",
+                    }}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "/placeholder.jpg";
+                    }}
+                  />
+                  <br />
+                  {row.name || "-"}
+                </TableCell>
+
+                <TableCell align="left" className="product-tabledata">
+                  {row.brand &&
+                  typeof row.brand === "string" &&
+                  row.brand.trim() !== ""
+                    ? row.brand
+                    : "-"}
+                </TableCell>
+
+                <TableCell align="left" className="product-tabledata">
+                  {row.productCode || "-"}
+                </TableCell>
+                <TableCell align="left" className="product-tabledata">
+                  {row.totalStock || 0}
+                </TableCell>
+                <TableCell align="left" className="product-tabledata">
+                  {Array.isArray(row.variants) && row.variants.length > 0
+                    ? row.variants[0].price ?? "-"
+                    : "-"}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </div>
   );
 }

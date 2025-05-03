@@ -1,26 +1,66 @@
-import React from 'react';
-import { Card, Button, Row, Col } from 'react-bootstrap';
-import { FaClipboardList, FaTshirt } from 'react-icons/fa';
-import { MdRemoveShoppingCart } from 'react-icons/md';
-import { IoMdCart } from 'react-icons/io';
-import '../../Pages/Home.css';
-import { PiGreaterThanBold } from 'react-icons/pi';
-import Storevisitors from '../../Components/Storevisitors';
-import OrderStatistics from '../../Components/OrderStatistics';
-import Leaderboard from '../../Components/Leaderboard';
-import RecTransaction from '../../Components/RecTransaction';
-import Dproducts from '../../Components/Dproducts'
-import OrderGraph from '../../Components/OrderGraph'
-import Dorders from '../../Components/Dorders'
-import Weekly from '../../Components/Weekly'
-
+import React from "react";
+import { Card, Button, Row, Col } from "react-bootstrap";
+import { FaClipboardList, FaTshirt } from "react-icons/fa";
+import { MdRemoveShoppingCart } from "react-icons/md";
+import { IoMdCart } from "react-icons/io";
+import "../../Pages/Home.css";
+import { PiGreaterThanBold } from "react-icons/pi";
+import Storevisitors from "../../Components/Storevisitors";
+import OrderStatistics from "../../Components/OrderStatistics";
+import Leaderboard from "../../Components/Leaderboard";
+import RecTransaction from "../../Components/RecTransaction";
+import VOrderGraph from "./VOrderGraph";
+import Dorders from "../../Components/Dorders";
+import Weekly from "../../Components/Weekly";
+import { getVendorDashboardApi } from "../../services/allApi";
+import { useState } from "react";
+import { useEffect } from "react";
+import { Link } from "react-router-dom";
+import VDProduct from "./VDProduct";
 
 function VendorDashboard() {
+  const [dashboardData, setDashboardData] = useState(null);
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+  const fetchDashboardData = async () => {
+    const result = await getVendorDashboardApi();
+    console.log("dashboard", result);
+    if (result.success) {
+      setDashboardData(result.data);
+    } else {
+      console.error(result.error);
+    }
+  };
   const cardsData = [
-    { title: 'All Product', count: 120, icon: <FaTshirt style={{ color: '#495DD9' }} />, color: '#495DD9' },
-    { title: 'Current Orders', count: 45, icon: <FaClipboardList style={{ color: '#66BB6A' }} />, color: '#66BB6A' },
-    { title: 'Out of Stock', count: 15, icon: <MdRemoveShoppingCart style={{ color: '#FB544B' }} />, color: '#FB544B' },
-    { title: 'Limited Stock', count: 8, icon: <IoMdCart style={{ color: '#FFA425' }} />, color: '#FFA425' },
+    {
+      title: "All Product",
+      count: dashboardData?.totalProducts || 0,
+      icon: <FaTshirt style={{ color: "#495DD9" }} />,
+      color: "#495DD9",
+      path: "/vendorproducts",
+    },
+    {
+      title: "Current Orders",
+      count: dashboardData?.currentOrders || 0,
+      icon: <FaClipboardList style={{ color: "#66BB6A" }} />,
+      color: "#66BB6A",
+      path: "/vendororders",
+    },
+    {
+      title: "Out of Stock",
+      count: dashboardData?.outOfStock || 0,
+      icon: <MdRemoveShoppingCart style={{ color: "#FB544B" }} />,
+      color: "#FB544B",
+      path: "/vendorproducts",
+    },
+    {
+      title: "Limited Stock",
+      count: dashboardData?.limitedStock || 0,
+      icon: <IoMdCart style={{ color: "#FFA425" }} />,
+      color: "#FFA425",
+      path: "/vendorproducts",
+    },
   ];
 
   return (
@@ -31,15 +71,31 @@ function VendorDashboard() {
             <Card className="dashboard-card shadow">
               <Card.Body>
                 <div className="dashboard-card-header">
-                  <Card.Title className="mb-4 dashboard-card-title">{card.title}</Card.Title>
+                  <Card.Title className="mb-4 dashboard-card-title">
+                    {card.title}
+                  </Card.Title>
                 </div>
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <h2 className="dashboard-card-number">{card.count}</h2>
                   <div className="dashboard-card-icon">{card.icon}</div>
                 </div>
                 <div className="dashboard-card-footer">
-                  <Button variant="link" className="view-btn p-0 dashboard-card-view">
-                    View <span className="arrow-icon mt-1 ms-2"><PiGreaterThanBold /></span>
+                  <Button
+                    variant="link"
+                    className="view-btn p-0 dashboard-card-view"
+                  >
+                    <Link
+                      to={card.path}
+                      className="view-btn p-0 dashboard-card-view"
+                    >
+                      View{" "}
+                      <span className="arrow-icon mt-1 ms-2">
+                        <PiGreaterThanBold />
+                      </span>
+                    </Link>
+                    <span className="arrow-icon mt-1 ms-2">
+                      <PiGreaterThanBold />
+                    </span>
                   </Button>
                 </div>
               </Card.Body>
@@ -49,40 +105,37 @@ function VendorDashboard() {
       </Row>
       <Row className="mt-5">
         <Col md={7}>
-          <OrderGraph />
+          <VOrderGraph vendordashboardData={dashboardData} />
         </Col>
         <Col md={5}>
           <Storevisitors />
         </Col>
       </Row>
-      <Row className="mt-5" >
+      <Row className="mt-5">
         <Col md={6}>
-          <Dproducts />
+          <VDProduct />
         </Col>
         <Col md={6}>
           <Dorders />
         </Col>
       </Row>
-      <Row className="mt-5" >
+      <Row className="mt-5">
         <Col md={7}>
           <Weekly />
         </Col>
         <Col md={5}>
-        <OrderStatistics></OrderStatistics>
+          <OrderStatistics></OrderStatistics>
         </Col>
-        
       </Row>
-      <Row className="mt-5" >
+      <Row className="mt-5">
         <Col md={12}>
           <Leaderboard />
         </Col>
-        
       </Row>
-      <Row className="mt-5" >
+      <Row className="mt-5">
         <Col md={12}>
           <RecTransaction />
         </Col>
-        
       </Row>
     </div>
   );

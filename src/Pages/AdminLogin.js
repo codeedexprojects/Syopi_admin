@@ -4,7 +4,7 @@ import { Col, Row, Container, Form } from "react-bootstrap";
 import loginimg from "../images/admin-login.png";
 import { FaEnvelope, FaLock } from "react-icons/fa";
 import { PiGreaterThanBold } from "react-icons/pi";
-import { adminLoginApi, venodorLoginApi } from "../services/allApi";
+import { adminLoginApi } from "../services/allApi";
 import { toast, ToastContainer } from "react-toastify";
 import HashLoader from "react-spinners/HashLoader";
 import { useNavigate } from "react-router-dom";
@@ -13,10 +13,7 @@ function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isAdminLogin, setIsAdminLogin] = useState(true); 
   const navigate = useNavigate();
-
-
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -29,8 +26,7 @@ function AdminLogin() {
     setLoading(true);
   
     try {
-      const apiCall = isAdminLogin ? adminLoginApi : venodorLoginApi;
-      const response = await apiCall({ email, password });
+      const response = await adminLoginApi({ email, password });
   
       console.log("Response:", response);
   
@@ -42,27 +38,14 @@ function AdminLogin() {
         localStorage.setItem("refreshToken", response.data.refreshToken);
   
         // Save the role
-        const role = isAdminLogin ? "admin" : "vendor";
-        localStorage.setItem("role", role);
+        localStorage.setItem("role", "admin");
   
-        if (isAdminLogin) {
-          // Save admin ID
-          localStorage.setItem("adminId", response.data.admin.id);
-          localStorage.removeItem("vendorId")
-        } else {
-          // Save vendor ID
-          localStorage.setItem("vendorId", response.data.vendorId);
-          localStorage.removeItem("adminId")
-        }
+        // Save admin ID
+        localStorage.setItem("adminId", response.data.admin.id);
+        localStorage.removeItem("vendorId");
   
-        // Navigate to the appropriate page based on role
-        if (role === "admin") {
-          navigate("/admindashboard", { replace: true });
-
-        } else if (role === "vendor") {
-          navigate("/vendordashboard", { replace: true });
-
-        }
+        // Navigate to admin dashboard
+        navigate("/admindashboard", { replace: true });
       } else {
         // Handle case when response.success is false or data is missing
         const errorMessage = response?.error?.message || "Login failed. Please try again.";
@@ -79,8 +62,6 @@ function AdminLogin() {
     }
   };
   
-  
-
   return (
     <div className="admin-login">
       <Container fluid>
@@ -108,27 +89,10 @@ function AdminLogin() {
 
           <Col md={5} className="admin-login-right-col">
             <p className="admin-login-logo">Syopi</p>
-            <p className="admin-login-p1">Hello Again!</p>
+            <p className="admin-login-p1">Hello Admin!</p>
             <p className="admin-login-p2">Welcome Back</p>
 
-            {/* Toggle between Admin and Vendor */}
-            <div className="login-toggle-container">
-  <button
-    className={`login-toggle-button ${isAdminLogin ? "login-toggle-active" : ""}`}
-    onClick={() => setIsAdminLogin(true)}
-  >
-    <i className="fas fa-user-shield"></i> {/* Admin Icon */}
-    Admin Login
-  </button>
-  <button
-    className={`login-toggle-button ${!isAdminLogin ? "login-toggle-active" : ""}`}
-    onClick={() => setIsAdminLogin(false)}
-  >
-    <i className="fas fa-user-tie"></i> {/* Vendor Icon */}
-    Vendor Login
-  </button>
-</div>
-
+           
 
             <Form className="login-form" onSubmit={handleLogin}>
               <Form.Group controlId="formEmail">

@@ -27,7 +27,7 @@ import SubcategoriesbyCategoryId from './Pages/SubcategoriesbyCategoryId';
 import VendorDashboard from './Pages/Vendor/VendorDashboard';
 import VendorCategory from './Pages/Vendor/VendorCategory';
 import VendorSubcategory from './Pages/Vendor/VendorSubcategory';
-
+import CategoryCarousel from './Pages/CategoryCarousel'
 
 import ProtectedRoute from './Components/ProtectedRoute';
 import Vendorsubcategorybyid from './Pages/Vendor/Vendorsubcategorybyid';
@@ -43,6 +43,9 @@ import TokenExpiredModal from './Components/TokenExpiredModal';
 import Brand from './Pages/Brand';
 import VendorOrder from './Pages/Vendor/VendorOrder';
 import Homepage from './Pages/Homepage';
+import Coin from './Pages/Coin';
+import BrandCarousel from './Pages/BrandCarousel';
+import VendorLogin from './Pages/Vendor/VendorLogin';
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -95,7 +98,8 @@ function App() {
       <Routes>
         {/* Public routes */}
         <Route path="/login" element={<AdminLogin />} />
-        
+        <Route path="/vendorlogin" element={<VendorLogin />} />
+
         {/* Root path redirects to appropriate dashboard or login */}
         <Route path="/" element={
           localStorage.getItem('accessToken') 
@@ -115,6 +119,9 @@ function App() {
           }
         />
                 <Route path="/homepage" element={<ProtectedRoute role="admin">{renderLayout(Homepage)}</ProtectedRoute>} />
+                <Route path="/coin" element={<ProtectedRoute role="admin">{renderLayout(Coin)}</ProtectedRoute>} />
+                <Route path="/categorycarousal" element={<ProtectedRoute role="admin">{renderLayout(CategoryCarousel)}</ProtectedRoute>} />
+                <Route path="/brandcarousal" element={<ProtectedRoute role="admin">{renderLayout(BrandCarousel)}</ProtectedRoute>} />
 
         <Route path="/products" element={<ProtectedRoute role="admin">{renderLayout(Products)}</ProtectedRoute>} />
         <Route path="/flagged" element={<ProtectedRoute role="admin">{renderLayout(Flagged)}</ProtectedRoute>} />

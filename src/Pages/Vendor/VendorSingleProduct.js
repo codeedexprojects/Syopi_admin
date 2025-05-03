@@ -42,7 +42,7 @@ function VendorSingleProduct() {
   const [editingIndex, setEditingIndex] = useState(null); 
   const [productId, setProductId] = useState("");
   const adminID = localStorage.getItem("adminId");
-const [previewImages, setPreviewImages] = useState([]); // For preview URLs
+const [previewImages, setPreviewImages] = useState([]); 
 
 
   useEffect(() => {

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {  Button, Form, Modal, Container, Row, Col, Card, Badge, Spinner, Alert } from 'react-bootstrap';
-import axios from 'axios';
 import './LowestProduct.css';
-import { createLowestPriceProductApi, deleteLowestPriceProductApi, updateLowestPriceProductApi } from '../services/allApi';
+import {getLowestPriceProductApi, createLowestPriceProductApi, deleteLowestPriceProductApi, updateLowestPriceProductApi } from '../services/allApi';
+import { BASE_URL } from '../services/baseUrl';
 
 function LowestProduct() {
   const [products, setProducts] = useState([]);
@@ -20,7 +20,6 @@ function LowestProduct() {
   const [previewImage, setPreviewImage] = useState(null);
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
 
-  // Fetch all products when component mounts
   useEffect(() => {
     fetchProducts();
   }, []);
@@ -28,8 +27,10 @@ function LowestProduct() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/api/lowest-price-products');
-      setProducts(response.data);
+      const response = await getLowestPriceProductApi();
+      console.log("lowest",response);
+      
+      setProducts(response.data.lowestPriceProducts);
       setError(null);
     } catch (err) {
       setError('Failed to fetch products. Please try again later.');
@@ -67,7 +68,7 @@ function LowestProduct() {
   const handleAddSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+  
     try {
       const formDataToSend = new FormData();
       formDataToSend.append('description', formData.description);
@@ -75,13 +76,9 @@ function LowestProduct() {
       if (formData.image) {
         formDataToSend.append('image', formData.image);
       }
-
-      await axios.post('/api/lowest-price-products', formDataToSend, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-      
+  
+      await createLowestPriceProductApi(formDataToSend);
+  
       setShowAddModal(false);
       resetForm();
       fetchProducts();
@@ -93,25 +90,21 @@ function LowestProduct() {
       setLoading(false);
     }
   };
-
+  
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+  
     try {
       const formDataToSend = new FormData();
       formDataToSend.append('description', formData.description);
-      formDataToSend.append('lowestPrice', formData.startingPrice);
+      formDataToSend.append('lowestPrice', formData.startingPrice); // Note the field name change here
       if (formData.image) {
         formDataToSend.append('image', formData.image);
       }
-
-      await axios.put(`/api/lowest-price-products/${selectedProduct._id}`, formDataToSend, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-      
+  
+      await updateLowestPriceProductApi(selectedProduct._id, formDataToSend);
+  
       setShowEditModal(false);
       resetForm();
       fetchProducts();
@@ -123,12 +116,12 @@ function LowestProduct() {
       setLoading(false);
     }
   };
-
+  
   const handleDelete = async () => {
     setLoading(true);
-    
+  
     try {
-      await axios.delete(`/api/lowest-price-products/${selectedProduct._id}`);
+      await deleteLowestPriceProductApi(selectedProduct._id);
       setShowDeleteModal(false);
       fetchProducts();
       showNotification('Product deleted successfully!', 'success');
@@ -139,6 +132,7 @@ function LowestProduct() {
       setLoading(false);
     }
   };
+  
 
   const openEditModal = (product) => {
     setSelectedProduct(product);
@@ -147,7 +141,7 @@ function LowestProduct() {
       startingPrice: product.startingPrice,
       image: null
     });
-    setPreviewImage(`/uploads/lowest_price_products/${product.image}`);
+    setPreviewImage(`${BASE_URL}/uploads/${product.image}`);
     setShowEditModal(true);
   };
 
@@ -223,7 +217,7 @@ function LowestProduct() {
                     <div className="product-image-container">
                       <Card.Img 
                         variant="top" 
-                        src={`/uploads/lowest_price_products/${product.image}`} 
+                        src={`${BASE_URL}/uploads/${product.image}`} 
                         alt={product.description} 
                         className="product-image"
                       />
@@ -232,7 +226,7 @@ function LowestProduct() {
                       <Card.Title className="product-title">{product.description}</Card.Title>
                       <Card.Text>
                         <Badge bg="success" className="price-badge">
-                          Starting from ${product.startingPrice}
+                          Starting from ₹{product.startingPrice}
                         </Badge>
                       </Card.Text>
                       <div className="product-actions">
@@ -280,7 +274,7 @@ function LowestProduct() {
               />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Starting Price ($)</Form.Label>
+              <Form.Label>Starting Price (₹)</Form.Label>
               <Form.Control
                 type="number"
                 step="0.01"
@@ -356,7 +350,7 @@ function LowestProduct() {
               />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Starting Price ($)</Form.Label>
+              <Form.Label>Starting Price (₹)</Form.Label>
               <Form.Control
                 type="number"
                 step="0.01"
@@ -425,12 +419,12 @@ function LowestProduct() {
           {selectedProduct && (
             <div className="text-center mt-3">
               <img 
-                src={`/uploads/lowest_price_products/${selectedProduct.image}`} 
+                src={`${BASE_URL}/uploads/${selectedProduct.image}`} 
                 alt={selectedProduct.description} 
                 className="img-thumbnail delete-preview" 
               />
               <p className="mt-2"><strong>{selectedProduct.description}</strong></p>
-              <p>Starting Price: ${selectedProduct.startingPrice}</p>
+              <p>Starting Price: ₹{selectedProduct.startingPrice}</p>
             </div>
           )}
         </Modal.Body>
