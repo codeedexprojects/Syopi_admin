@@ -219,12 +219,6 @@ function Category() {
       centered
     >
       <Modal.Body className="custom-popover-body">
-        <p
-          onClick={() => handleView(selectedCategory)}
-          className="category-small-modal-p"
-        >
-          View Date
-        </p>
         <p onClick={handleeditModalShow} className="category-small-modal-p">
           Edit
         </p>
@@ -303,7 +297,7 @@ function Category() {
             {categories.map((category) => (
               <Col
                 key={category.id}
-                onClick={() => handleNavigateToSub(category._id)} // For navigation
+                onClick={() => handleNavigateToSub(category._id)} 
                 style={{ cursor: "pointer" }}
                 md={2}
                 className="category-card-wrapper"
@@ -318,8 +312,8 @@ function Category() {
                   <FaEllipsisVertical
                     className="category-icon"
                     onClick={(e) => {
-                      e.stopPropagation(); // Prevents triggering the parent onClick
-                      handleIconClick(category, e); // Handle icon-specific action
+                      e.stopPropagation(); 
+                      handleIconClick(category, e); 
                     }}
                   />
                 </div>

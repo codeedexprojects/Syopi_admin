@@ -62,7 +62,9 @@ function Offer() {
   const [product, setProduct] = useState([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState([]);
-
+ const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
   const handleEditShow = (offer) => {
     setSelectedAmount(offer.amount);
     setSelectedOfferName(offer.offerName);
@@ -212,6 +214,8 @@ function Offer() {
 
       if (response && response.data) {
         setRows(response.data.offers);
+        setTotalPages(Math.ceil(response.data.offers.length / rowsPerPage));
+
         console.log(response);
       }
     } catch (err) {
@@ -224,7 +228,55 @@ function Offer() {
   useEffect(() => {
     fetchOffers();
   }, []);
+ useEffect(() => {
+    if (rows.length > 0) {
+      setTotalPages(Math.ceil(rows.length / rowsPerPage));
+    }
+  }, [rows, rowsPerPage]);
+  // Handle page change
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
 
+  // Handle rows per page change
+  const handleRowsPerPageChange = (e) => {
+    const newRowsPerPage = parseInt(e.target.value);
+    setRowsPerPage(newRowsPerPage);
+    setCurrentPage(1); // Reset to first page when changing items per page
+  };
+
+  const getCurrentRows = () => {
+    const startIndex = (currentPage - 1) * rowsPerPage;
+    const endIndex = startIndex + rowsPerPage;
+    return rows.slice(startIndex, endIndex);
+  };
+
+  // Calculate pagination numbers
+  const getPaginationNumbers = () => {
+    const maxPagesToShow = 5;
+    let paginationNumbers = [];
+    
+    if (totalPages <= maxPagesToShow) {
+      // Show all pages if total pages are less than or equal to maxPagesToShow
+      paginationNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
+    } else {
+      // Show a subset of pages with ellipsis
+      if (currentPage <= 3) {
+        paginationNumbers = [1, 2, 3, 4, 5, '...', totalPages];
+      } else if (currentPage >= totalPages - 2) {
+        paginationNumbers = [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+      } else {
+        paginationNumbers = [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
+      }
+    }
+    
+    return paginationNumbers;
+  };
+
+  // Get starting index for serial number
+  const getStartIndex = () => {
+    return (currentPage - 1) * rowsPerPage;
+  };
   const fetchCategories = async () => {
     try {
       const response = await getCategoriesApi();
@@ -404,17 +456,41 @@ function Offer() {
       </Row>
 
       <div className="coupon-table-container">
-        {loading ? (
-          <div className="spinner-overlay">
-            <HashLoader color="#36d7b7" size={60} />
+      {loading ? (
+        <div className="spinner-overlay">
+          <HashLoader color="#36d7b7" size={60} />
+        </div>
+      ) : error ? (
+        <Toast>
+          <Toast.Body className="text-danger">
+            {error} {/* Show the error message in a Toast */}
+          </Toast.Body>
+        </Toast>
+      ) : (
+        <>
+          {/* Pagination controls - top */}
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <span>Show </span>
+              <select
+                className="form-select form-select-sm d-inline-block"
+                style={{ width: '80px' }}
+                value={rowsPerPage}
+                onChange={handleRowsPerPageChange}
+              >
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+              </select>
+              <span> entries</span>
+            </div>
+            <div>
+              <span>Total Offers: {rows.length}</span>
+            </div>
           </div>
-        ) : error ? (
-          <Toast>
-            <Toast.Body className="text-danger">
-              {error} {/* Show the error message in a Toast */}
-            </Toast.Body>
-          </Toast>
-        ) : (
+
+          {/* Table */}
           <TableContainer component={Paper} className="Dproduct">
             <Table aria-label="simple table">
               <TableHead>
@@ -437,13 +513,13 @@ function Offer() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {rows.map((row, index) => (
+                {getCurrentRows().map((row, index) => (
                   <TableRow
                     key={row._id}
                     sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                   >
                     <TableCell align="left" className="dproduct-tabledata">
-                      {index + 1}
+                      {getStartIndex() + index + 1}
                     </TableCell>
                     <TableCell
                       align="left"
@@ -481,8 +557,53 @@ function Offer() {
               </TableBody>
             </Table>
           </TableContainer>
-        )}
-      </div>
+
+          {/* Pagination info and controls - bottom */}
+          <div className="d-flex justify-content-between align-items-center mt-3">
+            <div>
+              Showing {rows.length > 0 ? getStartIndex() + 1 : 0} to {Math.min(getStartIndex() + rowsPerPage, rows.length)} of {rows.length} entries
+            </div>
+            <nav aria-label="Offer pagination">
+              <ul className="pagination">
+                <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                  <button 
+                    className="page-link" 
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </button>
+                </li>
+                
+                {getPaginationNumbers().map((pageNumber, index) => (
+                  <li 
+                    key={index} 
+                    className={`page-item ${pageNumber === currentPage ? 'active' : ''} ${pageNumber === '...' ? 'disabled' : ''}`}
+                  >
+                    <button 
+                      className="page-link"
+                      onClick={() => pageNumber !== '...' && handlePageChange(pageNumber)}
+                    >
+                      {pageNumber}
+                    </button>
+                  </li>
+                ))}
+                
+                <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                  <button 
+                    className="page-link" 
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </button>
+                </li>
+              </ul>
+            </nav>
+          </div>
+        </>
+      )}
+    </div>
 
       {deleteModal}
 

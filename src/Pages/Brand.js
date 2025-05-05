@@ -24,11 +24,29 @@ function Brand() {
   const [brandToDelete, setBrandToDelete] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [totalPages, setTotalPages] = useState(1);
 
   // Fetch all brands on component mount
   useEffect(() => {
     fetchBrands();
   }, []);
+
+  // Update total pages when brands or items per page changes
+  useEffect(() => {
+    const filtered = brands.filter((brand) =>
+      brand.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+    
+    // Reset to first page when filter changes
+    if (currentPage > Math.ceil(filtered.length / itemsPerPage)) {
+      setCurrentPage(1);
+    }
+  }, [brands, itemsPerPage, searchTerm]);
 
   const fetchBrands = async () => {
     setIsLoading(true);
@@ -192,9 +210,38 @@ function Brand() {
     setError(null);
   };
 
+  // Filter brands based on search term
   const filteredBrands = brands.filter((brand) =>
     brand.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Get current page items
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentBrands = filteredBrands.slice(indexOfFirstItem, indexOfLastItem);
+
+  // Change page
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  // Next page
+  const nextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  // Previous page
+  const prevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  // Handle items per page change
+  const handleItemsPerPageChange = (e) => {
+    setItemsPerPage(parseInt(e.target.value));
+    setCurrentPage(1); // Reset to first page when changing items per page
+  };
 
   return (
     <div className="brand-dashboard">
@@ -225,7 +272,7 @@ function Brand() {
             <table className="brand-table">
               <thead>
                 <tr>
-                <th>SI NO</th>
+                  <th>SI NO</th>
                   <th>Logo</th>
                   <th>Brand Image</th>
                   <th>Brand</th>
@@ -235,9 +282,9 @@ function Brand() {
                 </tr>
               </thead>
               <tbody>
-                {filteredBrands.map((brand,index) => (
+                {currentBrands.map((brand, index) => (
                   <tr key={brand._id}>
-                    <td>{index+1}</td>
+                    <td>{indexOfFirstItem + index + 1}</td>
                     <td>
                       <div className="brand-logo">
                         {brand.logo ? (
@@ -297,6 +344,60 @@ function Brand() {
           </>
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {filteredBrands.length > 0 && (
+        <div className="brand-pagination">
+          <div className="brand-pagination-info">
+            Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredBrands.length)} of {filteredBrands.length} entries
+          </div>
+          
+          <div className="brand-pagination-controls">
+            <button 
+              onClick={prevPage} 
+              disabled={currentPage === 1}
+              className="brand-pagination-btn"
+            >
+              Previous
+            </button>
+            
+            <div className="brand-pagination-pages">
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => paginate(i + 1)}
+                  className={`brand-pagination-btn ${currentPage === i + 1 ? 'active' : ''}`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+            
+            <button 
+              onClick={nextPage} 
+              disabled={currentPage === totalPages}
+              className="brand-pagination-btn"
+            >
+              Next
+            </button>
+          </div>
+          
+          <div className="brand-per-page-selector">
+            <span>Show</span>
+            <select 
+              value={itemsPerPage} 
+              onChange={handleItemsPerPageChange}
+              className="brand-select"
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+            </select>
+            <span>per page</span>
+          </div>
+        </div>
+      )}
 
       {/* Add/Edit Modal */}
       {showModal && (

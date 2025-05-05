@@ -10,24 +10,37 @@ import OrderStatistics from "../../Components/OrderStatistics";
 import Leaderboard from "../../Components/Leaderboard";
 import RecTransaction from "../../Components/RecTransaction";
 import VOrderGraph from "./VOrderGraph";
-import Dorders from "../../Components/Dorders";
 import Weekly from "../../Components/Weekly";
-import { getVendorDashboardApi } from "../../services/allApi";
 import { useState } from "react";
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import VDProduct from "./VDProduct";
+import { getVendorDashboardOrderApi, getVendorDashboardProductApi } from "../../services/allApi";
+import VDOrder from "./VDOrder";
 
 function VendorDashboard() {
-  const [dashboardData, setDashboardData] = useState(null);
+  const [dashboardProductData, setDashboardProductData] = useState(null);
+  const [dashboardOrderData, setDashboardOrderData] = useState(null);
+
   useEffect(() => {
-    fetchDashboardData();
+    fetchDashboardProductData();
+    fetchDashboardOrderData();
+
   }, []);
-  const fetchDashboardData = async () => {
-    const result = await getVendorDashboardApi();
-    console.log("dashboard", result);
+  const fetchDashboardProductData = async () => {
+    const result = await getVendorDashboardProductApi();
+    console.log("dashboard-product", result);
     if (result.success) {
-      setDashboardData(result.data);
+      setDashboardProductData(result.data);
+    } else {
+      console.error(result.error);
+    }
+  };
+  const fetchDashboardOrderData = async () => {
+    const result = await getVendorDashboardOrderApi();
+    console.log("dashboard-order", result);
+    if (result.success) {
+      setDashboardOrderData(result.data);
     } else {
       console.error(result.error);
     }
@@ -35,28 +48,28 @@ function VendorDashboard() {
   const cardsData = [
     {
       title: "All Product",
-      count: dashboardData?.totalProducts || 0,
+      count: dashboardProductData?.totalProducts || 0,
       icon: <FaTshirt style={{ color: "#495DD9" }} />,
       color: "#495DD9",
       path: "/vendorproducts",
     },
     {
       title: "Current Orders",
-      count: dashboardData?.currentOrders || 0,
+      count: dashboardOrderData?.currentOrders || 0,
       icon: <FaClipboardList style={{ color: "#66BB6A" }} />,
       color: "#66BB6A",
       path: "/vendororders",
     },
     {
       title: "Out of Stock",
-      count: dashboardData?.outOfStock || 0,
+      count: dashboardOrderData?.outOfStock || 0,
       icon: <MdRemoveShoppingCart style={{ color: "#FB544B" }} />,
       color: "#FB544B",
       path: "/vendorproducts",
     },
     {
       title: "Limited Stock",
-      count: dashboardData?.limitedStock || 0,
+      count: dashboardOrderData?.limitedStock || 0,
       icon: <IoMdCart style={{ color: "#FFA425" }} />,
       color: "#FFA425",
       path: "/vendorproducts",
@@ -105,7 +118,7 @@ function VendorDashboard() {
       </Row>
       <Row className="mt-5">
         <Col md={7}>
-          <VOrderGraph vendordashboardData={dashboardData} />
+          <VOrderGraph vendordashboardData={dashboardOrderData} />
         </Col>
         <Col md={5}>
           <Storevisitors />
@@ -116,7 +129,7 @@ function VendorDashboard() {
           <VDProduct />
         </Col>
         <Col md={6}>
-          <Dorders />
+          <VDOrder />
         </Col>
       </Row>
       <Row className="mt-5">

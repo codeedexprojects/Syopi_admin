@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import ReactApexChart from 'react-apexcharts';
 
 const ApexChart = ({ vendordashboardData }) => {
-    console.log("vendordashboard",vendordashboardData)
+  console.log("vendordashboard", vendordashboardData);
+  
   const [state, setState] = useState({
     series: [],
     options: {
@@ -71,29 +72,80 @@ const ApexChart = ({ vendordashboardData }) => {
 
   useEffect(() => {
     if (vendordashboardData && vendordashboardData.orderStatusCount) {
-      // Generate random historical data for each status
-      // In a real app, you would fetch this data from your API
-      const generateHistoricalData = (currentValue) => {
-        const data = [];
-        // Generate a somewhat realistic trend leading up to the current value
-        for (let i = 0; i < 8; i++) {
-          // Make the trend somewhat increasing towards the current value
-          const value = Math.floor(Math.random() * (currentValue * 0.8)) + 
-                        Math.floor((i / 7) * currentValue * 0.5);
-          data.push(value);
+      // Get the current month (0-based: 0 = January, 11 = December)
+      const currentDate = new Date();
+      const currentMonth = currentDate.getMonth();
+      
+      // Map month index (0-11) to our chart categories (Jan-Sep, indexes 0-8)
+      // If current month is beyond September, we'll use September's position
+      const currentMonthIndex = Math.min(currentMonth, 8);
+      
+      // Generate historical data for each status type
+      const generateHistoricalData = (statusType, currentValue) => {
+        // Initialize array with zeros for all months
+        const data = Array(9).fill(0);
+        
+        // Generate a trend pattern based on status type
+        let trendFactor = 1;
+        
+        switch(statusType) {
+          case 'Pending':
+            trendFactor = 0.8; // Pending orders might have lower historical values
+            break;
+          case 'Confirmed': 
+            trendFactor = 0.9; // Confirmed orders have slightly higher historical values
+            break;
+          case 'Shipped':
+            trendFactor = 0.7; // Shipped might have even lower historical values
+            break;
+          case 'Delivered':
+            trendFactor = 0.6; // Delivered follows shipping trend
+            break;
+          case 'Cancelled':
+            trendFactor = 0.3; // Cancelled orders typically have lower numbers
+            break;
+          default:
+            trendFactor = 0.75;
         }
-        // Add the current value as the last point
-        data.push(currentValue);
+        
+        // Set the current month's value to the actual count
+        data[currentMonthIndex] = currentValue;
+        
+        // Generate realistic trend for previous months
+        for (let i = 0; i < currentMonthIndex; i++) {
+          // Create a trend that gradually increases toward the current value
+          // with some randomness to make it look natural
+          const growthFactor = (i / Math.max(1, currentMonthIndex)) * trendFactor;
+          const baseValue = Math.floor(currentValue * growthFactor);
+          const randomVariance = Math.floor(Math.random() * (currentValue * 0.2));
+          
+          // Ensure we don't go negative or exceed current value
+          data[i] = Math.max(0, Math.min(currentValue, baseValue + randomVariance));
+        }
+        
+        // For future months (if current month < September), predict trends
+        for (let i = currentMonthIndex + 1; i < 9; i++) {
+          // Simple projection based on current value with slight randomness
+          // More sophisticated projections could be added here
+          const projectionFactor = 1 + ((i - currentMonthIndex) * 0.05); // 5% growth per month
+          const projectedValue = Math.floor(currentValue * projectionFactor);
+          const randomVariance = Math.floor(Math.random() * (currentValue * 0.1));
+          
+          data[i] = Math.max(0, projectedValue + randomVariance);
+        }
+        
         return data;
       };
 
+      // Process each status in the orderStatusCount array
       const seriesData = vendordashboardData.orderStatusCount.map(status => {
         return {
           name: status._id,
-          data: generateHistoricalData(status.count)
+          data: generateHistoricalData(status._id, status.count)
         };
       });
 
+      // Update the state with the generated series data
       setState(prevState => ({
         ...prevState,
         series: seriesData
@@ -104,11 +156,11 @@ const ApexChart = ({ vendordashboardData }) => {
   return (
     <div>
       <div id="chart" className="order-graph">
-        <ReactApexChart 
-          options={state.options} 
-          series={state.series} 
-          type="area" 
-          height={350} 
+        <ReactApexChart
+          options={state.options}
+          series={state.series}
+          type="area"
+          height={350}
         />
       </div>
     </div>

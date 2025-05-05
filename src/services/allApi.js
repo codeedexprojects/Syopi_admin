@@ -56,8 +56,52 @@ export const refreshAccessToken = async () => {
   }
 };
 
-export const getDashboardContentApi = async () => {
-  const url = `${BASE_URL}/admin/dashboard`;
+export const getDashboardProductContentApi = async () => {
+  const url = `${BASE_URL}/admin/dashboard/products`;
+
+  const accessToken = localStorage.getItem("accessToken");
+
+  if (!accessToken) {
+    return { success: false, error: "No token provided" };
+  }
+
+  try {
+    const response = await commonApi("GET", url, null, {
+      Authorization: `Bearer ${accessToken}`,
+    });
+
+    return response;
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message || "Error fetching dashboard content",
+    };
+  }
+};
+export const getDashboardOrdersContentApi = async () => {
+  const url = `${BASE_URL}/admin/dashboard/orders`;
+
+  const accessToken = localStorage.getItem("accessToken");
+
+  if (!accessToken) {
+    return { success: false, error: "No token provided" };
+  }
+
+  try {
+    const response = await commonApi("GET", url, null, {
+      Authorization: `Bearer ${accessToken}`,
+    });
+
+    return response;
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message || "Error fetching dashboard content",
+    };
+  }
+};
+export const getDashboardUserContentApi = async () => {
+  const url = `${BASE_URL}/admin/dashboard/users`;
 
   const accessToken = localStorage.getItem("accessToken");
 
@@ -1818,8 +1862,30 @@ export const venodorLoginApi = async (loginData) => {
   const url = `${BASE_URL}/vendor/auth/login`;
   return await commonApi("POST", url, loginData);
 };
-export const getVendorDashboardApi = async () => {
-  const url = `${BASE_URL}/vendor/dashboard`;
+export const getVendorDashboardProductApi = async () => {
+  const url = `${BASE_URL}/vendor/dashboard/products`;
+
+  const accessToken = localStorage.getItem("accessToken");
+
+  if (!accessToken) {
+    return { success: false, error: "No token provided" };
+  }
+
+  try {
+    const response = await commonApi("GET", url, null, {
+      Authorization: `Bearer ${accessToken}`,
+    });
+
+    return response;
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message || "Error fetching dashboard content",
+    };
+  }
+};
+export const getVendorDashboardOrderApi = async () => {
+  const url = `${BASE_URL}/vendor/dashboard/orders`;
 
   const accessToken = localStorage.getItem("accessToken");
 

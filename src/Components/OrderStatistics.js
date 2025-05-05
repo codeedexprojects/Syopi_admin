@@ -1,15 +1,54 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { PieChart, Pie, Cell, Tooltip } from 'recharts';
 
-const OrderStatistics = () => {
-  const data1 = [
-    { name: 'Delivered', value: 45, text: '45%', fill: '#00226C' },
-    { name: 'Canceled', value: 15, text: '15%', fill: '#0450C2' },
-    { name: 'Shipped', value: 25, text: '25%', fill: '#0073DC' },
-    { name: 'Processed', value: 10, text: '10%', fill: '#0D98FF' },
-    { name: 'Pending', value: 5, text: '5%', fill: '#9CD9FF' },
-  ];
-
+const OrderStatistics = ({ dashboardData }) => {
+  const [timeFilter, setTimeFilter] = useState('Last 7 Days');
+  
+  // Process the order status data for the chart
+  let chartData = [];
+  
+  if (dashboardData && dashboardData.data && dashboardData.data.orderStatusCount) {
+    const totalOrders = dashboardData.data.totalOrders;
+    
+    chartData = dashboardData.data.orderStatusCount.map(item => {
+      const percentage = Math.round((item.count / totalOrders) * 100);
+      
+      // Define colors for different statuses
+      let color;
+      switch(item._id) {
+        case 'Delivered':
+          color = '#00226C';
+          break;
+        case 'Cancelled':
+          color = '#0450C2';
+          break;
+        case 'Confirmed':
+          color = '#0073DC';
+          break;
+        case 'Pending':
+          color = '#9CD9FF';
+          break;
+        default:
+          color = '#0D98FF';
+      }
+      
+      return {
+        name: item._id,
+        value: item.count,
+        text: `${percentage}%`,
+        fill: color
+      };
+    });
+  } else {
+    // Fallback data if dashboardData is not available
+    chartData = [
+      { name: 'Delivered', value: 6, text: '10%', fill: '#00226C' },
+      { name: 'Cancelled', value: 9, text: '16%', fill: '#0450C2' },
+      { name: 'Confirmed', value: 31, text: '53%', fill: '#0073DC' },
+      { name: 'Pending', value: 12, text: '21%', fill: '#9CD9FF' },
+    ];
+  }
+  
   return (
     <div className="weekly-container">
       <h2>Order Statistics</h2>
@@ -39,6 +78,8 @@ const OrderStatistics = () => {
               border: '1px solid #ccc',
             }}
             className="sv-dropdown"
+            value={timeFilter}
+            onChange={(e) => setTimeFilter(e.target.value)}
           >
             <option className="sv-option">Last 7 Days</option>
             <option className="sv-option">Last 30 Days</option>
@@ -59,7 +100,7 @@ const OrderStatistics = () => {
           <div style={{ flex: '1', maxWidth: '60%' }}>
             <PieChart width={300} height={300}>
               <Pie
-                data={data1}
+                data={chartData}
                 dataKey="value"
                 nameKey="name"
                 cx="50%"
@@ -68,11 +109,11 @@ const OrderStatistics = () => {
                 innerRadius={60}
                 fill="#8884d8"
               >
-                {data1.map((entry, index) => (
+                {chartData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.fill} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip formatter={(value, name) => [`${value} Orders`, name]} />
             </PieChart>
           </div>
 
@@ -85,7 +126,7 @@ const OrderStatistics = () => {
             }}
           >
             <ul style={{ listStyle: 'none', padding: 0 }}>
-              {data1.map((item, index) => (
+              {chartData.map((item, index) => (
                 <li
                   key={index}
                   style={{
@@ -105,7 +146,7 @@ const OrderStatistics = () => {
                     }}
                   ></span>
                   <span className="order-statistics-label">
-                    {item.name} - {item.text}
+                    {item.name} - {item.text} ({item.value})
                   </span>
                 </li>
               ))}

@@ -51,33 +51,42 @@ function SingleProduct() {
   const adminID = localStorage.getItem("adminId");
   const [previewImages, setPreviewImages] = useState([]);
   const [selectedBrand, setSelectedBrand] = useState("");
+  const [isReturnable, setIsReturnable] = useState(false);
+  const [returnWithinDays, setReturnWithinDays] = useState(7);
+  const [codAvailable, setCodAvailable] = useState(false);
+  const [variantImages, setVariantImages] = useState({});
+  const [selectedVariantIndex, setSelectedVariantIndex] = useState(null);
 
   useEffect(() => {
     const fetchproductData = async () => {
       try {
         const response = await getproductByID(id);
         console.log(response);
-
+  
         if (response && response.data) {
           const product = response.data;
           setProducts(product);
-          setImages(products.images || [null, null, null, null]);
+          setImages(product.images || [null, null, null, null]);
           setProductName(product.name || "");
           setDescription(product.description || "");
           setBrand(product.brand || "");
           setStock(product.totalStock || "");
           setSelectedProductType(product.productType || "");
-          setVariants(product.variants || "");
-          setMaterial(product.features.material);
-          setSleevesType(product.features.sleevesType || "");
-          setSoleMaterial(product.features.soleMaterial || "");
-          setFit(product.features.fit || "");
-          setLength(product.features.length || "");
-          setOccasion(product.features.occasion || "");
-          setNetWeight(product.features.netWeight || "");
+          setVariants(product.variants || []);
+          setMaterial(product.features?.material || "");
+          setSleevesType(product.features?.sleevesType || "");
+          setSoleMaterial(product.features?.soleMaterial || "");
+          setFit(product.features?.fit || "");
+          setLength(product.features?.length || "");
+          setOccasion(product.features?.occasion || "");
+          setNetWeight(product.features?.netWeight || "");
           setProductId(product._id);
           setSelectedCategory(product.category._id);
           setSelectedSubCategory(product.subcategory._id);
+          // Set new fields
+          setIsReturnable(product.isReturnable || false);
+          setReturnWithinDays(product.returnWithinDays || 7);
+          setCodAvailable(product.CODAvailable || false);
         } else {
           console.error("Invalid response format:", response);
         }
@@ -85,7 +94,7 @@ function SingleProduct() {
         console.error("Error fetching vendor data:", error);
       }
     };
-
+  
     if (id) {
       fetchproductData();
     }
@@ -185,26 +194,49 @@ function SingleProduct() {
     setSizeStocks((prev) => ({ ...prev, [size]: stock }));
   };
 
-  const handleImageChange = (index, event) => {
-    if (event.target.files && event.target.files[0]) {
-      const file = event.target.files[0];
+const handleImageChange = (variantIndex, imageIndex, event) => {
+  if (event.target.files && event.target.files[0]) {
+    const file = event.target.files[0];
+    
+    // Update the variant images state
+    setVariantImages(prev => {
+      const updatedImages = { ...prev };
+      if (!updatedImages[variantIndex]) {
+        updatedImages[variantIndex] = [null, null, null, null];
+      }
+      updatedImages[variantIndex][imageIndex] = file;
+      return updatedImages;
+    });
 
-      // Update the files array
-      const newImages = [...images];
-      newImages[index] = file;
-      setImages(newImages);
+    // Update preview images
+    setPreviewImages(prev => {
+      const newPreviewImages = [...prev];
+      if (!newPreviewImages[variantIndex]) {
+        newPreviewImages[variantIndex] = [];
+      }
+      newPreviewImages[variantIndex][imageIndex] = URL.createObjectURL(file);
+      return newPreviewImages;
+    });
+  }
+};
 
-      const newPreviewImages = [...previewImages];
-      newPreviewImages[index] = URL.createObjectURL(file);
-      setPreviewImages(newPreviewImages);
+const handleRemoveImage = (variantIndex, imageIndex) => {
+  setVariantImages(prev => {
+    const updatedImages = { ...prev };
+    if (updatedImages[variantIndex]) {
+      updatedImages[variantIndex][imageIndex] = null;
     }
-  };
+    return updatedImages;
+  });
 
-  const handleRemoveImage = (index) => {
-    const newImages = [...images];
-    newImages[index] = null;
-    setImages(newImages);
-  };
+  setPreviewImages(prev => {
+    const newPreviewImages = [...prev];
+    if (newPreviewImages[variantIndex]) {
+      newPreviewImages[variantIndex][imageIndex] = null;
+    }
+    return newPreviewImages;
+  });
+};
 
   const handleDeleteModalOpen = () => setShowDeleteModal(true);
   const handleDeleteModalClose = () => setShowDeleteModal(false);
@@ -245,25 +277,31 @@ function SingleProduct() {
       setIsModalOpen(false);
       return;
     }
-
+  
     const productId = products?._id;
-
+    const { variantIndex, imageName } = imageToDelete;
+  
     try {
       const response = await deleteProductImageApi(productId, {
-        imageName: imageToDelete,
+        variantIndex: variantIndex,
+        imageName: imageName
       });
-
+  
       if (response.success) {
         toast.success("Image deleted successfully!");
-
-        setProducts((prevData) => ({
-          ...prevData,
-          images: prevData.images.filter((image) => image !== imageToDelete),
-        }));
+  
+        // Update the variants state to remove the deleted image
+        setVariants(prevVariants => {
+          const updatedVariants = [...prevVariants];
+          if (updatedVariants[variantIndex]?.images) {
+            updatedVariants[variantIndex].images = updatedVariants[variantIndex].images.filter(
+              image => image !== imageName
+            );
+          }
+          return updatedVariants;
+        });
       } else {
-        toast.error(
-          response.error || "Failed to delete the image. Please try again."
-        );
+        toast.error(response.error || "Failed to delete the image. Please try again.");
       }
     } catch (error) {
       console.error("Error during image deletion:", error);
@@ -273,6 +311,7 @@ function SingleProduct() {
       setImageToDelete(null);
     }
   };
+  
 
   const closeModal = () => {
     setIsModalOpen(false);
@@ -284,26 +323,30 @@ function SingleProduct() {
       alert("Please fill in all required fields.");
       return;
     }
-
+  
     const formattedSizes = Object.entries(sizeStocks).map(([size, stock]) => ({
       size,
       stock: Number(stock),
     }));
-
+  
     const totalStock = formattedSizes.reduce(
       (sum, { stock }) => sum + stock,
       0
     );
-
+  
+    // Add images to the variant
+    const variantIndex = editingIndex !== null ? editingIndex : variants.length;
+    const variantImagesArray = variantImages[variantIndex] || [];
+  
     const newVariant = {
       color,
-      wholesalePrice,
-      price,
-      // offerPrice,
+      wholesalePrice: Number(wholesalePrice) || 0,
+      price: Number(price) || 0,
       stock: totalStock,
       sizes: formattedSizes,
+      images: variantImagesArray.filter(img => img !== null)
     };
-
+  
     if (editingIndex !== null) {
       setVariants((prevVariants) =>
         prevVariants.map((variant, index) =>
@@ -314,25 +357,33 @@ function SingleProduct() {
     } else {
       setVariants((prevVariants) => [...prevVariants, newVariant]);
     }
-
+  
     clearFormFields();
   };
+  
 
-  const handleEditVariant = (index) => {
-    const variant = variants[index];
-    setColor(variant.color);
-    setwholesalePrice(variant.wholesalePrice);
-    setPrice(variant.price);
+// Updated handleEditVariant function to handle variant images
+const handleEditVariant = (index) => {
+  const variant = variants[index];
+  setColor(variant.color);
+  setwholesalePrice(variant.wholesalePrice);
+  setPrice(variant.price);
 
-    const sizeStockObj = {};
-    variant.sizes.forEach(({ size, stock }) => {
-      sizeStockObj[size] = stock;
-    });
-    setSizeStocks(sizeStockObj);
-    setSelectedSizes(variant.sizes.map(({ size }) => size));
+  const sizeStockObj = {};
+  variant.sizes.forEach(({ size, stock }) => {
+    sizeStockObj[size] = stock;
+  });
+  setSizeStocks(sizeStockObj);
+  setSelectedSizes(variant.sizes.map(({ size }) => size));
+  
+  // Set the selected variant index for image handling
+  setSelectedVariantIndex(index);
+  
+  // If the variant has images, they will be displayed in the variant card
+  // No need to load them into the image fields at the top
 
-    setEditingIndex(index);
-  };
+  setEditingIndex(index);
+};
 
   const clearFormFields = () => {
     setColor("");
@@ -345,25 +396,25 @@ function SingleProduct() {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-
+  
     if (!productName || !selectedCategory || !description) {
       toast.error("All fields are required");
       return;
     }
-
-    const formattedVariants = variants.map((variant) => ({
-      color: variant.color,
-      price: variant.normalPrice,
-      wholesalePrice: variant.wholesalePrice,
-      offerPrice: variant.offerPrice,
-      sizes: variant.sizes.map(({ size, stock }) => ({
-        size,
-        stock,
-      })),
-    }));
-
-    const variantPayload = JSON.stringify(formattedVariants);
-
+  
+    // Format variants correctly as per backend expectations
+    const formattedVariants = variants.map((variant, index) => {
+      const variantData = {
+        color: variant.color,
+        price: variant.price, 
+        wholesalePrice: variant.wholesalePrice,
+        stock: variant.stock,
+        sizes: variant.sizes,
+        images: variant.images || [] // Include existing images
+      };
+      return variantData;
+    });
+  
     const features = {
       material: selectedProductType === "Dress" ? material || "" : undefined,
       soleMaterial:
@@ -375,53 +426,65 @@ function SingleProduct() {
       length: length || "",
       occasion: occasion || "",
     };
-
+  
     const cleanedFeatures = Object.fromEntries(
       Object.entries(features).filter(([_, value]) => value !== undefined)
     );
-
+  
     const formData = new FormData();
     formData.append("name", productName.trim());
     formData.append("description", description.trim());
     formData.append("category", selectedCategory);
     formData.append("subcategory", selectedSubCategory || "");
     formData.append("brand", brand.trim() || "");
-    formData.append("wholesalePrice", wholesalePrice || "");
-    formData.append("normalPrice", price || "");
     formData.append("stock", stock || "");
-    formData.append("sizes", selectedSizes || "");
     formData.append("type", occasion || "");
     formData.append("productType", selectedProductType || "");
     formData.append("material", material || "");
     formData.append("owner", adminID || "");
     formData.append("fileType", "product");
     formData.append("userType", "admin");
-    formData.append("variants", variantPayload);
+    formData.append("variants", JSON.stringify(formattedVariants));
     formData.append("features", JSON.stringify(cleanedFeatures));
-
-    images.forEach((image) => {
-      if (image) {
-        formData.append("images", image);
-      }
+    
+    // Add new fields
+    formData.append("isReturnable", isReturnable);
+    formData.append("returnWithinDays", returnWithinDays);
+    formData.append("CODAvailable", codAvailable);
+  
+    // Add new variant images to FormData
+    Object.entries(variantImages).forEach(([variantIndex, images]) => {
+      images.forEach((image, imageIndex) => {
+        if (image && image instanceof File) {
+          formData.append(`variantImages`, image);
+          formData.append(`variantImageMeta`, JSON.stringify({
+            variantIndex,
+            imageIndex
+          }));
+        }
+      });
     });
-
+  
     console.log("FormData being sent:");
     for (let [key, value] of formData.entries()) {
       console.log(`${key}:`, value);
     }
-
+  
     try {
       const response = await updateproductapi(productId, formData);
-
+  
       if (response.success) {
-        toast.success("Product edited successfully");
+        toast.success("Product updated successfully");
+        // Optionally redirect to products page after successful update
+        // navigate("/products");
       } else {
-        toast.error(response.error || "Failed to create product");
+        toast.error(response.error || "Failed to update product");
       }
     } catch (err) {
       toast.error(err.message || "An unexpected error occurred");
     }
   };
+  
 
   return (
     <div className=" single-product">
@@ -748,140 +811,257 @@ function SingleProduct() {
             <div className="mt-4">
               <p className="single-product-form-label">Variants</p>
               {variants.map((variant, index) => {
-                const totalStock = variant.sizes.reduce(
-                  (sum, { stock }) => sum + stock,
-                  0
-                );
+  const totalStock = variant.sizes.reduce(
+    (sum, { stock }) => sum + stock,
+    0
+  );
 
-                return (
-                  <div
-                    key={index}
-                    className="variant-card p-4 border rounded shadow-sm mb-4 position-relative"
-                    style={{
-                      backgroundColor: "#f9f9f9",
-                      borderLeft: "5px solid #000000",
-                      borderRadius: "10px",
-                    }}
-                  >
-                    <span
-                      className="position-absolute"
-                      style={{
-                        top: "10px",
-                        right: "10px",
-                        cursor: "pointer",
-                      }}
-                      onClick={() => handleEditVariant(index)}
-                    >
-                      <i
-                        className="fas fa-edit"
-                        style={{
-                          fontSize: "20px",
-                          color: "#555555",
-                        }}
-                      ></i>
-                    </span>
+  return (
+    <div
+      key={index}
+      className="variant-card p-4 border rounded shadow-sm mb-4 position-relative"
+      style={{
+        backgroundColor: "#f9f9f9",
+        borderLeft: "5px solid #000000",
+        borderRadius: "10px",
+      }}
+    >
+      <span
+        className="position-absolute"
+        style={{
+          top: "10px",
+          right: "10px",
+          cursor: "pointer",
+        }}
+        onClick={() => handleEditVariant(index)}
+      >
+        <i
+          className="fas fa-edit"
+          style={{
+            fontSize: "20px",
+            color: "#555555",
+          }}
+        ></i>
+      </span>
 
-                    <p
-                      className="mb-2"
-                      style={{
-                        fontFamily: "'Poppins', sans-serif",
-                        fontSize: "16px",
-                        fontWeight: "600",
-                        color: "#000000",
-                      }}
-                    >
-                      <span>Color:</span>{" "}
-                      <span>
-                        {variant.color}{" "}
-                        <span
-                          style={{
-                            display: "inline-block",
-                            width: "20px",
-                            height: "20px",
-                            backgroundColor: variant.color,
-                            borderRadius: "50%",
-                            marginLeft: "12px",
-                          }}
-                        ></span>
-                      </span>
-                    </p>
-                    <p
-                      className="mb-2"
-                      style={{
-                        fontFamily: "'Poppins', sans-serif",
-                        fontSize: "16px",
-                        fontWeight: "600",
-                        color: "#000000",
-                      }}
-                    >
-                      <span>Stock:</span>{" "}
-                      <span style={{ fontWeight: "400", color: "#333333" }}>
-                        {totalStock}
-                      </span>
-                    </p>
-                    <p
-                      className="mb-2"
-                      style={{
-                        fontFamily: "'Poppins', sans-serif",
-                        fontSize: "16px",
-                        fontWeight: "600",
-                        color: "#000000",
-                      }}
-                    >
-                      <span>Sizes:</span>{" "}
-                      <span style={{ fontWeight: "400", color: "#333333" }}>
-                        {variant.sizes
-                          .map(({ size, stock }) => `${size} (Stock: ${stock})`)
-                          .join(", ")}
-                      </span>
-                    </p>
-                    <p
-                      className="mb-2"
-                      style={{
-                        fontFamily: "'Poppins', sans-serif",
-                        fontSize: "16px",
-                        fontWeight: "600",
-                        color: "#000000",
-                      }}
-                    >
-                      <span>Wholesale Price:</span>{" "}
-                      <span style={{ fontWeight: "400", color: "#333333" }}>
-                        Rs. {variant.wholesalePrice}
-                      </span>
-                    </p>
-                    <p
-                      className="mb-2"
-                      style={{
-                        fontFamily: "'Poppins', sans-serif",
-                        fontSize: "16px",
-                        fontWeight: "600",
-                        color: "#000000",
-                      }}
-                    >
-                      <span>Normal Price:</span>{" "}
-                      <span style={{ fontWeight: "400", color: "#333333" }}>
-                        Rs. {variant.price}
-                      </span>
-                    </p>
-                    <p
-                      className="mb-0"
-                      style={{
-                        fontFamily: "'Poppins', sans-serif",
-                        fontSize: "16px",
-                        fontWeight: "600",
-                        color: "#000000",
-                      }}
-                    >
-                      <span>Offer Price:</span>{" "}
-                      <span style={{ fontWeight: "400", color: "#333333" }}>
-                        Rs. {variant.offerPrice}
-                      </span>
-                    </p>
-                  </div>
-                );
-              })}
+      <div className="row mb-3">
+        <div className="col-md-6">
+          {/* Variant details */}
+          <p
+            className="mb-2"
+            style={{
+              fontFamily: "'Poppins', sans-serif",
+              fontSize: "16px",
+              fontWeight: "600",
+              color: "#000000",
+            }}
+          >
+            <span>Color:</span>{" "}
+            <span>
+              {variant.color}{" "}
+              <span
+                style={{
+                  display: "inline-block",
+                  width: "20px",
+                  height: "20px",
+                  backgroundColor: variant.color,
+                  borderRadius: "50%",
+                  marginLeft: "12px",
+                }}
+              ></span>
+            </span>
+          </p>
+          <p
+            className="mb-2"
+            style={{
+              fontFamily: "'Poppins', sans-serif",
+              fontSize: "16px",
+              fontWeight: "600",
+              color: "#000000",
+            }}
+          >
+            <span>Stock:</span>{" "}
+            <span style={{ fontWeight: "400", color: "#333333" }}>
+              {totalStock}
+            </span>
+          </p>
+          <p
+            className="mb-2"
+            style={{
+              fontFamily: "'Poppins', sans-serif",
+              fontSize: "16px",
+              fontWeight: "600",
+              color: "#000000",
+            }}
+          >
+            <span>Sizes:</span>{" "}
+            <span style={{ fontWeight: "400", color: "#333333" }}>
+              {variant.sizes
+                .map(({ size, stock }) => `${size} (Stock: ${stock})`)
+                .join(", ")}
+            </span>
+          </p>
+          <p
+            className="mb-2"
+            style={{
+              fontFamily: "'Poppins', sans-serif",
+              fontSize: "16px",
+              fontWeight: "600",
+              color: "#000000",
+            }}
+          >
+            <span>Wholesale Price:</span>{" "}
+            <span style={{ fontWeight: "400", color: "#333333" }}>
+              Rs. {variant.wholesalePrice}
+            </span>
+          </p>
+          <p
+            className="mb-2"
+            style={{
+              fontFamily: "'Poppins', sans-serif",
+              fontSize: "16px",
+              fontWeight: "600",
+              color: "#000000",
+            }}
+          >
+            <span>Normal Price:</span>{" "}
+            <span style={{ fontWeight: "400", color: "#333333" }}>
+              Rs. {variant.price}
+            </span>
+          </p>
+        </div>
+        
+        <div className="col-md-6">
+          {/* Variant Images */}
+          <p
+            className="mb-2"
+            style={{
+              fontFamily: "'Poppins', sans-serif",
+              fontSize: "16px",
+              fontWeight: "600",
+              color: "#000000",
+            }}
+          >
+            Variant Images:
+          </p>
+          
+          <div className="d-flex flex-wrap">
+            {/* Show existing images for this variant */}
+            {variant.images && variant.images.map((imageName, imgIndex) => (
+              <div key={imgIndex} className="position-relative me-2 mb-2" style={{ width: '80px', height: '80px' }}>
+                <img
+                  src={`${BASE_URL}/uploads/${imageName}`}
+                  alt={`Variant ${index} Image ${imgIndex}`}
+                  className="img-fluid"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px' }}
+                />
+                <i
+                  className="fa-solid fa-trash position-absolute"
+                  style={{ top: '5px', right: '5px', cursor: 'pointer', color: 'red' }}
+                  onClick={() => openDeleteModal(index, imgIndex)}
+                ></i>
+              </div>
+            ))}
+            
+            {/* Add new image button */}
+            <div 
+              className="d-flex justify-content-center align-items-center" 
+              style={{ 
+                width: '80px', 
+                height: '80px', 
+                border: '1px dashed #ccc', 
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+              onClick={() => document.getElementById(`variant-image-input-${index}`).click()}
+            >
+              <span style={{ fontSize: '24px', color: '#666' }}>+</span>
+              <input
+                id={`variant-image-input-${index}`}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={(event) => handleImageChange(index, variant.images ? variant.images.length : 0, event)}
+              />
             </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Preview new images */}
+      {variantImages[index] && variantImages[index].filter(img => img !== null).length > 0 && (
+        <div className="mt-2">
+          <p className="mb-2" style={{ fontSize: '14px', fontWeight: '600' }}>New Images (Not yet saved):</p>
+          <div className="d-flex flex-wrap">
+            {variantImages[index].map((img, imgIndex) => 
+              img && (
+                <div key={`new-${imgIndex}`} className="position-relative me-2 mb-2" style={{ width: '80px', height: '80px' }}>
+                  <img
+                    src={previewImages[index]?.[imgIndex]}
+                    alt={`New Variant ${index} Image ${imgIndex}`}
+                    className="img-fluid"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px' }}
+                  />
+                  <i
+                    className="fa-solid fa-trash position-absolute"
+                    style={{ top: '5px', right: '5px', cursor: 'pointer', color: 'red' }}
+                    onClick={() => handleRemoveImage(index, imgIndex)}
+                  ></i>
+                </div>
+              )
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+})}
+            </div>
+            <Row className="mb-3 mt-4">
+  <Col md={12}>
+    <h3 className="shipping-options-heading">Shipping & Return Options</h3>
+  </Col>
+</Row>
 
+<Row className="mb-3">
+  <Col md={4}>
+    <Form.Group className="mb-3">
+      <Form.Check 
+        type="checkbox" 
+        label="COD Available" 
+        checked={codAvailable}
+        onChange={(e) => setCodAvailable(e.target.checked)}
+        className="single-product-checkbox"
+      />
+    </Form.Group>
+  </Col>
+  <Col md={4}>
+    <Form.Group className="mb-3">
+      <Form.Check 
+        type="checkbox" 
+        label="Returnable" 
+        checked={isReturnable}
+        onChange={(e) => setIsReturnable(e.target.checked)}
+        className="single-product-checkbox"
+      />
+    </Form.Group>
+  </Col>
+  {isReturnable && (
+    <Col md={4}>
+      <Form.Group>
+        <Form.Label className="single-product-form-label">Return Window (Days)</Form.Label>
+        <Form.Control
+          className="single-product-form"
+          type="number"
+          min="1"
+          max="30"
+          value={returnWithinDays}
+          onChange={(e) => setReturnWithinDays(e.target.value)}
+        />
+      </Form.Group>
+    </Col>
+  )}
+</Row>
             <Row className="mb-3">
               <Col md={12}>
                 <h3 className="features-heading">Features</h3>

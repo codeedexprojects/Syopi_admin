@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/admin/static/css/main.52662bde.css",
-    "main.js": "/admin/static/js/main.9bdc4941.js",
+    "main.css": "/admin/static/css/main.5e0b5758.css",
+    "main.js": "/admin/static/js/main.bfe4a23a.js",
     "static/media/syopi-admin-product.jpeg": "/admin/static/media/syopi-admin-product.8a956216aebda2961de3.jpeg",
     "static/media/user.png": "/admin/static/media/user.c3863532616cd2c136c3.png",
     "static/media/report.png": "/admin/static/media/report.2b3b9a1f6943054e3ace.png",
@@ -9,11 +9,11 @@
     "static/media/png": "/admin/static/media/e222d69f48d84cb3db37ef787f201fdc.a262ca47a8b3342dd8c6.png",
     "static/media/admin-login.png": "/admin/static/media/admin-login.327633ba6a17c75b4831.png",
     "index.html": "/admin/index.html",
-    "main.52662bde.css.map": "/admin/static/css/main.52662bde.css.map",
-    "main.9bdc4941.js.map": "/admin/static/js/main.9bdc4941.js.map"
+    "main.5e0b5758.css.map": "/admin/static/css/main.5e0b5758.css.map",
+    "main.bfe4a23a.js.map": "/admin/static/js/main.bfe4a23a.js.map"
   },
   "entrypoints": [
-    "static/css/main.52662bde.css",
-    "static/js/main.9bdc4941.js"
+    "static/css/main.5e0b5758.css",
+    "static/js/main.bfe4a23a.js"
   ]
 }
