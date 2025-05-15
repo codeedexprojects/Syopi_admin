@@ -46,6 +46,7 @@ import Homepage from './Pages/Homepage';
 import Coin from './Pages/Coin';
 import BrandCarousel from './Pages/BrandCarousel';
 import VendorLogin from './Pages/Vendor/VendorLogin';
+import UserProfile from './Pages/UserProfile';
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -119,6 +120,8 @@ function App() {
           }
         />
                 <Route path="/homepage" element={<ProtectedRoute role="admin">{renderLayout(Homepage)}</ProtectedRoute>} />
+                <Route path="/userprofile/:id" element={<ProtectedRoute role="admin">{renderLayout(UserProfile)}</ProtectedRoute>} />
+
                 <Route path="/coin" element={<ProtectedRoute role="admin">{renderLayout(Coin)}</ProtectedRoute>} />
                 <Route path="/categorycarousal" element={<ProtectedRoute role="admin">{renderLayout(CategoryCarousel)}</ProtectedRoute>} />
                 <Route path="/brandcarousal" element={<ProtectedRoute role="admin">{renderLayout(BrandCarousel)}</ProtectedRoute>} />

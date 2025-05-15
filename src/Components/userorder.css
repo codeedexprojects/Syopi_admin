@@ -1,0 +1,159 @@
+/* Import Poppins font */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* Base styles */
+.user-order-container {
+  font-family: 'Poppins', sans-serif;
+  padding: 2rem 1rem;
+}
+
+.order-wrapper {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+/* Card styling */
+.order-card {
+  border-radius: 8px;
+  border: none;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  background-color: #fff;
+}
+
+/* Header styling */
+.order-header {
+  padding: 1.5rem 1.75rem;
+  background-color: #fff;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.order-header h3 {
+  color: #333;
+  font-weight: 600;
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+/* Search styling */
+.search-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.search-container {
+  position: relative;
+  width: 280px;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  color: #9ca3af;
+}
+
+.search-input {
+  padding-left: 40px;
+  border-radius: 6px;
+  height: 40px;
+  font-size: 0.9rem;
+  border: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+  width: 100%;
+}
+
+.search-input:focus {
+  border-color: #d1d5db;
+  background-color: #fff;
+  box-shadow: none;
+}
+
+/* Table styling */
+.order-table {
+  margin-bottom: 0;
+}
+
+.order-table thead th {
+  background-color: #f9fafb;
+  font-weight: 500;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0.95rem 1.5rem;
+  border-top: none;
+  border-bottom: 1px solid #f0f0f0;
+  color: #6b7280;
+}
+
+.order-table tbody tr {
+  transition: all 0.15s ease;
+}
+
+.order-table tbody tr:hover {
+  background-color: #fafafa;
+}
+
+.order-table td {
+  padding: 1rem 1.5rem;
+  vertical-align: middle;
+  border-bottom: 1px solid #f0f0f0;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.product-cell {
+  font-weight: 500;
+  color: #111827;
+}
+
+.price-cell {
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Status badges */
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.status-badge.delivered {
+  background-color: #ecfdf5;
+  color: #047857;
+}
+
+.status-badge.processing {
+  background-color: #eff6ff;
+  color: #1e40af;
+}
+
+.status-badge.shipped {
+  background-color: #f0f9ff;
+  color: #0369a1;
+}
+
+.status-badge.pending {
+  background-color: #fffbeb;
+  color: #b45309;
+}
+
+/* Footer styling */
+.order-footer {
+  background-color: #fff;
+  padding: 1rem 1.5rem;
+  color: #6b7280;
+  font-size: 0.8rem;
+  text-align: right;
+  border-top: 1px solid #f1f1f1;
+}
+

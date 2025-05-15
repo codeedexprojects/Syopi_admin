@@ -14,21 +14,20 @@ import {
 } from "@mui/material";
 import { getallUserApi, searchUsers } from "../services/allApi";
 import HashLoader from "react-spinners/HashLoader";
+import { useNavigate } from "react-router-dom";
 
 function UserManage() {
   const [rows, setRows] = useState([]);
-  const [allUsers, setAllUsers] = useState([]); // Store all users for client-side filtering
+  const [allUsers, setAllUsers] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [apiData, setApiData] = useState(null); // Store the full API response
+  const [apiData, setApiData] = useState(null); 
   
-  // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
-  
-  // Filter states
+  const navigate = useNavigate();
   const [filters, setFilters] = useState({
     gender: "",
     role: "",
@@ -36,7 +35,6 @@ function UserManage() {
   });
   const [showFilters, setShowFilters] = useState(false);
 
-  // User stats state
   const [userStats, setUserStats] = useState([
     { title: "Most Wishlisted", number: 0 },
     { title: "Top Ordered", number: 0 },
@@ -46,7 +44,6 @@ function UserManage() {
     { title: "Inactive Users", number: 0 },
   ]);
 
-  // Fetch data from API
   const fetchData = async () => {
     setLoading(true);
     setError(null);
@@ -167,6 +164,9 @@ function UserManage() {
     }
   };
 
+  const singleuser=(id)=>{
+    navigate(`/userprofile/${id}`)
+  }
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
   };
@@ -405,29 +405,41 @@ function UserManage() {
                 </TableHead>
                 <TableBody>
                   {rows.map((row, index) => (
-                    <TableRow key={row._id || index}>
-                      <TableCell align="left" className="dorder-tabledata">
-                        {(currentPage - 1) * itemsPerPage + index + 1}
-                      </TableCell>
-                      <TableCell align="left" className="dorder-tabledata">
-                        {row.name || 'N/A'}
-                      </TableCell>
-                      <TableCell align="left" className="dorder-tabledata">
-                        {row.email || 'N/A'}
-                      </TableCell>
-                      <TableCell align="left" className="dorder-tabledata">
-                        {row.phone || 'N/A'}
-                      </TableCell>
-                      <TableCell align="left" className="dorder-tabledata">
-                        {row.gender || 'N/A'}
-                      </TableCell>
-                      <TableCell align="left" className="dorder-tabledata">
-                        {row.role || 'N/A'}
-                      </TableCell>
-                      <TableCell align="left" className="dorder-tabledata">
-                        {row.referralCode || 'N/A'}
-                      </TableCell>
-                    </TableRow>
+                   <TableRow key={row._id || index} hover>
+  <TableCell align="left" className="dorder-tabledata">
+    {(currentPage - 1) * itemsPerPage + index + 1}
+  </TableCell>
+
+  <TableCell
+    align="left"
+    className="dorder-tabledata"
+    style={{ cursor: 'pointer', color: '#007bff' }}
+    onClick={() => singleuser(row._id)}
+  >
+    {row.name || 'N/A'}
+  </TableCell>
+
+  <TableCell align="left" className="dorder-tabledata">
+    {row.email || 'N/A'}
+  </TableCell>
+
+  <TableCell align="left" className="dorder-tabledata">
+    {row.phone || 'N/A'}
+  </TableCell>
+
+  <TableCell align="left" className="dorder-tabledata">
+    {row.gender || 'N/A'}
+  </TableCell>
+
+  <TableCell align="left" className="dorder-tabledata">
+    {row.role || 'N/A'}
+  </TableCell>
+
+  <TableCell align="left" className="dorder-tabledata">
+    {row.referralCode || 'N/A'}
+  </TableCell>
+</TableRow>
+
                   ))}
                 </TableBody>
               </Table>

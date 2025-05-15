@@ -34,8 +34,6 @@ function Addproduct() {
   const [occasion, setOccasion] = useState("");
   const [material, setMaterial] = useState("");
   const adminID = localStorage.getItem("adminId");
-
-  // Current working variant
   const [color, setColor] = useState("#000000");
   const [colorName, setColorName] = useState("Black");
   const [sizeStocks, setSizeStocks] = useState({});
@@ -196,9 +194,8 @@ function Addproduct() {
 
     formData.append("features", JSON.stringify(cleanedFeatures));
 
-    // Format and append variants data
+
     const formattedVariants = variants.map((variant, index) => {
-      // Need to exclude the actual image files from this JSON
       const { images, ...variantData } = variant;
       return {
         ...variantData,
@@ -210,7 +207,6 @@ function Addproduct() {
 
     formData.append("variants", JSON.stringify(formattedVariants));
 
-    // Append variant images with special naming convention for the backend
     variants.forEach((variant, variantIndex) => {
       variant.images.forEach((image, imageIndex) => {
         if (image) {

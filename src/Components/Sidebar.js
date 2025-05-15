@@ -12,7 +12,7 @@ import { Link, useLocation } from "react-router-dom";
 import "./Sidebar.css";
 
 function Sidebar({ isOpen }) {
-  const location = useLocation(); 
+  const location = useLocation();
   const userRole = localStorage.getItem("role");
 
   const isActive = (path) => location.pathname === path;
@@ -27,6 +27,11 @@ function Sidebar({ isOpen }) {
                 <FaTachometerAlt className="icon" /> Dashboard
               </li>
             </Link>
+            <Link to="/usermanage" style={{ textDecoration: "none" }}>
+              <li className={isActive("/usermanage") ? "active" : ""}>
+                <FaTags className="icon" /> Manage Users
+              </li>
+            </Link>
             <Link to="/managevendors" style={{ textDecoration: "none" }}>
               <li className={isActive("/managevendors") ? "active" : ""}>
                 <FaBox className="icon" /> Manage Vendors
@@ -37,19 +42,9 @@ function Sidebar({ isOpen }) {
                 <FaBox className="icon" /> Manage Products
               </li>
             </Link>
-            <Link to="/homepage" style={{ textDecoration: "none" }}>
-              <li className={isActive("/homepage") ? "active" : ""}>
-                <FaBox className="icon" /> Manage homepage
-              </li>
-            </Link>
-            <Link to="/coin" style={{ textDecoration: "none" }}>
-              <li className={isActive("/coin") ? "active" : ""}>
-                <FaBox className="icon" /> Coin
-              </li>
-            </Link>
-            <Link to="/usermanage" style={{ textDecoration: "none" }}>
-              <li className={isActive("/usermanage") ? "active" : ""}>
-                <FaTags className="icon" /> Manage Users
+            <Link to="/orders" style={{ textDecoration: "none" }}>
+              <li className={isActive("/orders") ? "active" : ""}>
+                <FaShoppingCart className="icon" /> Orders
               </li>
             </Link>
             <Link to="/brand" style={{ textDecoration: "none" }}>
@@ -67,9 +62,10 @@ function Sidebar({ isOpen }) {
                 <FaListAlt className="icon" /> Subcategory
               </li>
             </Link>
-            <Link to="/orders" style={{ textDecoration: "none" }}>
-              <li className={isActive("/orders") ? "active" : ""}>
-                <FaShoppingCart className="icon" /> Orders
+           
+            <Link to="/homepage" style={{ textDecoration: "none" }}>
+              <li className={isActive("/homepage") ? "active" : ""}>
+                <FaBox className="icon" /> Manage Homepage
               </li>
             </Link>
             <Link to="/coupon" style={{ textDecoration: "none" }}>
@@ -82,12 +78,16 @@ function Sidebar({ isOpen }) {
                 <FaTags className="icon" /> Offers
               </li>
             </Link>
+            <Link to="/coin" style={{ textDecoration: "none" }}>
+              <li className={isActive("/coin") ? "active" : ""}>
+                <FaBox className="icon" /> Coin
+              </li>
+            </Link>
             <Link to="/notification" style={{ textDecoration: "none" }}>
               <li className={isActive("/notification") ? "active" : ""}>
                 <FaBell className="icon" /> Notifications
               </li>
             </Link>
-          
           </>
         )}
 
