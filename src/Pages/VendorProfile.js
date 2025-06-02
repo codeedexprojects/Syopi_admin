@@ -15,10 +15,13 @@ import {
 import { BASE_URL } from "../services/baseUrl";
 import { toast, ToastContainer } from "react-toastify";
 import { AiOutlineCloudUpload } from "react-icons/ai";
+import VendorProducts from "../Components/VendorProducts";
 
 function VendorProfile() {
   const { id } = useParams(); 
   const [vendorData, setVendorData] = useState({});
+  const [vendorProduct, setVendorProduct] = useState({});
+
   const [images, setImages] = useState([null, null, null, null]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const navigate = useNavigate();
@@ -48,11 +51,15 @@ function VendorProfile() {
     const fetchVendorData = async () => {
       try {
         const response = await getVendorbyID(id);
-        console.log(response);
+        console.log("single-vendor",response);
 
         if (response && response.data) {
-          const vendor = response.data;
-          setVendorData(vendor);
+          const vendor = response.data.vendor;
+          const vendorproduct=response.data.products
+          setVendorData(
+            vendor
+            );
+          setVendorProduct(vendorproduct);
           setImages(vendorData.images  || [null, null, null, null])
           setShopName(vendor.businessname || "");
           setDescription(vendor.description || "");
@@ -619,7 +626,7 @@ function VendorProfile() {
           </button>
         </Col>
       </Row>
-
+    <VendorProducts product={vendorProduct}/>
       <Modal show={isModalOpen} onHide={closeModal} centered>
         <Modal.Header closeButton>
           <Modal.Title>Confirm Deletion</Modal.Title>

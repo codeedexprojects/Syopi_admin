@@ -393,7 +393,10 @@ const handleEditVariant = (index) => {
     setSizeStocks({});
     setSelectedSizes([]);
   };
-
+  
+  const productnavigation=()=>{
+    navigate('/products')
+    }
   const handleFormSubmit = async (e) => {
     e.preventDefault();
   
@@ -484,11 +487,24 @@ const handleEditVariant = (index) => {
       toast.error(err.message || "An unexpected error occurred");
     }
   };
-  
 
   return (
     <div className=" single-product">
       <Row className="mb-4 align-items-center">
+      <h5
+  onClick={productnavigation}
+  style={{
+    cursor: "pointer",
+    color: "rgb(56, 186, 244)",
+    textDecoration: "underline",
+    marginBottom: "1rem",
+    display: "inline-block",
+  }}
+>
+  ← Back
+</h5>
+
+
         <Col>
           <h2 className="single-product-title">Product</h2>
         </Col>

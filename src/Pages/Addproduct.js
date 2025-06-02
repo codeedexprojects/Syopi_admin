@@ -18,6 +18,8 @@ function Addproduct() {
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedCategoryName, setSelectedCategoryName] = useState("");
+
   const [description, setDescription] = useState("");
   const [selectedSubCategory, setSelectedSubCategory] = useState("");
   const [selectedProductType, setSelectedProductType] = useState("");
@@ -28,6 +30,7 @@ function Addproduct() {
   const [fit, setFit] = useState("");
   const [sleevesType, setSleevesType] = useState("");
   const [length, setLength] = useState("");
+  const [cost, setCost] = useState("");
   const [netWeight, setNetWeight] = useState("");
   const [isReturnable, setIsReturnable] = useState("");
   const [returnWithinDays, setReturnWithinDays] = useState("");
@@ -39,6 +42,8 @@ function Addproduct() {
   const [sizeStocks, setSizeStocks] = useState({});
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [variantImages, setVariantImages] = useState([null, null, null, null]);
+  const [loading, setLoading] = useState(false);
+  const [lengthUnit, setLengthUnit] = useState("cm");
 
   // All variants for the product
   const [variants, setVariants] = useState([]);
@@ -124,10 +129,18 @@ function Addproduct() {
     const selectedCategoryId = e.target.value;
     setSelectedCategory(selectedCategoryId);
 
+    // Find the full category object based on the selected ID
+    const selectedCategoryObj = categories.find(
+      (cat) => cat._id === selectedCategoryId
+    );
+
+    // Set the name from the found category object
+    setSelectedCategoryName(selectedCategoryObj?.name || "");
+
     if (selectedCategoryId) {
       await fetchSubCategories(selectedCategoryId);
     } else {
-      setSubCategories([]); // No category selected, so clear subcategories
+      setSubCategories([]);
     }
   };
 
@@ -141,6 +154,7 @@ function Addproduct() {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     if (!productName || !selectedCategory || !description) {
       toast.error("All fields are required");
@@ -154,6 +168,7 @@ function Addproduct() {
 
     const formData = new FormData();
     formData.append("name", productName.trim());
+    formData.append("cost", cost.trim());
     formData.append("description", description.trim());
     formData.append("category", selectedCategory);
     formData.append("subcategory", selectedSubCategory || "");
@@ -166,7 +181,6 @@ function Addproduct() {
     formData.append("fileType", "product");
     formData.append("userType", "admin");
 
-    // Append main product images (first variant's images)
     if (variants[0]?.images) {
       variants[0].images.forEach((image, index) => {
         if (image) {
@@ -184,7 +198,8 @@ function Addproduct() {
       fit: fit || "",
       sleevesType:
         selectedProductType === "Dress" ? sleevesType || "" : undefined,
-      length: length || "",
+        length: length ? `${length} ${lengthUnit}` : "", // Include the unit with the length
+
       occasion: occasion || "",
     };
 
@@ -193,7 +208,6 @@ function Addproduct() {
     );
 
     formData.append("features", JSON.stringify(cleanedFeatures));
-
 
     const formattedVariants = variants.map((variant, index) => {
       const { images, ...variantData } = variant;
@@ -231,6 +245,7 @@ function Addproduct() {
         setDescription("");
         setSelectedCategory("");
         setSelectedSubCategory("");
+        setCost("");
         setSelectedBrand("");
         setIsReturnable(false);
         setCODAvailable(false);
@@ -246,13 +261,13 @@ function Addproduct() {
         setVariants([
           { size: "", color: "", price: "", stock: "", images: [] },
         ]);
-
-        // Reset form or redirect
       } else {
         toast.error(response.error || "Failed to create product");
       }
     } catch (err) {
       toast.error(err.message || "An unexpected error occurred");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -267,7 +282,6 @@ function Addproduct() {
   const handleSelectVariantImage = (index) => {
     if (variantImages[index] && variantImages[0] !== variantImages[index]) {
       const updatedImages = [...variantImages];
-      // Swap images instead of just copying
       const temp = updatedImages[0];
       updatedImages[0] = updatedImages[index];
       updatedImages[index] = temp;
@@ -286,31 +300,26 @@ function Addproduct() {
       return;
     }
 
-    // Validate price fields
     if (!wholesalePrice || !price) {
       toast.error("Please enter both wholesale and normal prices");
       return;
     }
 
-    // Check if prices are valid numbers
     if (isNaN(Number(wholesalePrice)) || isNaN(Number(price))) {
       toast.error("Prices must be valid numbers");
       return;
     }
 
-    // Map sizeStocks object into an array of sizes
     const formattedSizes = Object.entries(sizeStocks).map(([size, stock]) => ({
       size,
-      stock: Number(stock), // Ensure stock is a number
+      stock: Number(stock),
     }));
 
-    // Calculate the total stock
     const totalStock = formattedSizes.reduce(
       (sum, { stock }) => sum + stock,
       0
     );
 
-    // Filter out null images
     const filteredImages = variantImages.filter((img) => img !== null);
 
     const newVariant = {
@@ -320,12 +329,11 @@ function Addproduct() {
       price: Number(price),
       stock: totalStock,
       sizes: formattedSizes,
-      images: filteredImages, // Store the actual File objects
+      images: filteredImages,
     };
 
     setVariants((prevVariants) => [...prevVariants, newVariant]);
 
-    // Clear fields for the next variant
     setColor("#000000");
     setColorName("Black");
     setWholesalePrice("");
@@ -336,6 +344,10 @@ function Addproduct() {
 
     toast.success("Variant added successfully");
   };
+  const kidSizes = ["New Born", "0-1", "1-2", "2-3", "3-4", "4-5", "5-6"];
+  const adultSizes = ["S", "M", "L", "XL", "XXL", "XXXL"];
+  const currentSizes =
+    selectedCategoryName?.toLowerCase() === "kids" ? kidSizes : adultSizes;
 
   const handleSizeSelection = (size) => {
     if (selectedSizes.includes(size)) {
@@ -543,6 +555,21 @@ function Addproduct() {
                   </div>
                 </Form.Group>
               </Col>
+              <Col md={4}>
+                <Form.Group>
+                  <Form.Label className="single-product-form-label">
+                    Cost
+                  </Form.Label>
+                  <Form.Control
+                    className="single-product-form"
+                    type="text"
+                    placeholder="Enter Cost"
+                    value={cost}
+                    onChange={(e) => setCost(e.target.value)}
+                    required
+                  />
+                </Form.Group>
+              </Col>
             </Row>
 
             {/* Variant details */}
@@ -566,7 +593,7 @@ function Addproduct() {
                       className="single-product-form mx-2"
                       type="color"
                       value={color}
-                      style={{ padding: "5px" }}
+                      style={{ padding: "5px", height: "40px", width: "6%" }}
                       onChange={(e) => {
                         const selectedColor = e.target.value;
                         setColor(selectedColor);
@@ -622,10 +649,12 @@ function Addproduct() {
               <Col md={12}>
                 <Form.Group>
                   <Form.Label className="single-product-form-label">
-                    Size and Stock
+                    {selectedCategoryName?.toLowerCase() === "kids"
+                      ? "Age and Stock"
+                      : "Size and Stock"}
                   </Form.Label>
                   <div className="size-selection">
-                    {["S", "M", "L", "XL", "XXL", "XXXL"].map((size) => (
+                    {currentSizes.map((size) => (
                       <div key={size} className="size-stock-group">
                         <label className="size-checkbox-label">
                           <input
@@ -903,18 +932,39 @@ function Addproduct() {
                     </Form.Group>
                   </Col>
                   <Col md={4}>
-                    <Form.Group>
-                      <Form.Label className="single-product-form-label">
-                        Length
-                      </Form.Label>
-                      <Form.Control
-                        className="single-product-form"
-                        type="text"
-                        placeholder="Enter Length"
-                        value={length}
-                        onChange={(e) => setLength(e.target.value)}
-                      />
-                    </Form.Group>
+                  <Form.Group>
+  <Form.Label className="single-product-form-label">
+    Length
+  </Form.Label>
+  <div className="position-relative">
+    <Form.Control
+      className="single-product-form"
+      type="text"
+      placeholder="Enter Length"
+      value={length}
+      onChange={(e) => setLength(e.target.value)}
+      style={{ paddingRight: "80px" }} // Add padding to make room for the dropdown
+    />
+    <Form.Select 
+      className="position-absolute"
+      style={{ 
+        top: 0, 
+        right: 0, 
+        width: "80px", 
+        height: "100%", 
+        borderTopLeftRadius: 0, 
+        borderBottomLeftRadius: 0,
+        borderLeft: "1px solid #ced4da",
+        background:"e9e9e9"
+      }}
+      value={lengthUnit}
+      onChange={(e) => setLengthUnit(e.target.value)}
+    >
+      <option value="cm">cm</option>
+      <option value="m">m</option>
+    </Form.Select>
+  </div>
+</Form.Group>
                   </Col>
                   <Col md={4}>
                     <Form.Group>
@@ -1004,9 +1054,21 @@ function Addproduct() {
               </Col>
             </Row>
 
-            <button type="submit" className="w-25 category-model-cancel">
-              Add
-            </button>
+            <button type="submit" className="w-25 category-model-add" disabled={loading}>
+  {loading ? (
+    <>
+      <span
+        className="spinner-border spinner-border-sm me-2"
+        role="status"
+        aria-hidden="true"
+      ></span>
+      Loading...
+    </>
+  ) : (
+    "Add"
+  )}
+</button>
+
           </Col>
         </Row>
       </Form>

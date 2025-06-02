@@ -1476,6 +1476,31 @@ export const getallUserApi = async () => {
   }
 };
 
+export const getUserByID = async (userId) => {
+  const url = `${BASE_URL}/admin/user/get/${userId}`;
+
+  // Retrieve accessToken from localStorage
+  const accessToken = localStorage.getItem("accessToken");
+
+  // Check if the token exists
+  if (!accessToken) {
+    return { success: false, error: "No token provided" };
+  }
+
+  // If the token exists, make the API request with the token in the headers
+  try {
+    const response = await commonApi("GET", url, null, {
+      Authorization: `Bearer ${accessToken}`,
+    });
+
+    return response;
+  } catch (error) {
+    // Handle any error in the API request
+    return { success: false, error: error.message || "Error fetching single user" };
+  }
+};
+
+
 export const getallProducts = async () => {
   const url = `${BASE_URL}/admin/product/get`;
 
@@ -1821,6 +1846,72 @@ export const updatevendorapi = async (VendorId, VendorData) => {
     return { success: false, error: error.message || "Error updating Vendor " };
   }
 };
+
+
+
+// Get all vendor payouts
+export const getAllVendorPayoutsApi = async () => {
+  const url = `${BASE_URL}/admin/vendorpayout/view`;
+  const accessToken = localStorage.getItem("accessToken");
+  
+  if (!accessToken) {
+    return { success: false, error: "No token provided" };
+  }
+  
+  try {
+    const response = await commonApi("GET", url, null, {
+      Authorization: `Bearer ${accessToken}`,
+    });
+    
+    return response;
+  } catch (error) {
+    return { success: false, error: error.message || "Error fetching vendor payouts" };
+  }
+};
+
+// Get payouts for a specific vendor
+export const getVendorPayoutsByVendorIdApi = async (vendorId) => {
+  const url = `${BASE_URL}/admin/vendor/payouts/${vendorId}`;
+  const accessToken = localStorage.getItem("accessToken");
+  
+  if (!accessToken) {
+    return { success: false, error: "No token provided" };
+  }
+  
+  try {
+    const response = await commonApi("GET", url, null, {
+      Authorization: `Bearer ${accessToken}`,
+    });
+    
+    return response;
+  } catch (error) {
+    return { success: false, error: error.message || "Error fetching vendor payouts" };
+  }
+};
+
+// Update payout status (pending to paid or vice versa)
+export const updateVendorPayoutStatusApi = async (statusData) => {
+  const url = `${BASE_URL}/admin/vendorpayout/update`;
+  const accessToken = localStorage.getItem("accessToken");
+  
+  if (!accessToken) {
+    return { success: false, error: "No token provided" };
+  }
+  
+  try {
+    const response = await commonApi("PUT", url, statusData, {
+      Authorization: `Bearer ${accessToken}`,
+    });
+    
+    return response;
+  } catch (error) {
+    return { success: false, error: error.message || "Error updating payout status" };
+  }
+};
+
+
+
+
 
 export const searchUsers = async (name, phone) => {
   // Initialize the base URL

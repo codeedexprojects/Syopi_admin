@@ -8,12 +8,14 @@ import { adminLoginApi } from "../services/allApi";
 import { toast, ToastContainer } from "react-toastify";
 import HashLoader from "react-spinners/HashLoader";
 import { useNavigate } from "react-router-dom";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -108,17 +110,31 @@ function AdminLogin() {
                 </div>
               </Form.Group>
               <Form.Group controlId="formPassword" className="mt-3">
-                <div className="login-input-group">
-                  <FaLock className="input-icon" />
-                  <Form.Control
-                    type="password"
-                    placeholder="Password"
-                    className="custom-input"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
-              </Form.Group>
+  <div className="login-input-group position-relative">
+    <FaLock className="input-icon" />
+    <Form.Control
+      type={showPassword ? "text" : "password"}
+      placeholder="Password"
+      className="custom-input"
+      value={password}
+      onChange={(e) => setPassword(e.target.value)}
+    />
+    <span
+      className="password-toggle-icon"
+      onClick={() => setShowPassword(!showPassword)}
+      style={{
+        position: "absolute",
+        right: "10px",
+        top: "50%",
+        transform: "translateY(-50%)",
+        cursor: "pointer",
+        color: "#888",
+      }}
+    >
+      {showPassword ? <FaEyeSlash /> : <FaEye />}
+    </span>
+  </div>
+</Form.Group>
 
               <div className="button-container">
                 <button

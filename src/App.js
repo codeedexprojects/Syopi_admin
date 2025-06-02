@@ -47,9 +47,10 @@ import Coin from './Pages/Coin';
 import BrandCarousel from './Pages/BrandCarousel';
 import VendorLogin from './Pages/Vendor/VendorLogin';
 import UserProfile from './Pages/UserProfile';
+import VendorPayout from './Pages/VendorPayout';
 
 function App() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [showTokenModal, setShowTokenModal] = useState(false);
 
   // Check authentication status on component mount
@@ -146,6 +147,7 @@ function App() {
         <Route path="/vendorprofile/:id" element={<ProtectedRoute role="admin">{renderLayout(VendorProfile)}</ProtectedRoute>} />
         <Route path="/shopdetails" element={<ProtectedRoute role="admin">{renderLayout(Shopdetails)}</ProtectedRoute>} />
         <Route path="/addvendor" element={<ProtectedRoute role="admin">{renderLayout(Addvendors)}</ProtectedRoute>} />
+        <Route path="/vendorpayout" element={<ProtectedRoute role="admin">{renderLayout(VendorPayout)}</ProtectedRoute>} />
 
         {/* Vendor routes */}
         <Route path="/vendordashboard" element={<ProtectedRoute role="vendor">{renderLayout(VendorDashboard)}</ProtectedRoute>} />

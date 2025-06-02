@@ -37,6 +37,11 @@ function Sidebar({ isOpen }) {
                 <FaBox className="icon" /> Manage Vendors
               </li>
             </Link>
+            <Link to="/vendorpayout" style={{ textDecoration: "none" }}>
+              <li className={isActive("/vendorpayout") ? "active" : ""}>
+                <FaBox className="icon" /> Vendor Payout
+              </li>
+            </Link>
             <Link to="/products" style={{ textDecoration: "none" }}>
               <li className={isActive("/products") ? "active" : ""}>
                 <FaBox className="icon" /> Manage Products

@@ -9,8 +9,12 @@ import TablePagination from "@mui/material/TablePagination";
 import Paper from "@mui/material/Paper";
 import { Col, Form, Row, Badge, Card } from "react-bootstrap";
 import "./order.css";
-import { getAdminOrdersApi, updateAdminOrderStatusApi } from "../services/allApi";
+import {
+  getAdminOrdersApi,
+  updateAdminOrderStatusApi,
+} from "../services/allApi";
 import { toast, ToastContainer } from "react-toastify";
+import { BASE_URL } from "../services/baseUrl";
 
 function Orders() {
   const [orders, setOrders] = useState([]);
@@ -35,10 +39,14 @@ function Orders() {
         setLoading(true);
         const response = await getAdminOrdersApi();
         console.log(response);
-
+  
         if (response.success) {
-          setOrders(response.data.orders);
-          setFilteredOrders(response.data.orders);
+          // Sort orders by createdAt (latest first)
+          const sortedOrders = response.data.orders.sort(
+            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+          );
+          setOrders(sortedOrders);
+          setFilteredOrders(sortedOrders);
         } else {
           setError("Failed to fetch orders");
         }
@@ -48,6 +56,9 @@ function Orders() {
         setLoading(false);
       }
     };
+  
+  
+  
 
     fetchOrders();
   }, []);
@@ -78,31 +89,31 @@ function Orders() {
 
   const handleSaveClick = async (id) => {
     const newStatus = status[id];
-  
+
     if (!newStatus) {
       toast.warn("Please select a status before saving.");
       return;
     }
-  
+
     try {
       const response = await updateAdminOrderStatusApi({
         orderId: id,
         status: newStatus,
       });
-  
+
       console.log("API Response:", response);
-  
+
       if (!response.success) {
         toast.error(response.message || "Failed to update status");
         return;
       }
-  
+
       toast.success("Order status updated!");
-  
+
       const updatedOrders = orders.map((order) =>
         order._id === id ? { ...order, status: newStatus } : order
       );
-  
+
       setOrders(updatedOrders);
       setFilteredOrders(
         currentFilter === "All"
@@ -115,8 +126,6 @@ function Orders() {
       console.error("Error updating status:", err);
     }
   };
-  
-  
 
   const handleStatusChange = (event, id) => {
     setStatus({ ...status, [id]: event.target.value });
@@ -142,23 +151,24 @@ function Orders() {
     setPage(0);
   };
 
-  // Function to format date
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-IN"); // Indian date format
+    return date.toLocaleDateString("en-IN"); 
   };
 
   // Status color mapping
   const getStatusColor = (status) => {
     const statusColors = {
-      Returned: "primary",
-      Processing: "info",
-      Pending: "warning",
-      Cancelled: "danger",
-      Shipped: "secondary",
-      Delivered: "success",
-      Not_requested: "light",
+      "In-Transit": "secondary",    // Gray
+      "Processing": "info",         // Light Blue
+      "Shipping": "primary",        // Dark Blue
+      "Pending": "warning",         // Orange
+      "Delivered": "success",       // Green
+      "Returned": "dark",           // Dark Gray or pick another
+      "Cancelled": "danger",        // Red
+      "Confirmed": "success",       // Green (or 'primary' if you want a different tone)
     };
+    
 
     return statusColors[status] || "light";
   };
@@ -206,23 +216,43 @@ function Orders() {
               <Card.Body>
                 <Row>
                   <Col md={3}>
-                    <div
-                      className="product-color-preview"
-                      style={{
-                        width: "100px",
-                        height: "100px",
-                        borderRadius: "8px",
-                        backgroundColor: order.color || "#ddd",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: "#fff",
-                        textShadow: "0 0 2px rgba(0,0,0,0.5)",
-                        marginBottom: "10px",
-                      }}
-                    >
-                      {order.colorName}
-                    </div>
+                  <div
+  className="product-image-preview"
+  style={{
+    width: "200px",
+    height: "250px",
+    borderRadius: "8px",
+    overflow: "hidden",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: "10px",
+    backgroundColor: "#f0f0f0",
+  }}
+>
+  {order.productId?.images?.[0] ? (
+    <img
+      src={`${BASE_URL}/uploads/${order.productId.images[0]}`}
+      alt={order.colorName || "Product"}
+      style={{
+        width: "100%",
+        height: "100%",
+        objectFit: "cover",
+      }}
+    />
+  ) : (
+    <span
+      style={{
+        color: "#666",
+        fontSize: "12px",
+        textAlign: "center",
+      }}
+    >
+      No Image
+    </span>
+  )}
+</div>
+
                   </Col>
                   <Col md={9}>
                     <table className="table table-borderless">
@@ -235,9 +265,9 @@ function Orders() {
                         </tr>
                         <tr>
                           <td>
-                            <strong>Product ID:</strong>
+                            <strong>Product </strong>
                           </td>
-                          <td>{order.productId}</td>
+                          <td>{order.productId?.name}</td>
                         </tr>
                         <tr>
                           <td>
@@ -340,6 +370,7 @@ function Orders() {
                   >
                     <option value="In-Transit">In-Transit</option>
                     <option value="Processing">Processing</option>
+                    <option value="Shipping">Shipping</option>
                     <option value="Pending">Pending</option>
                     <option value="Delivered">Delivered</option>
                     <option value="Returned">Returned</option>
@@ -552,6 +583,9 @@ function Orders() {
                   <TableCell className="dproduct-tablehead" align="left">
                     SI No
                   </TableCell>
+                  <TableCell className="dproduct-tablehead" align="left">
+                    Product Name
+                  </TableCell>
 
                   <TableCell className="dproduct-tablehead">Color</TableCell>
                   <TableCell className="dproduct-tablehead" align="left">
@@ -581,6 +615,32 @@ function Orders() {
                       <TableCell align="left" className="dorder-tabledata">
                         {page * rowsPerPage + index + 1}
                       </TableCell>
+                      <TableCell className="border-tabledata">
+  <div className="d-flex align-items-center">
+    {order.productId?.images?.[0] && (
+      <img
+        src={`${BASE_URL}/uploads/${order.productId.images[0]}`}
+        alt={order.productId?.name || "Product"}
+        className="me-2 rounded"
+        style={{
+          width: "32px",
+          height: "32px",
+          objectFit: "cover"
+        }}
+      />
+    )}
+    <div 
+      className="text-truncate" 
+      style={{ maxWidth: "120px" }}
+      title={order.productId?.name}
+    >
+      {order.productId?.name?.length > 15 
+        ? `${order.productId.name.substring(0, 15)}...` 
+        : order.productId?.name}
+    </div>
+  </div>
+</TableCell>
+
                       <TableCell component="th" scope="row">
                         <div
                           style={{
@@ -624,6 +684,8 @@ function Orders() {
                           >
                             <option value="Pending">Pending</option>
                             <option value="Processing">Processing</option>
+                            <option value="Shipping">Shipping</option>
+
                             <option value="In-Transit">In-Transit</option>
                             <option value="Delivered">Delivered</option>
                             <option value="Cancelled">Cancelled</option>

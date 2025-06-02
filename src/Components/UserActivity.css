@@ -1,0 +1,89 @@
+/* UserActivity.css */
+
+.user-activity-card {
+    border: none;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+  }
+  
+  .user-activity-card .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    font-weight: 500;
+  }
+  
+  .activity-table {
+    font-size: 14px;
+  }
+  
+  .activity-table thead {
+    background-color: #f8f9fa;
+  }
+  
+  .activity-table th {
+    font-weight: 500;
+    color: #495057;
+  }
+  
+  .user-id, .product-id {
+    font-family: monospace;
+    font-size: 12px;
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  .message-cell {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  .activity-badge {
+    font-weight: 400;
+    padding: 5px 10px;
+  }
+  
+  .rating {
+    display: inline-block;
+  }
+  
+  .star {
+    color: #d3d3d3;
+    margin-right: 2px;
+  }
+  
+  .star.filled {
+    color: #ffc107;
+  }
+  
+  .no-activity {
+    text-align: center;
+    padding: 20px;
+    color: #6c757d;
+  }
+  
+  .activity-summary {
+    margin-top: 20px;
+  }
+  
+  .summary-card {
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    padding: 15px;
+    text-align: center;
+    height: 100%;
+  }
+  
+  .summary-card h6 {
+    margin-bottom: 10px;
+    color: #495057;
+  }
+  
+  .summary-value {
+    font-size: 24px;
+    font-weight: 600;
+    color: #212529;
+  }

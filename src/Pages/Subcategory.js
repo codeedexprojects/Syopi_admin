@@ -175,10 +175,10 @@ function Subcategory() {
   };
 
   const handleIconClick = (category, e) => {
-    setSubCategoryName(category.name); // Sub-category name
-    setSelectedCategory(category.category._id); // Parent category ID
-    setDescription(category.description); // Sub-category description
-    setImagePreview(`${BASE_URL}/uploads/${category.image}`); // Image URL
+    setSubCategoryName(category.name);
+    setSelectedCategory(category.category?._id); 
+    setDescription(category.description);
+    setImagePreview(`${BASE_URL}/uploads/${category.image}`); 
     setSelectedId(category._id);
 
     setShowPopoverModal(true);

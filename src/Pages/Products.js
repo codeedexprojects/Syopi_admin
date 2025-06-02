@@ -527,11 +527,7 @@ function Products() {
                         {row.name || "-"}
                       </TableCell>
                       <TableCell align="left" className="product-tabledata">
-                        {row.brand &&
-                        typeof row.brand === "string" &&
-                        row.brand.trim() !== ""
-                          ? row.brand
-                          : "-"}
+                        {row.brand?.name}
                       </TableCell>
 
                       <TableCell align="left" className="product-tabledata">
@@ -541,7 +537,7 @@ function Products() {
                         {row.totalStock || 0}
                       </TableCell>
                       <TableCell align="left" className="product-tabledata">
-                        ${getBasePrice(row)}
+                      ₹{getBasePrice(row)}
                       </TableCell>
                       <TableCell
                         onClick={(event) => {
@@ -609,13 +605,13 @@ function Products() {
             <FaEye className="modal-icons" />
             <span>Review</span>
           </div>
-          <div
+          {/* <div
             className="modal-option"
             onClick={() => alert("Flagged clicked!")}
           >
             <FaFlag className="modal-icons" />
             <span>Flagged</span>
-          </div>
+          </div> */}
         </Modal.Body>
       </Modal>
 

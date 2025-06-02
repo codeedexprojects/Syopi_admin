@@ -3,17 +3,11 @@ import { Table,  Container, Card, Form,  Row, Col } from 'react-bootstrap';
 import { Search } from 'lucide-react';
 import './userorder.css';
 
-function UserOrder() {
+function UserOrder({orders}) {
   const [searchTerm, setSearchTerm] = useState('');
+  console.log("orders",orders);
   
-  // Sample data - replace with your actual data
-  const orders = [
-    { id: 1, product: 'Premium Headphones', orderDate: '2025-05-10', customerId: 'CUST-1243', status: 'Delivered', price: '₹249.99' },
-    { id: 2, product: 'Wireless Keyboard', orderDate: '2025-05-09', customerId: 'CUST-8754', status: 'Processing', price: '₹89.99' },
-    { id: 3, product: 'UHD Monitor', orderDate: '2025-05-08', customerId: 'CUST-3452', status: 'Shipped', price: '₹399.99' },
-    { id: 4, product: 'Ergonomic Chair', orderDate: '2025-05-07', customerId: 'CUST-9023', status: 'Pending', price: '₹299.99' },
-    { id: 5, product: 'USB-C Hub', orderDate: '2025-05-06', customerId: 'CUST-6234', status: 'Delivered', price: '₹59.99' },
-  ];
+ 
 
   const getStatusBadge = (status) => {
     switch (status.toLowerCase()) {
@@ -31,8 +25,8 @@ function UserOrder() {
   };
 
   const filteredOrders = orders.filter(order => 
-    order.product.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    order.customerId.toLowerCase().includes(searchTerm.toLowerCase())
+    order.color.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    order.color.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -70,14 +64,14 @@ function UserOrder() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredOrders.map(order => (
-                      <tr key={order.id}>
-                        <td>{order.id}</td>
-                        <td className="product-cell">{order.product}</td>
-                        <td>{order.orderDate}</td>
-                        <td>{order.customerId}</td>
+                    {filteredOrders.map((order,index) => (
+                      <tr key={order}>
+                        <td>{index+1}</td>
+                        <td className="product-cell">{order.color}</td>
+                        <td>{order.createdAt}</td>
+                        <td>{order.color}</td>
                         <td>{getStatusBadge(order.status)}</td>
-                        <td className="price-cell">{order.price}</td>
+                        <td className="price-cell">{order.itemTotal}</td>
                       </tr>
                     ))}
                   </tbody>

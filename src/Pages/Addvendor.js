@@ -30,10 +30,12 @@ function Addvendors() {
   const [accountNumber, setAccountNumber] = useState("");
   const [accountHolderName, setAccountHolderName] = useState("");
   const [ifscCode, setIfscCode] = useState("");
+  const [gstNumber, setGstNumber] = useState("");
 
-  const [licence, setLicence] = useState(null);
-  const [certificate, setCertificate] = useState(null);
+  const [license, setLicense] = useState(null); // Changed from 'licence' to 'license'
+  // Removed certificate state since backend doesn't handle it
   const [logo, setLogo] = useState(null);
+  const [passbookImage, setPassbookImage] = useState(null);
   const [email, setEmail] = useState("");
 
   const handleFormSubmit = async (e) => {
@@ -60,7 +62,6 @@ function Addvendors() {
       return;
     }
 
-    // Creating FormData object to send all form data
     const formData = new FormData();
 
     // Append all text fields
@@ -80,16 +81,19 @@ function Addvendors() {
     formData.append("pincode", pinCode);
     formData.append("storetype", storeType);
     formData.append("password", password);
+    formData.append("gstNumber", gstNumber.trim().toUpperCase());
     formData.append("bankDetails", JSON.stringify({
       bankName: bankName.trim(),
       accountNumber: accountNumber.trim(),
       accountHolderName: accountHolderName.trim(),
       ifscCode: ifscCode.trim().toUpperCase()
     }));
-    // Append all file fields
-    if (licence) formData.append("license", licence);
-    // if (certificate) formData.append("certificate", certificate);
+    
+    // Append only the file fields that backend expects
+    if (license) formData.append("license", license);
     if (logo) formData.append("storelogo", logo);
+    if (passbookImage) formData.append("passbookImage", passbookImage);
+    // Removed certificate append since backend doesn't handle it
 
     images.forEach((image) => {
       if (image) {
@@ -107,7 +111,7 @@ function Addvendors() {
 
       if (response.success) {
         toast.success("Vendor created successfully");
-        setImages([null, null, null, null]); // Reset images after successful submission
+        setImages([null, null, null, null]); 
 
         navigate("/managevendors");
       } else {
@@ -128,7 +132,7 @@ function Addvendors() {
     const selectedImage = images[index];
     if (selectedImage && images[0] !== selectedImage) {
       const updatedImages = [...images];
-      updatedImages[0] = selectedImage; // Set selected small image as the large one
+      updatedImages[0] = selectedImage;
       setImages(updatedImages);
     }
   };
@@ -211,7 +215,7 @@ function Addvendors() {
                   <Form.Control
                     className="single-product-form"
                     type="text"
-                    placeholder="Specials cut women's top wear"
+                    placeholder="Enter shop name"
                     value={shopName}
                     onChange={(e) => setShopName(e.target.value)}
                   />
@@ -286,7 +290,7 @@ function Addvendors() {
                   <Form.Control
                     className="single-product-form"
                     type="text"
-                    placeholder="5858588887"
+                    placeholder="Enter Landmark"
                     value={landmark}
                     onChange={(e) => setLandMark(e.target.value)}
                   />
@@ -300,7 +304,7 @@ function Addvendors() {
                   <Form.Control
                     className="single-product-form"
                     type="text"
-                    placeholder="5858588887"
+                    placeholder="Enter city"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                   />
@@ -316,7 +320,7 @@ function Addvendors() {
                   <Form.Control
                     className="single-product-form"
                     type="text"
-                    placeholder="Enter Address"
+                    placeholder="Enter state"
                     value={state}
                     onChange={(e) => setState(e.target.value)}
                   />
@@ -330,7 +334,7 @@ function Addvendors() {
                   <Form.Control
                     className="single-product-form"
                     type="text"
-                    placeholder="5858588887"
+                    placeholder="Enter pincode"
                     value={pinCode}
                     onChange={(e) => setPinCode(e.target.value)}
                   />
@@ -368,7 +372,51 @@ function Addvendors() {
               </Col>
             </Row>
             <Row className="mb-3">
-              <Col md={4}>
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label className="single-product-form-label">
+                    GST Number
+                  </Form.Label>
+                  <Form.Control
+                    className="single-product-form"
+                    type="text"
+                    placeholder="Enter GST Number (15 characters)"
+                    value={gstNumber}
+                    onChange={(e) => setGstNumber(e.target.value.toUpperCase())}
+                    maxLength={15}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="position-relative">
+                  <Form.Label className="single-product-form-label">
+                    Passbook Image
+                  </Form.Label>
+                  <Form.Control
+                    id="passbook"
+                    className="single-product-form with-icon"
+                    type="text"
+                    placeholder="Click to upload passbook image"
+                    value={passbookImage ? passbookImage.name : ""}
+                    readOnly
+                    onClick={() => handleFileInputClick("passbook-file")}
+                  />
+                  <input
+                    type="file"
+                    id="passbook-file"
+                    accept="image/*"
+                    style={{ display: "none" }}
+                    onChange={(e) => handleFileChange(e, setPassbookImage)}
+                  />
+                  <AiOutlineCloudUpload
+                    className="form-icon"
+                    onClick={() => handleFileInputClick("passbook-file")}
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+            <Row className="mb-3">
+              <Col md={6}>
                 <Form.Group className="position-relative">
                   <Form.Label className="single-product-form-label">
                     Logo
@@ -394,7 +442,7 @@ function Addvendors() {
                   />
                 </Form.Group>
               </Col>
-              <Col md={4}>
+              <Col md={6}>
                 <Form.Group className="position-relative">
                   <Form.Label className="single-product-form-label">
                     License
@@ -404,7 +452,7 @@ function Addvendors() {
                     className="single-product-form with-icon"
                     type="text"
                     placeholder="Click to upload a file"
-                    value={licence ? licence.name : ""}
+                    value={license ? license.name : ""}
                     readOnly
                     onClick={() => handleFileInputClick("license-file")}
                   />
@@ -412,7 +460,7 @@ function Addvendors() {
                     type="file"
                     id="license-file"
                     style={{ display: "none" }}
-                    onChange={(e) => handleFileChange(e, setLicence)}
+                    onChange={(e) => handleFileChange(e, setLicense)}
                   />
                   <AiOutlineCloudUpload
                     className="form-icon"
@@ -420,33 +468,8 @@ function Addvendors() {
                   />
                 </Form.Group>
               </Col>
-              <Col md={4}>
-                <Form.Group className="position-relative">
-                  <Form.Label className="single-product-form-label">
-                    Certificates
-                  </Form.Label>
-                  <Form.Control
-                    id="certificates"
-                    className="single-product-form with-icon"
-                    type="text"
-                    placeholder="Click to upload a file"
-                    value={certificate ? certificate.name : ""}
-                    readOnly
-                    onClick={() => handleFileInputClick("certificate-file")}
-                  />
-                  <input
-                    type="file"
-                    id="certificate-file" 
-                    style={{ display: "none" }}
-                    onChange={(e) => handleFileChange(e, setCertificate)}
-                  />
-                  <AiOutlineCloudUpload
-                    className="form-icon"
-                    onClick={() => handleFileInputClick("certificate-file")}
-                  />
-                </Form.Group>
-              </Col>
             </Row>
+            {/* Removed the Certificates field entirely since backend doesn't handle it */}
             <Row className="mb-3">
               <Col md={3}>
                 <Form.Group>
@@ -561,7 +584,7 @@ function Addvendors() {
             onClick={handleFormSubmit}
           >
             Add
-          </button>{" "}
+          </button>
         </Col>
       </Row>
       <ToastContainer></ToastContainer>

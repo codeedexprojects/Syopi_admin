@@ -7,12 +7,14 @@ import { toast, ToastContainer } from "react-toastify";
 import HashLoader from "react-spinners/HashLoader";
 import { useNavigate } from "react-router-dom";
 import { venodorLoginApi } from "../../services/allApi";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 function VendorLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleVendorLogin = async (e) => {
     e.preventDefault();
@@ -106,16 +108,30 @@ function VendorLogin() {
                   />
                 </div>
               </Form.Group>
-              <Form.Group controlId="formPassword" className="mt-3">
-                <div className="login-input-group">
+               <Form.Group controlId="formPassword" className="mt-3">
+                <div className="login-input-group position-relative">
                   <FaLock className="input-icon" />
                   <Form.Control
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="Password"
                     className="custom-input"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
+                  <span
+                    className="password-toggle-icon"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      position: "absolute",
+                      right: "10px",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      cursor: "pointer",
+                      color: "#888",
+                    }}
+                  >
+                    {showPassword ? <FaEyeSlash /> : <FaEye />}
+                  </span>
                 </div>
               </Form.Group>
 

@@ -9,8 +9,8 @@ import Storevisitors from "../Components/Storevisitors";
 import OrderGraph from "../Components/OrderGraph";
 import Dproducts from "../Components/Dproducts";
 import Dorders from "../Components/Dorders";
-import Weekly from "../Components/Weekly";
-import Leaderboard from "../Components/Leaderboard";
+// import Weekly from "../Components/Weekly";
+// import Leaderboard from "../Components/Leaderboard";
 import RecTransaction from "../Components/RecTransaction";
 import OrderStatistics from "../Components/OrderStatistics";
 import {
@@ -149,18 +149,18 @@ function Home() {
         </Col>
       </Row>
       <Row className="mt-5">
-        <Col md={7}>
+        {/* <Col md={7}>
           <Weekly />
-        </Col>
-        <Col md={5}>
+        </Col> */}
+        <Col md={12}>
           <OrderStatistics dashboardData={dashboardOrderData}/>
         </Col>
       </Row>
-      <Row className="mt-5">
+      {/* <Row className="mt-5">
         <Col md={12}>
           <Leaderboard />
         </Col>
-      </Row>
+      </Row> */}
       <Row className="mt-5">
         <Col md={12}>
           <RecTransaction />

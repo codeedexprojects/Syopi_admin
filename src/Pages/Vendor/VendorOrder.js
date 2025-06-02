@@ -7,7 +7,9 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import { Col, Form, Row, Badge, Card } from "react-bootstrap";
-import { getVendorOrdersApi } from "../../services/allApi";
+import { getVendorOrdersApi, updateVendorOrderStatusApi } from "../../services/allApi";
+import { BASE_URL } from "../../services/baseUrl";
+import { toast, ToastContainer } from "react-toastify";
 
 function VendorOrder() {
   const [orders, setOrders] = useState([]);
@@ -61,25 +63,43 @@ function VendorOrder() {
   };
 
   const handleSaveClick = async (id) => {
-    // Here you would implement the API call to update the order status
-    // For example:
-    // await updateOrderStatusApi(id, status[id]);
-    
-    // Update local state to reflect the change
-    const updatedOrders = orders.map(order => {
-      if (order._id === id) {
-        return { ...order, status: status[id] || order.status };
+    const newStatus = status[id];
+
+    if (!newStatus) {
+      toast.warn("Please select a status before saving.");
+      return;
+    }
+
+    try {
+      const response = await updateVendorOrderStatusApi({
+        orderId: id,
+        status: newStatus,
+      });
+
+      console.log("API Response:", response);
+
+      if (!response.success) {
+        toast.error(response.message || "Failed to update status");
+        return;
       }
-      return order;
-    });
-    
-    setOrders(updatedOrders);
-    setFilteredOrders(
-      currentFilter === "All" 
-        ? updatedOrders 
-        : updatedOrders.filter(order => order.status === currentFilter)
-    );
-    setEditRowId(null);
+
+      toast.success("Order status updated!");
+
+      const updatedOrders = orders.map((order) =>
+        order._id === id ? { ...order, status: newStatus } : order
+      );
+
+      setOrders(updatedOrders);
+      setFilteredOrders(
+        currentFilter === "All"
+          ? updatedOrders
+          : updatedOrders.filter((order) => order.status === currentFilter)
+      );
+      setEditRowId(null);
+    } catch (err) {
+      toast.error("Unexpected error occurred");
+      console.error("Error updating status:", err);
+    }
   };
 
   const handleStatusChange = (event, id) => {
@@ -109,7 +129,7 @@ function VendorOrder() {
       "Processing": "info",
       "Pending": "warning",
       "Cancelled": "danger",
-      "Shipped": "secondary",
+      "Shipping": "secondary",
       "Delivered": "success",
       "Not_requested": "light"
     };
@@ -264,7 +284,7 @@ function VendorOrder() {
                     <option value="Confirmed">Confirmed</option>
                     <option value="Processing">Processing</option>
                     <option value="Pending">Pending</option>
-                    <option value="Shipped">Shipped</option>
+                    <option value="Shipping">Shipping</option>
                     <option value="Delivered">Delivered</option>
                     <option value="Cancelled">Cancelled</option>
                   </Form.Select>
@@ -420,6 +440,12 @@ function VendorOrder() {
             <Table aria-label="orders table">
               <TableHead>
                 <TableRow>
+                   <TableCell className="dproduct-tablehead" align="left">
+                                      SI No
+                                    </TableCell>
+                   <TableCell className="dproduct-tablehead" align="left">
+                                      Product Name
+                                    </TableCell>
                   <TableCell className="dproduct-tablehead">Color</TableCell>
                   <TableCell className="dproduct-tablehead" align="left">Order Date</TableCell>
                   <TableCell className="dproduct-tablehead" align="left">Customer ID</TableCell>
@@ -431,8 +457,28 @@ function VendorOrder() {
               </TableHead>
               <TableBody>
                 {filteredOrders.length > 0 ? (
-                  filteredOrders.map((order) => (
+                  filteredOrders.map((order,index) => (
                     <TableRow key={order._id} hover>
+                       <TableCell align="left" className="dorder-tabledata">
+                                              {index + 1}
+                                            </TableCell>
+                                            <TableCell align="left" className="dorder-tabledata">
+                                              <div>
+                                                <div>{order.productId?._id}</div>
+                                                {order.productId?.images?.[0] && (
+                                                  <img
+                                                    src={`${BASE_URL}/uploads/${order.productId.images[0]}`}
+                                                    alt="Product"
+                                                    style={{
+                                                      width: "50px",
+                                                      height: "50px",
+                                                      objectFit: "cover",
+                                                      marginTop: "5px",
+                                                    }}
+                                                  />
+                                                )}
+                                              </div>
+                                            </TableCell>
                       <TableCell component="th" scope="row">
                         <div
                           style={{
@@ -467,7 +513,7 @@ function VendorOrder() {
                             <option value="Confirmed">Confirmed</option>
                             <option value="Processing">Processing</option>
                             <option value="Pending">Pending</option>
-                            <option value="Shipped">Shipped</option>
+                            <option value="Shipping">Shipping</option>
                             <option value="Delivered">Delivered</option>
                             <option value="Cancelled">Cancelled</option>
                           </Form.Select>
@@ -617,6 +663,7 @@ function VendorOrder() {
           `}</style>
         </>
       )}
+      <ToastContainer></ToastContainer>
     </div>
   );
 }
