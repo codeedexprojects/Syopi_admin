@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { createTopPickProductApi, getAllTopPickProductsApi, getCategoriesApi, getSubCategoriesApi, updateTopPickProductApi } from '../services/allApi';
+import { createTopPickProductApi, getsubcategoryByID, getAllTopPickProductsApi, getCategoriesApi, updateTopPickProductApi } from '../services/allApi';
 import './TopPickProduct.css';
 import { BASE_URL } from '../services/baseUrl';
 
@@ -12,7 +12,6 @@ function TopPickProduct() {
   const [editMode, setEditMode] = useState(false);
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
 
-  // Form data state
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -64,7 +63,7 @@ function TopPickProduct() {
   const fetchCategories = async () => {
     try {
       const response = await getCategoriesApi();
-      console.log("categories",response);
+      console.log("categories", response);
       
       if (response.status === 200 && response.data) {
         setCategories(response.data || []);
@@ -79,11 +78,12 @@ function TopPickProduct() {
   // Fetch subcategories based on category ID
   const fetchSubcategories = async (categoryId) => {
     try {
-      const response = await getSubCategoriesApi(categoryId);
-      console.log("subcategories",response);
+      const response = await getsubcategoryByID(categoryId);
+      console.log("subcategories", response);
       
       if (response.status === 200 && response.data) {
-        setFilteredSubcategories(response.data.subCategories || []);
+        // Adjust this based on your API response structure
+        setFilteredSubcategories(response.data.subCategories || response.data || []);
       } else {
         console.error('Error fetching subcategories:', response);
         setFilteredSubcategories([]);

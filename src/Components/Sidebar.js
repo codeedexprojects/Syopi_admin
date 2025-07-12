@@ -7,6 +7,8 @@ import {
   FaShoppingCart,
   FaGift,
   FaBell,
+  FaMoneyBillWave,
+  FaPercentage,
 } from "react-icons/fa";
 import { Link, useLocation } from "react-router-dom";
 import "./Sidebar.css";
@@ -47,6 +49,17 @@ function Sidebar({ isOpen }) {
                 <FaBox className="icon" /> Manage Products
               </li>
             </Link>
+            <Link to="/revenue" style={{ textDecoration: "none" }}>
+  <li className={isActive("/revenue") ? "active" : ""}>
+    <FaMoneyBillWave className="icon" /> Revenue
+  </li>
+</Link>
+
+<Link to="/commision" style={{ textDecoration: "none" }}>
+  <li className={isActive("/commision") ? "active" : ""}>
+    <FaPercentage className="icon" /> Commission
+  </li>
+</Link>
             <Link to="/orders" style={{ textDecoration: "none" }}>
               <li className={isActive("/orders") ? "active" : ""}>
                 <FaShoppingCart className="icon" /> Orders
@@ -114,11 +127,11 @@ function Sidebar({ isOpen }) {
                 <FaListAlt className="icon" /> Subcategory
               </li>
             </Link>
-            <Link to="/vendornotification" style={{ textDecoration: "none" }}>
+            {/* <Link to="/vendornotification" style={{ textDecoration: "none" }}>
               <li className={isActive("/vendornotification") ? "active" : ""}>
                 <FaListAlt className="icon" /> Notification
               </li>
-            </Link>
+            </Link> */}
             <Link to="/vendororders" style={{ textDecoration: "none" }}>
               <li className={isActive("/vendororders") ? "active" : ""}>
                 <FaShoppingCart className="icon" /> Orders

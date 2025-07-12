@@ -9,11 +9,13 @@ import {
   getCategoriesApi,
   getproductByID,
   getsubcategoryByID,
+  deleteProductVariantApi,
   updateproductapi,
 } from "../services/allApi";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import { BASE_URL } from "../services/baseUrl";
+import ColorNamer from "color-namer";
 
 function SingleProduct() {
   const { id } = useParams();
@@ -26,11 +28,10 @@ function SingleProduct() {
   const [products, setProducts] = useState({});
   const [productName, setProductName] = useState("");
   const [description, setDescription] = useState("");
+  const [cost, setCost] = useState();
   const [brand, setBrand] = useState("");
-  const [stock, setStock] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const navigate = useNavigate();
   const [imageToDelete, setImageToDelete] = useState(null);
   const [selectedProductType, setSelectedProductType] = useState("");
   const [wholesalePrice, setwholesalePrice] = useState("");
@@ -49,20 +50,30 @@ function SingleProduct() {
   const [editingIndex, setEditingIndex] = useState(null);
   const [productId, setProductId] = useState("");
   const adminID = localStorage.getItem("adminId");
-  const [previewImages, setPreviewImages] = useState([]);
   const [selectedBrand, setSelectedBrand] = useState("");
   const [isReturnable, setIsReturnable] = useState(false);
   const [returnWithinDays, setReturnWithinDays] = useState(7);
   const [codAvailable, setCodAvailable] = useState(false);
-  const [variantImages, setVariantImages] = useState({});
+  const [variantPreviewImages, setVariantPreviewImages] = useState({});
   const [selectedVariantIndex, setSelectedVariantIndex] = useState(null);
+  const [isKidsCategory, setIsKidsCategory] = useState(false);
+  const [colorName, setColorName] = useState("");
+  const [newVariantImages, setNewVariantImages] = useState({});
+const [deleteImageModal, setDeleteImageModal] = useState({
+    show: false,
+    imageName: null
+  });
+
+  const navigate = useNavigate();
+  const adultSizes = ["S", "M", "L", "XL", "XXL", "XXXL"];
+  const kidSizes = ["New Born", "0-1", "1-2", "2-3", "3-4", "4-5", "5-6"];
 
   useEffect(() => {
     const fetchproductData = async () => {
       try {
         const response = await getproductByID(id);
         console.log(response);
-  
+
         if (response && response.data) {
           const product = response.data;
           setProducts(product);
@@ -70,7 +81,8 @@ function SingleProduct() {
           setProductName(product.name || "");
           setDescription(product.description || "");
           setBrand(product.brand || "");
-          setStock(product.totalStock || "");
+          setSelectedBrand(product.brand?._id || "");
+          setCost(product.cost || "");
           setSelectedProductType(product.productType || "");
           setVariants(product.variants || []);
           setMaterial(product.features?.material || "");
@@ -83,7 +95,9 @@ function SingleProduct() {
           setProductId(product._id);
           setSelectedCategory(product.category._id);
           setSelectedSubCategory(product.subcategory._id);
-          // Set new fields
+          if (product.category.name.toLowerCase().includes("kids")) {
+            setIsKidsCategory(true);
+          }
           setIsReturnable(product.isReturnable || false);
           setReturnWithinDays(product.returnWithinDays || 7);
           setCodAvailable(product.CODAvailable || false);
@@ -94,7 +108,7 @@ function SingleProduct() {
         console.error("Error fetching vendor data:", error);
       }
     };
-  
+
     if (id) {
       fetchproductData();
     }
@@ -123,7 +137,6 @@ function SingleProduct() {
     try {
       const response = await getsubcategoryByID(categoryId);
       console.log("subcategories", response);
-
       if (response.success && Array.isArray(response.data)) {
         setSubCategories(response.data);
       } else {
@@ -142,6 +155,29 @@ function SingleProduct() {
   useEffect(() => {
     fetchsubCategories();
   }, []);
+
+  const handleDeleteVariant = async (variantId) => {
+  if (!window.confirm("Are you sure you want to delete this variant? This action cannot be undone.")) {
+    return;
+  }
+
+  try {
+    const response = await deleteProductVariantApi(productId, variantId, {});
+    
+    if (response.success) {
+      toast.success("Variant deleted successfully!");
+      // Refresh the product data
+      const updatedProduct = await getproductByID(id);
+      setProducts(updatedProduct.data);
+      setVariants(updatedProduct.data.variants || []);
+    } else {
+      toast.error(response.error || "Failed to delete variant");
+    }
+  } catch (error) {
+    console.error("Error deleting variant:", error);
+    toast.error(error.response?.data?.message || "An error occurred while deleting the variant");
+  }
+};
   const fetchBrands = async () => {
     try {
       const response = await getAllBrandsApi();
@@ -165,18 +201,89 @@ function SingleProduct() {
   }, []);
   const handleCategoryChange = async (e) => {
     const selectedCategoryId = e.target.value;
+    const selectedCategory = categories.find(
+      (cat) => cat._id === selectedCategoryId
+    );
 
     setSelectedCategory(selectedCategoryId);
+    setIsKidsCategory(
+      selectedCategory?.name.toLowerCase().includes("kids") || false
+    );
+
     if (selectedCategoryId) {
       await fetchsubCategories(selectedCategoryId);
     } else {
       setSubCategories([]);
     }
   };
+
   const handleSubCategoryChange = (e) => {
     setSelectedSubCategory(e.target.value);
   };
+  const handleColorChange = (hexColor) => {
+    setColor(hexColor);
 
+    const colorNames = ColorNamer(hexColor);
+    const basicName = colorNames.basic[0]?.name;
+    const htmlName = colorNames.html[0]?.name;
+    const name = basicName || htmlName || "";
+
+    setColorName(name);
+  };
+
+  
+const handleVariantImageChange = (variantIndex, imageIndex, event) => {
+  console.log('handleVariantImageChange called with:', {
+    variantIndex,
+    imageIndex,
+    file: event?.target?.files?.[0]
+  });
+
+  if (event?.target?.files?.[0]) {
+    const file = event.target.files[0];
+    const previewUrl = URL.createObjectURL(file);
+    
+    console.log('Generated preview URL:', previewUrl);
+
+    // Determine the key for the variant
+    const variantKey = editingIndex !== null ? editingIndex : 'new';
+    
+    console.log('Current newVariantImages before update:', newVariantImages);
+    console.log('Current variantPreviewImages before update:', variantPreviewImages);
+
+    setNewVariantImages(prev => {
+      const updated = {
+        ...prev,
+        [variantKey]: {
+          ...prev[variantKey],
+          [imageIndex]: file
+        }
+      };
+      console.log('Updated newVariantImages:', updated);
+      return updated;
+    });
+
+    setVariantPreviewImages(prev => {
+      const updated = {
+        ...prev,
+        [variantKey]: {
+          ...prev[variantKey],
+          [imageIndex]: previewUrl
+        }
+      };
+      console.log('Updated variantPreviewImages:', updated);
+      return updated;
+    });
+  }
+};
+
+
+
+
+
+
+
+ 
   const handleSizeSelection = (size) => {
     if (selectedSizes.includes(size)) {
       setSelectedSizes((prev) => prev.filter((s) => s !== size));
@@ -194,178 +301,48 @@ function SingleProduct() {
     setSizeStocks((prev) => ({ ...prev, [size]: stock }));
   };
 
-const handleImageChange = (variantIndex, imageIndex, event) => {
-  if (event.target.files && event.target.files[0]) {
-    const file = event.target.files[0];
-    
-    // Update the variant images state
-    setVariantImages(prev => {
-      const updatedImages = { ...prev };
-      if (!updatedImages[variantIndex]) {
-        updatedImages[variantIndex] = [null, null, null, null];
-      }
-      updatedImages[variantIndex][imageIndex] = file;
-      return updatedImages;
-    });
+  const handleDeleteModalOpen = () => setShowDeleteModal(true);
+  const handleDeleteModalClose = () => setShowDeleteModal(false);
 
-    // Update preview images
-    setPreviewImages(prev => {
-      const newPreviewImages = [...prev];
-      if (!newPreviewImages[variantIndex]) {
-        newPreviewImages[variantIndex] = [];
-      }
-      newPreviewImages[variantIndex][imageIndex] = URL.createObjectURL(file);
-      return newPreviewImages;
+const handleDeleteConfirm = async () => {
+  try {
+    await deleteProductapi(id);
+    toast.success("Product deleted successfully!", {
+      onClose: () => navigate("/products"),
     });
+    setShowDeleteModal(false);
+  } catch (error) {
+    console.error("Error deleting product:", error);
+    const errorMessage =
+      error?.response?.data?.message ||
+      "Failed to delete product. Please try again.";
+    toast.error(errorMessage);
   }
 };
 
-const handleRemoveImage = (variantIndex, imageIndex) => {
-  setVariantImages(prev => {
-    const updatedImages = { ...prev };
-    if (updatedImages[variantIndex]) {
-      updatedImages[variantIndex][imageIndex] = null;
-    }
-    return updatedImages;
+ const openDeleteModal = (variantIndex, imageIndex, imageName) => {
+  setImageToDelete({
+    variantIndex,
+    imageIndex,
+    imageName
   });
-
-  setPreviewImages(prev => {
-    const newPreviewImages = [...prev];
-    if (newPreviewImages[variantIndex]) {
-      newPreviewImages[variantIndex][imageIndex] = null;
-    }
-    return newPreviewImages;
-  });
+  setIsModalOpen(true);
 };
 
-  const handleDeleteModalOpen = () => setShowDeleteModal(true);
-  const handleDeleteModalClose = () => setShowDeleteModal(false);
-  const handleBrandChange = (e) => {
-    setSelectedBrand(e.target.value);
-  };
-  const handleDeleteConfirm = async () => {
-    try {
-      await deleteProductapi(id);
-      toast.success("Product deleted successfully!", {
-        onClose: () => navigate("/products"),
-      });
-      setShowDeleteModal(false);
-    } catch (error) {
-      console.error("Error deleting product:", error);
-      const errorMessage =
-        error?.response?.data?.message ||
-        "Failed to delete product. Please try again.";
-      toast.error(errorMessage);
-    }
-  };
-
-  const openDeleteModal = (imageIndex) => {
-    const imageName = products?.images?.[imageIndex];
-    console.log("Selected image name:", imageName);
-
-    if (imageName) {
-      setImageToDelete(imageName);
-      setIsModalOpen(true);
-    } else {
-      console.error("Image not found at the specified index.");
-    }
-  };
-
-  const confirmDeleteImage = async () => {
-    if (!imageToDelete) {
-      console.error("Image not found in product.");
-      setIsModalOpen(false);
-      return;
-    }
-  
-    const productId = products?._id;
-    const { variantIndex, imageName } = imageToDelete;
-  
-    try {
-      const response = await deleteProductImageApi(productId, {
-        variantIndex: variantIndex,
-        imageName: imageName
-      });
-  
-      if (response.success) {
-        toast.success("Image deleted successfully!");
-  
-        // Update the variants state to remove the deleted image
-        setVariants(prevVariants => {
-          const updatedVariants = [...prevVariants];
-          if (updatedVariants[variantIndex]?.images) {
-            updatedVariants[variantIndex].images = updatedVariants[variantIndex].images.filter(
-              image => image !== imageName
-            );
-          }
-          return updatedVariants;
-        });
-      } else {
-        toast.error(response.error || "Failed to delete the image. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error during image deletion:", error);
-      toast.error("An error occurred while deleting the image.");
-    } finally {
-      setIsModalOpen(false);
-      setImageToDelete(null);
-    }
-  };
-  
+ 
 
   const closeModal = () => {
     setIsModalOpen(false);
     setImageToDelete(null);
   };
-
-  const handleAddVariant = () => {
-    if (!color || !Object.keys(sizeStocks).length) {
-      alert("Please fill in all required fields.");
-      return;
-    }
-  
-    const formattedSizes = Object.entries(sizeStocks).map(([size, stock]) => ({
-      size,
-      stock: Number(stock),
-    }));
-  
-    const totalStock = formattedSizes.reduce(
-      (sum, { stock }) => sum + stock,
-      0
-    );
-  
-    // Add images to the variant
-    const variantIndex = editingIndex !== null ? editingIndex : variants.length;
-    const variantImagesArray = variantImages[variantIndex] || [];
-  
-    const newVariant = {
-      color,
-      wholesalePrice: Number(wholesalePrice) || 0,
-      price: Number(price) || 0,
-      stock: totalStock,
-      sizes: formattedSizes,
-      images: variantImagesArray.filter(img => img !== null)
-    };
-  
-    if (editingIndex !== null) {
-      setVariants((prevVariants) =>
-        prevVariants.map((variant, index) =>
-          index === editingIndex ? newVariant : variant
-        )
-      );
-      setEditingIndex(null);
-    } else {
-      setVariants((prevVariants) => [...prevVariants, newVariant]);
-    }
-  
-    clearFormFields();
-  };
-  
-
-// Updated handleEditVariant function to handle variant images
 const handleEditVariant = (index) => {
+  console.log('Editing variant at index:', index);
+  console.log('Current variant:', variants[index]);
+
   const variant = variants[index];
+  setSelectedVariantIndex(index);
   setColor(variant.color);
+  setColorName(variant.colorName || "");
   setwholesalePrice(variant.wholesalePrice);
   setPrice(variant.price);
 
@@ -375,135 +352,343 @@ const handleEditVariant = (index) => {
   });
   setSizeStocks(sizeStockObj);
   setSelectedSizes(variant.sizes.map(({ size }) => size));
-  
-  // Set the selected variant index for image handling
-  setSelectedVariantIndex(index);
-  
-  // If the variant has images, they will be displayed in the variant card
-  // No need to load them into the image fields at the top
-
   setEditingIndex(index);
+
+  console.log('Existing variant images:', variant.images);
+
+  // Initialize preview images for this variant
+  const previews = {};
+  variant.images?.forEach((img, i) => {
+    if (img instanceof File) {
+      previews[i] = URL.createObjectURL(img);
+      console.log(`Image ${i} is a File object, created preview URL`);
+    } else if (typeof img === 'string') {
+      previews[i] = `${BASE_URL}/uploads/${img}`;
+      console.log(`Image ${i} is a string, using server URL`);
+    }
+  });
+  
+  console.log('Setting preview images:', previews);
+  setVariantPreviewImages(prev => ({ ...prev, [index]: previews }));
 };
 
-  const clearFormFields = () => {
-    setColor("");
-    setColor("#ffffff");
-    setwholesalePrice("");
-    setPrice("");
-    setSizeStocks({});
-    setSelectedSizes([]);
+
+// Update the handleAddVariant function
+const handleAddVariant = () => {
+  console.log('Adding/editing variant with data:', {
+    color,
+    colorName,
+    wholesalePrice,
+    price,
+    sizeStocks,
+    selectedSizes,
+    editingIndex,
+    variantPreviewImages,
+    newVariantImages
+  });
+
+  if (!color || !colorName || Object.keys(sizeStocks).length === 0) {
+    toast.error("Please fill in all required fields for the variant");
+    return;
+  }
+
+  // Check for images (existing or new)
+  const variantKey = editingIndex !== null ? editingIndex : 'new';
+  const hasExistingImages = editingIndex !== null && variants[editingIndex]?.images?.length > 0;
+  const hasNewImages = newVariantImages[variantKey] && 
+                      Object.values(newVariantImages[variantKey] || {}).some(img => img !== null);
+
+  console.log('Image check:', { hasExistingImages, hasNewImages });
+
+  if (!hasExistingImages && !hasNewImages) {
+    toast.error("At least one image is required for each variant");
+    return;
+  }
+
+  const newVariant = {
+    ...(editingIndex !== null && { _id: variants[editingIndex]._id }), // Keep _id if editing
+    color,
+    colorName,
+    wholesalePrice: Number(wholesalePrice),
+    price: Number(price),
+    stock: Object.values(sizeStocks).reduce((sum, stock) => sum + Number(stock), 0),
+    sizes: Object.entries(sizeStocks).map(([size, stock]) => ({
+      size,
+      stock: Number(stock)
+    })),
+    images: []
   };
+
+  console.log('New variant object before images:', newVariant);
+
+  // Keep existing images if editing
+  if (editingIndex !== null && variants[editingIndex]?.images) {
+    newVariant.images = [...variants[editingIndex].images];
+    console.log('Kept existing images:', newVariant.images);
+  }
+
+  // Add new images if any
+  if (newVariantImages[variantKey]) {
+    console.log('Adding new images:', newVariantImages[variantKey]);
+    // For new images, we'll handle them in the form submission
+  }
+
+  console.log('Final variant to add/update:', newVariant);
+
+  // Update state
+  if (editingIndex !== null) {
+    setVariants(prev => {
+      const updated = prev.map((v, i) => (i === editingIndex ? newVariant : v));
+      console.log('Updated variants array:', updated);
+      return updated;
+    });
+  } else {
+    setVariants(prev => {
+      const updated = [...prev, newVariant];
+      console.log('Added new variant to array:', updated);
+      return updated;
+    });
+  }
+
+  // Reset form
+  setColor("");
+  setColorName("");
+  setPrice("");
+  setwholesalePrice("");
+  setSelectedSizes([]);
+  setSizeStocks({});
+  setEditingIndex(null);
   
-  const productnavigation=()=>{
-    navigate('/products')
-    }
-  const handleFormSubmit = async (e) => {
-    e.preventDefault();
+  // Clear preview images for the current variant
+  setVariantPreviewImages(prev => {
+    const newPreviews = {...prev};
+    delete newPreviews[variantKey];
+    console.log('Cleared preview images for variant:', variantKey);
+    return newPreviews;
+  });
+};
+
+
+
+
+  const productnavigation = () => {
+    navigate("/products");
+  };
+
+const handleFormSubmit = async (e) => {
+  e.preventDefault();
+
+  // Validate at least one variant exists
+  if (variants.length === 0) {
+    toast.error("At least one variant is required");
+    return;
+  }
+
+  // Separate variants into new and updated
+  const newVariants = [];
+  const updatedVariants = [];
   
-    if (!productName || !selectedCategory || !description) {
-      toast.error("All fields are required");
-      return;
-    }
-  
-    // Format variants correctly as per backend expectations
-    const formattedVariants = variants.map((variant, index) => {
-      const variantData = {
+  variants.forEach(variant => {
+    if (variant._id) {
+      // Existing variant - only include fields that can be updated
+      updatedVariants.push({
+        _id: variant._id,
         color: variant.color,
-        price: variant.price, 
+        colorName: variant.colorName,
         wholesalePrice: variant.wholesalePrice,
-        stock: variant.stock,
+        price: variant.price,
         sizes: variant.sizes,
-        images: variant.images || [] // Include existing images
-      };
-      return variantData;
-    });
-  
-    const features = {
-      material: selectedProductType === "Dress" ? material || "" : undefined,
-      soleMaterial:
-        selectedProductType === "Chappal" ? soleMaterial || "" : undefined,
-      netWeight: netWeight || "",
-      fit: fit || "",
-      sleevesType:
-        selectedProductType === "Dress" ? sleevesType || "" : undefined,
-      length: length || "",
-      occasion: occasion || "",
-    };
-  
-    const cleanedFeatures = Object.fromEntries(
-      Object.entries(features).filter(([_, value]) => value !== undefined)
-    );
-  
-    const formData = new FormData();
-    formData.append("name", productName.trim());
-    formData.append("description", description.trim());
-    formData.append("category", selectedCategory);
-    formData.append("subcategory", selectedSubCategory || "");
-    formData.append("brand", brand.trim() || "");
-    formData.append("stock", stock || "");
-    formData.append("type", occasion || "");
-    formData.append("productType", selectedProductType || "");
-    formData.append("material", material || "");
-    formData.append("owner", adminID || "");
-    formData.append("fileType", "product");
-    formData.append("userType", "admin");
-    formData.append("variants", JSON.stringify(formattedVariants));
-    formData.append("features", JSON.stringify(cleanedFeatures));
-    
-    // Add new fields
-    formData.append("isReturnable", isReturnable);
-    formData.append("returnWithinDays", returnWithinDays);
-    formData.append("CODAvailable", codAvailable);
-  
-    // Add new variant images to FormData
-    Object.entries(variantImages).forEach(([variantIndex, images]) => {
-      images.forEach((image, imageIndex) => {
-        if (image && image instanceof File) {
-          formData.append(`variantImages`, image);
-          formData.append(`variantImageMeta`, JSON.stringify({
-            variantIndex,
-            imageIndex
-          }));
-        }
+        stock: variant.stock
       });
-    });
-  
-    console.log("FormData being sent:");
-    for (let [key, value] of formData.entries()) {
-      console.log(`${key}:`, value);
+    } else {
+      // New variant
+      newVariants.push({
+        color: variant.color,
+        colorName: variant.colorName,
+        wholesalePrice: variant.wholesalePrice,
+        price: variant.price,
+        sizes: variant.sizes,
+        stock: variant.stock
+      });
     }
-  
-    try {
-      const response = await updateproductapi(productId, formData);
-  
-      if (response.success) {
-        toast.success("Product updated successfully");
-        // Optionally redirect to products page after successful update
-        // navigate("/products");
-      } else {
-        toast.error(response.error || "Failed to update product");
+  });
+
+  const formData = new FormData();
+
+  // Add basic product info
+  formData.append("name", productName);
+  formData.append("description", description);
+  formData.append("category", selectedCategory);
+  formData.append("subcategory", selectedSubCategory);
+  formData.append("brand", selectedBrand);
+  formData.append("productType", selectedProductType);
+  formData.append("owner", adminID);
+  formData.append("isReturnable", isReturnable);
+  formData.append("returnWithinDays", returnWithinDays);
+  formData.append("CODAvailable", codAvailable);
+  formData.append("cost", cost);
+
+  // Add features
+  const features = {
+    material,
+    sleevesType,
+    soleMaterial,
+    fit,
+    length,
+    occasion,
+    netWeight
+  };
+  formData.append("features", JSON.stringify(features));
+
+  // Add variants data
+  if (newVariants.length > 0) {
+    formData.append("newVariants", JSON.stringify(newVariants));
+  }
+  if (updatedVariants.length > 0) {
+    formData.append("updatedVariants", JSON.stringify(updatedVariants));
+  }
+
+  // Handle image uploads
+  Object.entries(newVariantImages).forEach(([variantKey, imagesObj]) => {
+    const variantIndex = variantKey === 'new' ? variants.length - 1 : parseInt(variantKey);
+    const variant = variants[variantIndex];
+    
+    // For new variants, use colorName as key
+    const formDataKey = variant._id ? variant._id : variant.colorName.toLowerCase().replace(/\s+/g, '-');
+
+    Object.entries(imagesObj || {}).forEach(([imgIndex, file]) => {
+      if (file instanceof File) {
+        formData.append(`variantImages[${formDataKey}]`, file);
       }
-    } catch (err) {
-      toast.error(err.message || "An unexpected error occurred");
+    });
+  });
+
+  try {
+    const response = await updateproductapi(productId, formData);
+    
+    if (response.success) {
+      toast.success("Product updated successfully!");
+      const updatedProduct = await getproductByID(id);
+      setProducts(updatedProduct.data);
+      setVariants(updatedProduct.data.variants || []);
+      
+      // Clear the new images state after successful update
+      setNewVariantImages({});
+      setVariantPreviewImages({});
+    } else {
+      toast.error(response.error || "Failed to update product");
     }
+  } catch (error) {
+    console.error("Submission error:", error);
+    toast.error(error.response?.data?.message || "An error occurred");
+  }
+};
+const handleDeleteImageClick = (imageName) => {
+  setDeleteImageModal({
+    show: true,
+    imageName
+  });
+};
+  const handleCloseDeleteImageModal = () => {
+    setDeleteImageModal({
+      show: false,
+      imageName: null
+    });
+  };
+
+const confirmDeleteImage = async () => {
+  const { imageName } = deleteImageModal;
+  
+  if (!imageName) {
+    toast.error("No image selected for deletion");
+    handleCloseDeleteImageModal();
+    return;
+  }
+
+  try {
+    // Determine if this is a variant image or main product image
+    const isVariantImage = selectedVariantIndex !== null;
+    const variantId = isVariantImage ? variants[selectedVariantIndex]?._id : null;
+
+    const response = await deleteProductImageApi(productId, {
+      imageName,
+      variantId: variantId || "" // Send empty string if not a variant image
+    });
+
+    if (response.success) {
+      toast.success("Image deleted successfully!");
+      
+      // Update the preview images state
+      setVariantPreviewImages(prev => {
+        const updated = {...prev};
+        Object.keys(updated).forEach(variantKey => {
+          Object.keys(updated[variantKey]).forEach(imgKey => {
+            if (getImageNameFromPreview(updated[variantKey][imgKey]) === imageName) {
+              delete updated[variantKey][imgKey];
+            }
+          });
+        });
+        return updated;
+      });
+
+      // Update the variants state if this was a variant image
+      if (isVariantImage && variantId) {
+        setVariants(prev => {
+          return prev.map((variant, idx) => {
+            if (idx === selectedVariantIndex) {
+              return {
+                ...variant,
+                images: variant.images.filter(img => img !== imageName)
+              };
+            }
+            return variant;
+          });
+        });
+      }
+    } else {
+      toast.error(response.error || "Failed to delete image");
+    }
+  } catch (error) {
+    console.error("Error deleting image:", error);
+    toast.error("An error occurred while deleting the image");
+  } finally {
+    handleCloseDeleteImageModal();
+  }
+};
+  // Function to extract image name from preview URL
+  const getImageNameFromPreview = (previewUrl) => {
+    if (typeof previewUrl !== 'string') return null;
+    
+    // If it's a new image (blob URL), return the file name
+    if (previewUrl.startsWith('blob:')) {
+      const variantKey = selectedVariantIndex !== null ? selectedVariantIndex : 'new';
+      const imageIndex = Object.values(variantPreviewImages[variantKey] || {}).indexOf(previewUrl);
+      if (imageIndex !== -1 && newVariantImages[variantKey]?.[imageIndex]) {
+        return newVariantImages[variantKey][imageIndex].name;
+      }
+      return null;
+    }
+    
+    // If it's an existing image (from server), extract from URL
+    const urlParts = previewUrl.split('/');
+    return urlParts[urlParts.length - 1];
   };
 
   return (
     <div className=" single-product">
       <Row className="mb-4 align-items-center">
-      <h5
-  onClick={productnavigation}
-  style={{
-    cursor: "pointer",
-    color: "rgb(56, 186, 244)",
-    textDecoration: "underline",
-    marginBottom: "1rem",
-    display: "inline-block",
-  }}
->
-  ← Back
-</h5>
-
+        <h5
+          onClick={productnavigation}
+          style={{
+            cursor: "pointer",
+            color: "rgb(56, 186, 244)",
+            textDecoration: "underline",
+            marginBottom: "1rem",
+            display: "inline-block",
+          }}
+        >
+          ← Back
+        </h5>
 
         <Col>
           <h2 className="single-product-title">Product</h2>
@@ -519,86 +704,106 @@ const handleEditVariant = (index) => {
       </Row>
       <Row>
         <Col md={3}>
-          <div className="position-relative single-product-wrapper">
-            {products?.images?.[0] || images[0] ? (
-              <img
-                src={
-                  products.images?.[0]
-                    ? `${BASE_URL}/uploads/${products.images[0]}`
-                    : previewImages[0] || "placeholder-image-path"
-                }
-                alt="Vendor Logo"
-                className="single-product-img"
-              />
-            ) : (
-              <div className="add-image-icon-large">
-                +
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="image-input"
-                  onChange={(event) => handleImageChange(0, event)}
-                />
-              </div>
-            )}
-            {(products?.images?.[0] || images[0]) && (
-              <i
-                className="fa-solid fa-trash main-image-delete-icon"
-                onClick={
-                  products?.images?.[0]
-                    ? () => openDeleteModal(0)
-                    : () => handleRemoveImage(0)
-                }
-              ></i>
-            )}
-          </div>
+        {/* Main variant image */}
+       {/* Main variant image */}
+<div className="position-relative single-product-wrapper">
+  {variantPreviewImages[selectedVariantIndex]?.[0] ? (
+    <>
+      <img
+        src={variantPreviewImages[selectedVariantIndex][0]}
+        alt="Main Variant Preview"
+        className="single-product-img"
+      />
+      <i
+        className="fa-solid fa-trash main-image-delete-icon"
+        onClick={() => {
+          const imageName = getImageNameFromPreview(variantPreviewImages[selectedVariantIndex][0]);
+          handleDeleteImageClick(imageName);
+        }}
+      ></i>
+    </>
+  ) : variants[selectedVariantIndex]?.images?.[0] ? (
+    <>
+      <img
+        src={`${BASE_URL}/uploads/${variants[selectedVariantIndex].images[0]}`}
+        alt="Main Variant"
+        className="single-product-img"
+      />
+      <i
+        className="fa-solid fa-trash main-image-delete-icon"
+        onClick={() => {
+          handleDeleteImageClick(variants[selectedVariantIndex].images[0]);
+        }}
+      ></i>
+    </>
+  ) : (
+    <div className="add-image-icon-large">
+      +
+      <input
+        type="file"
+        accept="image/*"
+        className="image-input"
+        onChange={(e) => handleVariantImageChange(selectedVariantIndex, 0, e)}
+      />
+    </div>
+  )}
+</div>
 
-          <Row className="mt-3">
-            {[...Array(4)].map((_, index) => (
-              <Col key={index} xs={3} className="position-relative">
-                <div className="image-square">
-                  {products?.images?.[index + 1] || images[index + 1] ? (
-                    <img
-                      src={
-                        products?.images?.[index + 1]
-                          ? `${BASE_URL}/uploads/${products.images[index + 1]}`
-                          : previewImages[index + 1]
-                      }
-                      alt={`AdditionalImage ${index + 1}`}
-                      className="img-fluid added-image"
-                    />
-                  ) : (
-                    <>
-                      <div className="add-image-icon">+</div>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="image-input"
-                        onChange={(event) =>
-                          handleImageChange(index + 1, event)
-                        }
-                      />
-                    </>
-                  )}
-                  {(products?.images?.[index + 1] || images[index + 1]) && (
-                    <i
-                      className="fa-solid fa-trash additional-image-delete-icon"
-                      onClick={
-                        products?.images?.[index + 1]
-                          ? () => openDeleteModal(index + 1)
-                          : () => handleRemoveImage(index + 1)
-                      }
-                    ></i>
-                  )}
-                </div>
-              </Col>
-            ))}
-          </Row>
-        </Col>
+{/* Additional variant images */}
+<Row className="mt-3">
+  {[1, 2, 3, 4].map((imgIndex) => (
+    <Col key={imgIndex} xs={3} className="position-relative">
+      <div className="image-square">
+        {variantPreviewImages[selectedVariantIndex]?.[imgIndex] ? (
+          <>
+            <img
+              src={variantPreviewImages[selectedVariantIndex][imgIndex]}
+              alt={`Variant Preview ${imgIndex}`}
+              className="img-fluid added-image"
+            />
+            <i
+              className="fa-solid fa-trash additional-image-delete-icon"
+              onClick={() => {
+                const imageName = getImageNameFromPreview(variantPreviewImages[selectedVariantIndex][imgIndex]);
+                handleDeleteImageClick(imageName);
+              }}
+            ></i>
+          </>
+        ) : variants[selectedVariantIndex]?.images?.[imgIndex] ? (
+          <>
+            <img
+              src={`${BASE_URL}/uploads/${variants[selectedVariantIndex].images[imgIndex]}`}
+              alt={`Variant ${imgIndex}`}
+              className="img-fluid added-image"
+            />
+            <i
+              className="fa-solid fa-trash additional-image-delete-icon"
+              onClick={() => {
+                handleDeleteImageClick(variants[selectedVariantIndex].images[imgIndex]);
+              }}
+            ></i>
+          </>
+        ) : (
+          <>
+            <div className="add-image-icon">+</div>
+            <input
+              type="file"
+              accept="image/*"
+              className="image-input"
+              onChange={(e) => handleVariantImageChange(selectedVariantIndex, imgIndex, e)}
+            />
+          </>
+        )}
+      </div>
+    </Col>
+  ))}
+</Row>
+      </Col>
+
         <Col md={9} className="single-product-right-column">
           <Form>
             <Row className="mb-3">
-              <Col md={6}>
+              <Col md={4}>
                 <Form.Group>
                   <Form.Label className="single-product-form-label">
                     Product Name
@@ -612,7 +817,7 @@ const handleEditVariant = (index) => {
                   />
                 </Form.Group>
               </Col>
-              <Col md={6}>
+              <Col md={4}>
                 <Form.Group>
                   <Form.Label className="single-product-form-label">
                     Category
@@ -629,6 +834,30 @@ const handleEditVariant = (index) => {
                       {categories.map((category) => (
                         <option key={category._id} value={category._id}>
                           {category.name}
+                        </option>
+                      ))}
+                    </Form.Select>
+                    <FaChevronDown className="dropdown-icon" />
+                  </div>
+                </Form.Group>
+              </Col>
+              <Col md={4}>
+                <Form.Group>
+                  <Form.Label className="single-product-form-label">
+                    Sub Category
+                  </Form.Label>
+                  <div className="dropdown-wrapper">
+                    <Form.Select
+                      className="single-product-form custom-dropdown"
+                      value={selectedSubCategory}
+                      onChange={handleSubCategoryChange}
+                      aria-label="Select subcategory"
+                      disabled={!selectedCategory}
+                    >
+                      <option value="">Select sub category</option>
+                      {subcategories.map((subcategory) => (
+                        <option key={subcategory._id} value={subcategory._id}>
+                          {subcategory.name}
                         </option>
                       ))}
                     </Form.Select>
@@ -658,37 +887,13 @@ const handleEditVariant = (index) => {
               <Col md={4}>
                 <Form.Group>
                   <Form.Label className="single-product-form-label">
-                    Sub Category
-                  </Form.Label>
-                  <div className="dropdown-wrapper">
-                    <Form.Select
-                      className="single-product-form custom-dropdown"
-                      value={selectedSubCategory}
-                      onChange={handleSubCategoryChange}
-                      aria-label="Select subcategory"
-                      disabled={!selectedCategory}
-                    >
-                      <option value="">Select sub category</option>
-                      {subcategories.map((subcategory) => (
-                        <option key={subcategory._id} value={subcategory._id}>
-                          {subcategory.name}
-                        </option>
-                      ))}
-                    </Form.Select>
-                    <FaChevronDown className="dropdown-icon" />
-                  </div>
-                </Form.Group>
-              </Col>
-              <Col md={4}>
-                <Form.Group>
-                  <Form.Label className="single-product-form-label">
                     Brand
                   </Form.Label>
                   <div className="dropdown-wrapper">
                     <Form.Select
                       className="single-product-form custom-dropdown"
                       value={selectedBrand}
-                      onChange={handleBrandChange}
+                      onChange={(e) => setSelectedBrand(e.target.value)}
                       aria-label="Select brand"
                     >
                       <option value="">Select Brand</option>
@@ -724,35 +929,57 @@ const handleEditVariant = (index) => {
                   </div>
                 </Form.Group>
               </Col>
+              <Col md={4}>
+                <Form.Group>
+                  <Form.Label className="single-product-form-label">
+                    Cost
+                  </Form.Label>
+                  <Form.Control
+                    className="single-product-form"
+                    type="text"
+                    placeholder="Enter cost"
+                    value={cost}
+                    onChange={(e) => setCost(e.target.value)}
+                  />
+                </Form.Group>
+              </Col>
             </Row>
 
             <Row className="mb-3">
-              <Form.Group>
-                <Form.Label className="single-product-form-label">
-                  Color
-                </Form.Label>
-                <div className="color-picker-container d-flex">
-                  <Form.Control
-                    className="single-product-form w-auto"
-                    type="text"
-                    placeholder="Enter color name"
-                    value={color}
-                    onChange={(e) => setColor(e.target.value)}
-                  />
+              <Col md={12}>
+                <Form.Group>
+                  <Form.Label className="single-product-form-label">
+                    Color
+                  </Form.Label>
+                  <div className="color-picker-container d-flex">
+                    <Form.Control
+                      className="single-product-form w-auto"
+                      type="text"
+                      disabled
+                      placeholder="Color Code"
+                      value={color}
+                    />
 
-                  <Form.Control
-                    className="single-product-form mx-2"
-                    type="color"
-                    value={color}
-                    style={{ padding: "5px" }}
-                    onChange={(e) => {
-                      const selectedColor = e.target.value;
-                      setColor(selectedColor);
-                    }}
-                  />
-                </div>
-              </Form.Group>
+                    <Form.Control
+                      className="single-product-form mx-2"
+                      type="color"
+                      value={color}
+                      style={{ padding: "5px", height: "40px", width: "6%" }}
+                      onChange={(e) => handleColorChange(e.target.value)}
+                    />
 
+                    <Form.Control
+                      className="single-product-form w-auto"
+                      type="text"
+                      placeholder="Enter color name"
+                      value={colorName}
+                      onChange={(e) => setColorName(e.target.value)}
+                    />
+                  </div>
+                </Form.Group>
+              </Col>
+            </Row>
+            <Row className="mb-3">
               <Col md={4}>
                 <Form.Group>
                   <Form.Label className="single-product-form-label">
@@ -789,7 +1016,7 @@ const handleEditVariant = (index) => {
                     Size and Stock
                   </Form.Label>
                   <div className="size-selection">
-                    {["S", "M", "L", "XL", "XXL", "XXXL"].map((size) => (
+                    {(isKidsCategory ? kidSizes : adultSizes).map((size) => (
                       <div key={size} className="size-stock-group">
                         <label className="size-checkbox-label">
                           <input
@@ -826,11 +1053,8 @@ const handleEditVariant = (index) => {
             </button>
             <div className="mt-4">
               <p className="single-product-form-label">Variants</p>
-              {variants.map((variant, index) => {
-  const totalStock = variant.sizes.reduce(
-    (sum, { stock }) => sum + stock,
-    0
-  );
+            {variants.map((variant, index) => {
+  const totalStock = variant.sizes.reduce((sum, { stock }) => sum + stock, 0);
 
   return (
     <div
@@ -838,7 +1062,7 @@ const handleEditVariant = (index) => {
       className="variant-card p-4 border rounded shadow-sm mb-4 position-relative"
       style={{
         backgroundColor: "#f9f9f9",
-        borderLeft: "5px solid #000000",
+        borderLeft: `5px solid ${variant.color}`,
         borderRadius: "10px",
       }}
     >
@@ -859,10 +1083,34 @@ const handleEditVariant = (index) => {
           }}
         ></i>
       </span>
+      <span
+  className="position-absolute"
+  style={{
+    top: "10px",
+    right: "40px", // Adjust this to position it left of the edit button
+    cursor: "pointer",
+  }}
+  onClick={() => {
+    if (variant._id) {
+      handleDeleteVariant(variant._id);
+    } else {
+      // Handle case where variant hasn't been saved yet
+      setVariants(prev => prev.filter((_, i) => i !== index));
+      toast.success("Unsaved variant removed");
+    }
+  }}
+>
+  <i
+    className="fas fa-trash"
+    style={{
+      fontSize: "20px",
+      color: "#ff0000",
+    }}
+  ></i>
+</span>
 
       <div className="row mb-3">
         <div className="col-md-6">
-          {/* Variant details */}
           <p
             className="mb-2"
             style={{
@@ -874,7 +1122,7 @@ const handleEditVariant = (index) => {
           >
             <span>Color:</span>{" "}
             <span>
-              {variant.color}{" "}
+              {variant.colorName || "N/A"}{" "}
               <span
                 style={{
                   display: "inline-block",
@@ -883,6 +1131,7 @@ const handleEditVariant = (index) => {
                   backgroundColor: variant.color,
                   borderRadius: "50%",
                   marginLeft: "12px",
+                  verticalAlign: "middle",
                 }}
               ></span>
             </span>
@@ -913,7 +1162,7 @@ const handleEditVariant = (index) => {
             <span>Sizes:</span>{" "}
             <span style={{ fontWeight: "400", color: "#333333" }}>
               {variant.sizes
-                .map(({ size, stock }) => `${size} (Stock: ${stock})`)
+                .map(({ size, stock }) => `${size} (${stock})`)
                 .join(", ")}
             </span>
           </p>
@@ -946,9 +1195,8 @@ const handleEditVariant = (index) => {
             </span>
           </p>
         </div>
-        
+
         <div className="col-md-6">
-          {/* Variant Images */}
           <p
             className="mb-2"
             style={{
@@ -960,124 +1208,85 @@ const handleEditVariant = (index) => {
           >
             Variant Images:
           </p>
-          
+
           <div className="d-flex flex-wrap">
-            {/* Show existing images for this variant */}
-            {variant.images && variant.images.map((imageName, imgIndex) => (
-              <div key={imgIndex} className="position-relative me-2 mb-2" style={{ width: '80px', height: '80px' }}>
-                <img
-                  src={`${BASE_URL}/uploads/${imageName}`}
-                  alt={`Variant ${index} Image ${imgIndex}`}
-                  className="img-fluid"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px' }}
-                />
-                <i
-                  className="fa-solid fa-trash position-absolute"
-                  style={{ top: '5px', right: '5px', cursor: 'pointer', color: 'red' }}
-                  onClick={() => openDeleteModal(index, imgIndex)}
-                ></i>
-              </div>
-            ))}
+          {variant.images?.map((image, imgIndex) => {
+            if (!image) return null;
             
-            {/* Add new image button */}
-            <div 
-              className="d-flex justify-content-center align-items-center" 
-              style={{ 
-                width: '80px', 
-                height: '80px', 
-                border: '1px dashed #ccc', 
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
-              onClick={() => document.getElementById(`variant-image-input-${index}`).click()}
-            >
-              <span style={{ fontSize: '24px', color: '#666' }}>+</span>
-              <input
-                id={`variant-image-input-${index}`}
-                type="file"
-                accept="image/*"
-                style={{ display: 'none' }}
-                onChange={(event) => handleImageChange(index, variant.images ? variant.images.length : 0, event)}
-              />
-            </div>
+            // Check if image is a string (existing) or File object (new)
+            const isString = typeof image === 'string';
+            const src = isString 
+              ? `${BASE_URL}/uploads/${image}`
+              : URL.createObjectURL(image);
+
+            return (
+              <div key={`variant-${index}-image-${imgIndex}`} className="position-relative me-2 mb-2" style={{ width: "80px", height: "80px" }}>
+                <img
+                  src={src}
+                  alt={`Variant${index}Image ${imgIndex}`}
+                  className="img-fluid"
+                  style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "4px" }}
+                />
+               
+              </div>
+            );
+          })}
           </div>
         </div>
       </div>
-      
-      {/* Preview new images */}
-      {variantImages[index] && variantImages[index].filter(img => img !== null).length > 0 && (
-        <div className="mt-2">
-          <p className="mb-2" style={{ fontSize: '14px', fontWeight: '600' }}>New Images (Not yet saved):</p>
-          <div className="d-flex flex-wrap">
-            {variantImages[index].map((img, imgIndex) => 
-              img && (
-                <div key={`new-${imgIndex}`} className="position-relative me-2 mb-2" style={{ width: '80px', height: '80px' }}>
-                  <img
-                    src={previewImages[index]?.[imgIndex]}
-                    alt={`New Variant ${index} Image ${imgIndex}`}
-                    className="img-fluid"
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px' }}
-                  />
-                  <i
-                    className="fa-solid fa-trash position-absolute"
-                    style={{ top: '5px', right: '5px', cursor: 'pointer', color: 'red' }}
-                    onClick={() => handleRemoveImage(index, imgIndex)}
-                  ></i>
-                </div>
-              )
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 })}
             </div>
             <Row className="mb-3 mt-4">
-  <Col md={12}>
-    <h3 className="shipping-options-heading">Shipping & Return Options</h3>
-  </Col>
-</Row>
+              <Col md={12}>
+                <h3 className="shipping-options-heading">
+                  Shipping & Return Options
+                </h3>
+              </Col>
+            </Row>
 
-<Row className="mb-3">
-  <Col md={4}>
-    <Form.Group className="mb-3">
-      <Form.Check 
-        type="checkbox" 
-        label="COD Available" 
-        checked={codAvailable}
-        onChange={(e) => setCodAvailable(e.target.checked)}
-        className="single-product-checkbox"
-      />
-    </Form.Group>
-  </Col>
-  <Col md={4}>
-    <Form.Group className="mb-3">
-      <Form.Check 
-        type="checkbox" 
-        label="Returnable" 
-        checked={isReturnable}
-        onChange={(e) => setIsReturnable(e.target.checked)}
-        className="single-product-checkbox"
-      />
-    </Form.Group>
-  </Col>
-  {isReturnable && (
-    <Col md={4}>
-      <Form.Group>
-        <Form.Label className="single-product-form-label">Return Window (Days)</Form.Label>
-        <Form.Control
-          className="single-product-form"
-          type="number"
-          min="1"
-          max="30"
-          value={returnWithinDays}
-          onChange={(e) => setReturnWithinDays(e.target.value)}
-        />
-      </Form.Group>
-    </Col>
-  )}
-</Row>
+            <Row className="mb-3">
+              <Col md={4}>
+                <Form.Group className="mb-3">
+                  <Form.Check
+                    type="checkbox"
+                    label="COD Available"
+                    checked={codAvailable}
+                    onChange={(e) => setCodAvailable(e.target.checked)}
+                    className="single-product-checkbox"
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={4}>
+                <Form.Group className="mb-3">
+                  <Form.Check
+                    type="checkbox"
+                    label="Returnable"
+                    checked={isReturnable}
+                    onChange={(e) => setIsReturnable(e.target.checked)}
+                    className="single-product-checkbox"
+                  />
+                </Form.Group>
+              </Col>
+              {isReturnable && (
+                <Col md={4}>
+                  <Form.Group>
+                    <Form.Label className="single-product-form-label">
+                      Return Window (Days)
+                    </Form.Label>
+                    <Form.Control
+                      className="single-product-form"
+                      type="number"
+                      min="1"
+                      max="30"
+                      value={returnWithinDays}
+                      onChange={(e) => setReturnWithinDays(e.target.value)}
+                    />
+                  </Form.Group>
+                </Col>
+              )}
+            </Row>
             <Row className="mb-3">
               <Col md={12}>
                 <h3 className="features-heading">Features</h3>
@@ -1202,65 +1411,48 @@ const handleEditVariant = (index) => {
             className="w-25 category-model-cancel"
             onClick={handleFormSubmit}
           >
-            Edit
+            Update
           </button>{" "}
         </Col>
       </Row>
 
-      <Modal show={showDeleteModal} onHide={handleDeleteModalClose} centered>
-        <Modal.Header closeButton>
-          <Modal.Title className="category-modal-title">
-            Confirm Deletion
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="modal-body-with-scroll">
-          <p className="delete-modal-text">
-            Are you sure you want to delete this Product? This action cannot be
-            undone.
-          </p>
-        </Modal.Body>
-        <Modal.Footer>
-          <Row className="w-100">
-            <Col>
-              <button
-                className="w-100 category-model-cancel"
-                onClick={handleDeleteModalClose}
-              >
-                Cancel
-              </button>
-            </Col>
-            <Col>
-              <button
-                className="w-100 category-model-add"
-                onClick={handleDeleteConfirm}
-              >
-                Delete
-              </button>
-            </Col>
-          </Row>
-        </Modal.Footer>
-      </Modal>
+     <Modal show={showDeleteModal} onHide={handleDeleteModalClose} centered>
+  <Modal.Header closeButton>
+    <Modal.Title>Confirm Product Deletion</Modal.Title>
+  </Modal.Header>
+  <Modal.Body>
+    Are you sure you want to delete this product? This action cannot be undone.
+  </Modal.Body>
+  <Modal.Footer>
+    <Button variant="secondary" onClick={handleDeleteModalClose}>
+      Cancel
+    </Button>
+    <Button variant="danger" onClick={handleDeleteConfirm}>
+      Delete Product
+    </Button>
+  </Modal.Footer>
+</Modal>
 
-      <Modal show={isModalOpen} onHide={closeModal} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Confirm Deletion</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          Are you sure you want to delete this image? This action cannot be
-          undone.
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={closeModal}>
-            Cancel
-          </Button>
-          <Button variant="danger" onClick={confirmDeleteImage}>
-            Delete
-          </Button>
-        </Modal.Footer>
-      </Modal>
+{/* Delete Image Modal */}
+<Modal show={deleteImageModal.show} onHide={handleCloseDeleteImageModal} centered>
+  <Modal.Header closeButton>
+    <Modal.Title>Confirm Image Deletion</Modal.Title>
+  </Modal.Header>
+  <Modal.Body>
+    Are you sure you want to delete this image? This action cannot be undone.
+  </Modal.Body>
+  <Modal.Footer>
+    <Button variant="secondary" onClick={handleCloseDeleteImageModal}>
+      Cancel
+    </Button>
+    <Button variant="danger" onClick={confirmDeleteImage}>
+      Delete Image
+    </Button>
+  </Modal.Footer>
+</Modal>
       <ToastContainer></ToastContainer>
     </div>
   );
 }
 
-export default SingleProduct;
+export default SingleProduct;   

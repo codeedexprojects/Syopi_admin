@@ -36,17 +36,17 @@ function Brand() {
   }, []);
 
   // Update total pages when brands or items per page changes
-  useEffect(() => {
-    const filtered = brands.filter((brand) =>
-      brand.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage));
-    
-    // Reset to first page when filter changes
-    if (currentPage > Math.ceil(filtered.length / itemsPerPage)) {
-      setCurrentPage(1);
-    }
-  }, [brands, itemsPerPage, searchTerm]);
+useEffect(() => {
+  const filtered = brands.filter((brand) => 
+    brand?.name?.toLowerCase()?.includes(searchTerm.toLowerCase())
+  );
+  
+  setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+  
+  if (currentPage > Math.ceil(filtered.length / itemsPerPage)) {
+    setCurrentPage(1);
+  }
+}, [brands, itemsPerPage, searchTerm, currentPage]); 
 
   const fetchBrands = async () => {
     setIsLoading(true);
@@ -211,9 +211,9 @@ function Brand() {
   };
 
   // Filter brands based on search term
-  const filteredBrands = brands.filter((brand) =>
-    brand.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+const filteredBrands = brands.filter((brand) =>
+  brand?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+);
 
   // Get current page items
   const indexOfLastItem = currentPage * itemsPerPage;

@@ -122,6 +122,78 @@ export const getDashboardUserContentApi = async () => {
     };
   }
 };
+
+
+export const getDashboardRevenueApi = async (filterType = '') => {
+  const url = `${BASE_URL}/admin/dashboard/revenue${filterType ? `?type=${filterType}` : ''}`;
+  const accessToken = localStorage.getItem("accessToken");
+  
+  if (!accessToken) {
+    return { success: false, error: "No token provided" };
+  }
+  
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch revenue data');
+    }
+    
+    return { success: true, data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message || "Error fetching revenue data",
+    };
+  }
+};
+
+
+
+export const getDashboardCommissionApi = async (filterType = '') => {
+  const url = `${BASE_URL}/admin/dashboard/commission-revenue${filterType ? `?type=${filterType}` : ''}`;
+  const accessToken = localStorage.getItem("accessToken");
+  
+  if (!accessToken) {
+    return { success: false, error: "No token provided" };
+  }
+  
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch revenue data');
+    }
+    
+    return { success: true, data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message || "Error fetching revenue data",
+    };
+  }
+};
+
+
+
+
+
 export const getAdminOrdersApi = async () => {
   const url = `${BASE_URL}/admin/orders`;
 
@@ -1213,7 +1285,7 @@ export const updateCategorysliderApi = async (sliderid, categoryData) => {
 };
 
 export const deleteCategorysliderApi = async (sliderId) => {
-  const url = `${BASE_URL}/admin/slidercategory/delete/${sliderId}`;
+  const url = `${BASE_URL}/admin/slider/category/delete/${sliderId}`;
 
   const accessToken = localStorage.getItem("accessToken");
 
@@ -1299,6 +1371,8 @@ export const updateBrandsliderApi = async (sliderid, categoryData) => {
     return { success: false, error: error.message || "Error updating slider " };
   }
 };
+
+
 
 export const deleteBrandsliderApi = async (sliderId) => {
   const url = `${BASE_URL}/admin/slider/brand/delete/${sliderId}`;
@@ -1479,15 +1553,15 @@ export const getallUserApi = async () => {
 export const getUserByID = async (userId) => {
   const url = `${BASE_URL}/admin/user/get/${userId}`;
 
-  // Retrieve accessToken from localStorage
+  
   const accessToken = localStorage.getItem("accessToken");
 
-  // Check if the token exists
+  
   if (!accessToken) {
     return { success: false, error: "No token provided" };
   }
 
-  // If the token exists, make the API request with the token in the headers
+  
   try {
     const response = await commonApi("GET", url, null, {
       Authorization: `Bearer ${accessToken}`,
@@ -1495,7 +1569,7 @@ export const getUserByID = async (userId) => {
 
     return response;
   } catch (error) {
-    // Handle any error in the API request
+    
     return { success: false, error: error.message || "Error fetching single user" };
   }
 };
@@ -1676,6 +1750,52 @@ export const deleteProductImageApi = async (productId, payload) => {
   }
 };
 
+export const deleteProductVariantApi = async (productId, variantId, payload) => {
+  const url = `${BASE_URL}/admin/product/delete/${productId}/variant/${variantId}`;
+
+  const accessToken = localStorage.getItem("accessToken");
+
+  if (!accessToken) {
+    return { success: false, error: "No token provided" };
+  }
+
+  try {
+    const response = await commonApi("DELETE", url, payload, {
+      Authorization: `Bearer ${accessToken}`,
+    });
+
+    return response;
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message || "Error deleting product variant",
+    };
+  }
+};
+
+
+export const deletevendorproductvariant = async (productId, variantId, payload) => {
+  const url = `${BASE_URL}/vendor/product/delete/${productId}/variant/${variantId}`;
+
+  const accessToken = localStorage.getItem("accessToken");
+
+  if (!accessToken) {
+    return { success: false, error: "No token provided" };
+  }
+
+  try {
+    const response = await commonApi("DELETE", url, payload, {
+      Authorization: `Bearer ${accessToken}`,
+    });
+
+    return response;
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message || "Error deleting product variant",
+    };
+  }
+};
 export const deleteProductapi = async (productId) => {
   const url = `${BASE_URL}/admin/product/delete/${productId}`;
 
@@ -1783,6 +1903,28 @@ export const getVendorbyID = async (vendorId) => {
     return { success: false, error: error.message || "Error fetching Venor" };
   }
 };
+
+
+export const updateVendorStatusApi = async (vendorId, status) => {
+  const url = `${BASE_URL}/admin/vendor/${vendorId}/status`;
+
+  const accessToken = localStorage.getItem("accessToken");
+
+  if (!accessToken) {
+    return { success: false, error: "No token provided" };
+  }
+
+  try {
+    const response = await commonApi("PATCH", url, { status }, {
+      Authorization: `Bearer ${accessToken}`,
+    });
+
+    return response;
+  } catch (error) {
+    return { success: false, error: error.message || "Error updating vendor status" };
+  }
+};
+
 
 export const deleteVendorApi = async (vendorId) => {
   const url = `${BASE_URL}/admin/vendor/delete/${vendorId}`;

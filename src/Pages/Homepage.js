@@ -110,7 +110,7 @@ function Homepage() {
         </button>
       </div>
 
-      <div className="section-content">{renderSection()}</div>
+      <div className="section-content2">{renderSection()}</div>
     </div>
   );
 }

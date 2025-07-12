@@ -1,8 +1,16 @@
+/* Existing styles */
 .vendor-card {
   padding: 20px;
   box-shadow: 0px 8px 16px 0px #00000014;  
   border: none !important;
   cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 16px;
+}
+
+.vendor-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0px 12px 24px 0px #00000020;
 }
 
 .vendor-card-img-container {
@@ -14,8 +22,13 @@
 .vendor-img {
   width: 100%;
   height: 150px;  
-  object-fit: fill;  
-  border-radius: 20px;  
+  object-fit: cover;  
+  border-radius: 20px;
+  transition: transform 0.3s ease;
+}
+
+.vendor-card:hover .vendor-img {
+  transform: scale(1.05);
 }
 
 .image-overlay {
@@ -24,7 +37,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: #00000070;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.7));
   border-radius: 20px;
 }
 
@@ -43,11 +56,12 @@
 
 .shop-name {
   font-family: 'Inter', sans-serif;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
-  line-height: 24.2px;
+  line-height: 22px;
   text-align: left;
   color: #FFFFFF;
+  text-shadow: 0px 1px 2px rgba(0,0,0,0.5);
 }
 
 .rating {
@@ -64,4 +78,215 @@
   text-align: left;
   color: #9CA3B0;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* New styles for status and actions */
+.vendor-status-row {
+  margin-bottom: 8px;
+}
+
+.vendor-info-row {
+  margin-bottom: 8px;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.status-badge.active {
+  background-color: #d4edda;
+  color: #155724;
+  border-color: #c3e6cb;
+}
+
+.status-badge.inactive {
+  background-color: #f8d7da;
+  color: #721c24;
+  border-color: #f5c6cb;
+}
+
+.status-badge.pending {
+  background-color: #fff3cd;
+  color: #856404;
+  border-color: #ffeaa7;
+}
+
+.status-dropdown-toggle {
+  background: none !important;
+  border: none !important;
+  padding: 6px !important;
+  border-radius: 6px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.status-dropdown-toggle:hover {
+  background-color: #f8f9fa !important;
+}
+
+.status-dropdown-toggle:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25) !important;
+}
+
+/* Dropdown menu styling */
+.dropdown-menu {
+  border: none;
+  box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 8px 0;
+  min-width: 140px;
+}
+
+.dropdown-item {
+  padding: 8px 16px;
+  font-size: 14px;
+  color: #495057;
+  transition: background-color 0.2s ease;
+  border: none;
+}
+
+.dropdown-item:hover {
+  background-color: #f8f9fa;
+  color: #495057;
+}
+
+.dropdown-item:disabled {
+  color: #6c757d;
+  pointer-events: none;
+  background-color: transparent;
+}
+
+.dropdown-divider {
+  margin: 4px 0;
+  border-top: 1px solid #e9ecef;
+}
+
+/* Spinner overlay */
+.spinner-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Toast container positioning */
+.toast-container {
+  position: fixed !important;
+  top: 20px !important;
+  right: 20px !important;
+  z-index: 9999 !important;
+}
+
+/* Vendor icon styling */
+.vendor-icon {
+  margin-right: 6px;
+  font-size: 14px;
+}
+
+/* Loading state for updating vendors */
+.vendor-card.updating {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.vendor-card.updating::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Error state */
+.alert {
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+}
+
+.alert-danger {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .vendor-card {
+    padding: 15px;
+  }
+  
+  .shop-name {
+    font-size: 16px;
+  }
+  
+  .vendor-description {
+    font-size: 12px;
+  }
+  
+  .status-badge {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+}
+
+/* Pagination styling */
+.pagination-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+}
+
+/* No vendors state */
+.no-vendors-container {
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.no-vendors-message {
+  font-size: 18px;
+  color: #555;
+  font-weight: 600;
+  margin-top: 20px;
+}
+
+.no-vendors-subtext {
+  font-size: 14px;
+  color: #888;
+  margin-top: 8px;
 }

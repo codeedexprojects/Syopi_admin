@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Row, Col, Form } from "react-bootstrap";
-import "../singleproduct.css";
 import { FaChevronDown } from "react-icons/fa";
-
 import { toast, ToastContainer } from "react-toastify";
 import ColorNamer from "color-namer";
 import { createvendorProductApi, getAllVendorBrandsApi, getVendorCategoriesApi, getvendorsubcategoryByID } from "../../services/allApi";
@@ -14,6 +12,8 @@ function VendorAddProduct() {
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedCategoryName, setSelectedCategoryName] = useState("");
+
   const [description, setDescription] = useState("");
   const [selectedSubCategory, setSelectedSubCategory] = useState("");
   const [selectedProductType, setSelectedProductType] = useState("");
@@ -30,13 +30,13 @@ function VendorAddProduct() {
   const [occasion, setOccasion] = useState("");
   const [material, setMaterial] = useState("");
   const vendorID = localStorage.getItem("vendorId");
-
-  // Current working variant
   const [color, setColor] = useState("#000000");
   const [colorName, setColorName] = useState("Black");
   const [sizeStocks, setSizeStocks] = useState({});
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [variantImages, setVariantImages] = useState([null, null, null, null]);
+  const [loading, setLoading] = useState(false);
+  const [lengthUnit, setLengthUnit] = useState("cm");
 
   // All variants for the product
   const [variants, setVariants] = useState([]);
@@ -122,35 +122,162 @@ function VendorAddProduct() {
     const selectedCategoryId = e.target.value;
     setSelectedCategory(selectedCategoryId);
 
+    // Find the full category object based on the selected ID
+    const selectedCategoryObj = categories.find(
+      (cat) => cat._id === selectedCategoryId
+    );
+
+    // Set the name from the found category object
+    setSelectedCategoryName(selectedCategoryObj?.name || "");
+
     if (selectedCategoryId) {
       await fetchSubCategories(selectedCategoryId);
     } else {
-      setSubCategories([]); // No category selected, so clear subcategories
+      setSubCategories([]);
     }
   };
 
   const handleSubCategoryChange = (e) => {
     setSelectedSubCategory(e.target.value);
   };
-  
+
   const handleBrandChange = (e) => {
     setSelectedBrand(e.target.value);
   };
 
-  const handleFormSubmit = async (e) => {
-    e.preventDefault();
+// Image compression utility
+const compressImage = (file, maxWidth = 800, quality = 0.7) => {
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = () => {
+      // Calculate new dimensions
+      let { width, height } = img;
+      
+      if (width > height) {
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+      } else {
+        if (height > maxWidth) {
+          width = (width * maxWidth) / height;
+          height = maxWidth;
+        }
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      
+      // Draw and compress
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            // Create a new File object with compressed data
+            const compressedFile = new File([blob], file.name, {
+              type: 'image/jpeg',
+              lastModified: Date.now()
+            });
+            resolve(compressedFile);
+          } else {
+            reject(new Error('Compression failed'));
+          }
+        },
+        'image/jpeg',
+        quality
+      );
+    };
+    
+    img.onerror = () => reject(new Error('Image loading failed'));
+    img.src = URL.createObjectURL(file);
+  });
+};
 
-    if (!productName || !selectedCategory || !description) {
-      toast.error("All fields are required");
+// Enhanced validation function
+const validateImageFile = (file) => {
+  const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+  
+  if (!file) {
+    return { isValid: false, error: "No file selected" };
+  }
+  
+  if (!allowedTypes.includes(file.type)) {
+    return { isValid: false, error: "Only JPEG, PNG, GIF, and WebP images are allowed" };
+  }
+  
+  if (file.size > maxSize) {
+    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+    return { isValid: false, error: `File size (${fileSizeMB}MB) exceeds 5MB limit` };
+  }
+  
+  return { isValid: true, error: null };
+};
+
+// Updated handleVariantImageChange function with compression
+const handleVariantImageChange = async (index, event) => {
+  if (event.target.files && event.target.files[0]) {
+    const file = event.target.files[0];
+    const validation = validateImageFile(file);
+    
+    if (!validation.isValid) {
+      toast.error(validation.error);
+      event.target.value = '';
       return;
     }
-
-    if (variants.length === 0) {
-      toast.error("At least one variant is required");
-      return;
+    
+    try {
+      // Show compression progress
+      
+      // Compress the image
+      const compressedFile = await compressImage(file, 800, 0.7);
+      
+      // Log compression results
+      const originalSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      const compressedSizeMB = (compressedFile.size / (1024 * 1024)).toFixed(2);
+      console.log(`Image compressed: ${originalSizeMB}MB → ${compressedSizeMB}MB`);
+      
+      const newImages = [...variantImages];
+      newImages[index] = compressedFile;
+      setVariantImages(newImages);
+      
+    } catch (error) {
+      console.error('Compression error:', error);
+      toast.error('Failed to compress image. Please try a different image.');
+      event.target.value = '';
     }
+  }
+};
 
+// Enhanced form submit handler with better error handling
+const handleFormSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+
+  if (!productName || !selectedCategory || !description) {
+    toast.error("All fields are required");
+    setLoading(false);
+    return;
+  }
+
+  if (variants.length === 0) {
+    toast.error("At least one variant is required");
+    setLoading(false);
+    return;
+  }
+
+  // Calculate total payload size before sending
+  let totalSize = 0;
+  const maxTotalSize = 45 * 1024 * 1024; // 45MB limit to be safe
+
+  try {
     const formData = new FormData();
+    
+    // Add text fields
     formData.append("name", productName.trim());
     formData.append("description", description.trim());
     formData.append("category", selectedCategory);
@@ -163,14 +290,24 @@ function VendorAddProduct() {
     formData.append("owner", vendorID || "");
     formData.append("fileType", "product");
     formData.append("userType", "vendor");
-    
-    // Append main product images (first variant's images)
+
+    // Compress and add main product images
     if (variants[0]?.images) {
-      variants[0].images.forEach((image, index) => {
+      for (let i = 0; i < variants[0].images.length; i++) {
+        const image = variants[0].images[i];
         if (image) {
-          formData.append("images", image);
+          let processedImage = image;
+          
+          // Compress if image is large
+          if (image.size > 1024 * 1024) { // If larger than 1MB
+            toast.info(`Compressing main image ${i + 1}...`);
+            processedImage = await compressImage(image, 800, 0.7);
+          }
+          
+          formData.append("images", processedImage);
+          totalSize += processedImage.size;
         }
-      });
+      }
     }
 
     // Prepare features
@@ -180,70 +317,126 @@ function VendorAddProduct() {
       netWeight: netWeight || "",
       fit: fit || "",
       sleevesType: selectedProductType === "Dress" ? sleevesType || "" : undefined,
-      length: length || "",
+      length: length ? `${length} ${lengthUnit}` : "",
       occasion: occasion || "",
     };
 
     const cleanedFeatures = Object.fromEntries(
       Object.entries(features).filter(([_, value]) => value !== undefined)
     );
-    
+
     formData.append("features", JSON.stringify(cleanedFeatures));
 
-    // Format and append variants data
     const formattedVariants = variants.map((variant, index) => {
-      // Need to exclude the actual image files from this JSON
       const { images, ...variantData } = variant;
       return {
         ...variantData,
-        imageIndexes: Array(variant.images.length).fill().map((_, i) => `${index}_${i}`),
+        imageIndexes: Array(variant.images.length)
+          .fill()
+          .map((_, i) => `${index}_${i}`),
       };
     });
 
     formData.append("variants", JSON.stringify(formattedVariants));
 
-    // Append variant images with special naming convention for the backend
-    variants.forEach((variant, variantIndex) => {
-      variant.images.forEach((image, imageIndex) => {
+    // Compress and add variant images
+    for (let variantIndex = 0; variantIndex < variants.length; variantIndex++) {
+      const variant = variants[variantIndex];
+      for (let imageIndex = 0; imageIndex < variant.images.length; imageIndex++) {
+        const image = variant.images[imageIndex];
         if (image) {
-          formData.append(`variantImages[${variantIndex}]`, image);
+          let processedImage = image;
+          
+          // Compress if image is large
+          if (image.size > 1024 * 1024) { // If larger than 1MB
+            toast.info(`Compressing variant image ${variantIndex + 1}-${imageIndex + 1}...`);
+            processedImage = await compressImage(image, 800, 0.7);
+          }
+          
+          formData.append(`variantImages[${variantIndex}]`, processedImage);
+          totalSize += processedImage.size;
         }
-      });
-    });
+      }
+    }
+
+    // Check total size
+    if (totalSize > maxTotalSize) {
+      const totalSizeMB = (totalSize / (1024 * 1024)).toFixed(2);
+      toast.error(`Total upload size (${totalSizeMB}MB) exceeds limit. Please reduce image quality or quantity.`);
+      setLoading(false);
+      return;
+    }
 
     console.log("FormData being sent:");
+    console.log(`Total payload size: ${(totalSize / (1024 * 1024)).toFixed(2)}MB`);
     for (let [key, value] of formData.entries()) {
-      console.log(`${key}:`, value);
+      if (value instanceof File) {
+        console.log(`${key}: File(${value.name}, ${(value.size / 1024).toFixed(1)}KB)`);
+      } else {
+        console.log(`${key}:`, value);
+      }
     }
 
-    try {
-      // Send API request
-      const response = await createvendorProductApi(formData);
-      console.log(response);
+    // Send API request with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
 
-      if (response.success) {
-        toast.success("Product created successfully");
-        // Reset form or redirect
-      } else {
-        toast.error(response.error || "Failed to create product");
-      }
-    } catch (err) {
+    const response = await createvendorProductApi(formData, {
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    console.log(response);
+
+    if (response.success) {
+      toast.success("Product created successfully");
+      // Reset all form fields
+      setProductName("");
+      setDescription("");
+      setSelectedCategory("");
+      setSelectedCategoryName("");
+      setSelectedSubCategory("");
+      setSelectedBrand("");
+      setIsReturnable("");
+      setCODAvailable("");
+      setReturnWithinDays("");
+      setSelectedProductType("");
+      setNetWeight("");
+      setFit("");
+      setMaterial("");
+      setSoleMaterial("");
+      setSleevesType("");
+      setLength("");
+      setLengthUnit("cm");
+      setOccasion("");
+      setColor("#000000");
+      setColorName("Black");
+      setWholesalePrice("");
+      setPrice("");
+      setSizeStocks({});
+      setSelectedSizes([]);
+      setVariantImages([null, null, null, null]);
+      setVariants([]);
+    } else {
+      toast.error(response.error || "Failed to create product");
+    }
+  } catch (err) {
+    console.error('Upload error:', err);
+    if (err.name === 'AbortError') {
+      toast.error("Upload timeout. Please try again with smaller images.");
+    } else if (err.message.includes('413')) {
+      toast.error("Upload too large. Please compress your images further.");
+    } else {
       toast.error(err.message || "An unexpected error occurred");
     }
-  };
-
-  const handleVariantImageChange = (index, event) => {
-    if (event.target.files && event.target.files[0]) {
-      const newImages = [...variantImages];
-      newImages[index] = event.target.files[0];
-      setVariantImages(newImages);
-    }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleSelectVariantImage = (index) => {
     if (variantImages[index] && variantImages[0] !== variantImages[index]) {
       const updatedImages = [...variantImages];
-      // Swap images instead of just copying
       const temp = updatedImages[0];
       updatedImages[0] = updatedImages[index];
       updatedImages[index] = temp;
@@ -251,67 +444,73 @@ function VendorAddProduct() {
     }
   };
 
-  const handleAddVariant = () => {
-    if (!color || !colorName || Object.keys(sizeStocks).length === 0) {
-      toast.error("Please fill in all required fields for the variant");
+ const handleAddVariant = () => {
+  if (!color || !colorName || Object.keys(sizeStocks).length === 0) {
+    toast.error("Please fill in all required fields for the variant");
+    return;
+  }
+
+  if (!variantImages[0]) {
+    toast.error("At least one image is required for each variant");
+    return;
+  }
+
+  // Validate all uploaded images
+  const filteredImages = variantImages.filter((img) => img !== null);
+  for (let i = 0; i < filteredImages.length; i++) {
+    const validation = validateImageFile(filteredImages[i]);
+    if (!validation.isValid) {
+      toast.error(`Image ${i + 1}: ${validation.error}`);
       return;
     }
+  }
 
-    if (!variantImages[0]) {
-      toast.error("At least one image is required for each variant");
-      return;
-    }
+  if (!wholesalePrice || !price) {
+    toast.error("Please enter both wholesale and normal prices");
+    return;
+  }
 
-    // Validate price fields
-    if (!wholesalePrice || !price) {
-      toast.error("Please enter both wholesale and normal prices");
-      return;
-    }
+  if (isNaN(Number(wholesalePrice)) || isNaN(Number(price))) {
+    toast.error("Prices must be valid numbers");
+    return;
+  }
 
-    // Check if prices are valid numbers
-    if (isNaN(Number(wholesalePrice)) || isNaN(Number(price))) {
-      toast.error("Prices must be valid numbers");
-      return;
-    }
+  const formattedSizes = Object.entries(sizeStocks).map(([size, stock]) => ({
+    size,
+    stock: Number(stock),
+  }));
 
-    // Map sizeStocks object into an array of sizes
-    const formattedSizes = Object.entries(sizeStocks).map(([size, stock]) => ({
-      size,
-      stock: Number(stock), // Ensure stock is a number
-    }));
+  const totalStock = formattedSizes.reduce(
+    (sum, { stock }) => sum + stock,
+    0
+  );
 
-    // Calculate the total stock
-    const totalStock = formattedSizes.reduce(
-      (sum, { stock }) => sum + stock,
-      0
-    );
-
-    // Filter out null images
-    const filteredImages = variantImages.filter(img => img !== null);
-
-    const newVariant = {
-      color,
-      colorName,
-      wholesalePrice: Number(wholesalePrice),
-      price: Number(price),
-      stock: totalStock,
-      sizes: formattedSizes,
-      images: filteredImages, // Store the actual File objects
-    };
-
-    setVariants((prevVariants) => [...prevVariants, newVariant]);
-
-    // Clear fields for the next variant
-    setColor("#000000");
-    setColorName("Black");
-    setWholesalePrice("");
-    setPrice("");
-    setSizeStocks({});
-    setSelectedSizes([]);
-    setVariantImages([null, null, null, null]);
-    
-    toast.success("Variant added successfully");
+  const newVariant = {
+    color,
+    colorName,
+    wholesalePrice: Number(wholesalePrice),
+    price: Number(price),
+    stock: totalStock,
+    sizes: formattedSizes,
+    images: filteredImages,
   };
+
+  setVariants((prevVariants) => [...prevVariants, newVariant]);
+
+  setColor("#000000");
+  setColorName("Black");
+  setWholesalePrice("");
+  setPrice("");
+  setSizeStocks({});
+  setSelectedSizes([]);
+  setVariantImages([null, null, null, null]);
+
+  toast.success("Variant added successfully");
+};
+  const kidSizes = ["New Born", "0-1", "1-2", "2-3", "3-4", "4-5", "5-6"];
+  const adultSizes = ["S", "M", "L", "XL", "XXL", "XXXL"];
+  const currentSizes =
+    selectedCategoryName?.toLowerCase() === "kids" ? kidSizes : adultSizes;
 
   const handleSizeSelection = (size) => {
     if (selectedSizes.includes(size)) {
@@ -341,54 +540,57 @@ function VendorAddProduct() {
       </Row>
       <Form onSubmit={handleFormSubmit}>
         <Row>
-          <Col md={3}>
-            <div className="position-relative">
-              <h4 className="mb-3">Current Variant Images</h4>
-              <div className="image-square large">
-                {variantImages[0] ? (
-                  <img
-                    src={URL.createObjectURL(variantImages[0])}
-                    alt="Selected Product"
-                    className="img-fluid added-image"
-                  />
-                ) : (
-                  <div className="add-image-icon">+</div>
-                )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="image-input"
-                  onChange={(event) => handleVariantImageChange(0, event)}
-                />
-              </div>
-            </div>
-            <Row className="mt-3">
-              {[1, 2, 3].map((index) => (
-                <Col key={index} xs={4} className="position-relative">
-                  <div
-                    className="image-square small"
-                    onClick={() => handleSelectVariantImage(index)}
-                  >
-                    {variantImages[index] ? (
-                      <img
-                        src={URL.createObjectURL(variantImages[index])}
-                        alt={`Product ${index + 1}`}
-                        className="img-fluid added-image"
-                      />
-                    ) : (
-                      <div className="add-image-icon">+</div>
-                    )}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="image-input"
-                      onChange={(event) => handleVariantImageChange(index, event)}
-                    />
-                  </div>
-                </Col>
-              ))}
-            </Row>
-          </Col>
+         <Col md={3}>
+  <div className="position-relative">
+    <h4 className="mb-3">Current Variant Images</h4>
+    <p className="text-muted small mb-2">Max file size: 5MB per image</p>
+    <div className="image-square large">
+      {variantImages[0] ? (
+        <img
+          src={URL.createObjectURL(variantImages[0])}
+          alt="Selected Product"
+          className="img-fluid added-image"
+        />
+      ) : (
+        <div className="add-image-icon">+</div>
+      )}
+      <input
+        type="file"
+        accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+        className="image-input"
+        onChange={(event) => handleVariantImageChange(0, event)}
+      />
+    </div>
+  </div>
+  <Row className="mt-3">
+    {[1, 2, 3].map((index) => (
+      <Col key={index} xs={4} className="position-relative">
+        <div
+          className="image-square small"
+          onClick={() => handleSelectVariantImage(index)}
+        >
+          {variantImages[index] ? (
+            <img
+              src={URL.createObjectURL(variantImages[index])}
+              alt={`Product ${index + 1}`}
+              className="img-fluid added-image"
+            />
+          ) : (
+            <div className="add-image-icon">+</div>
+          )}
+          <input
+            type="file"
+            accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+            className="image-input"
+            onChange={(event) =>
+              handleVariantImageChange(index, event)
+            }
+          />
+        </div>
+      </Col>
+    ))}
+  </Row>
+</Col>
           <Col md={9} className="single-product-right-column">
             <Row className="mb-3">
               <Col md={4}>
@@ -517,6 +719,7 @@ function VendorAddProduct() {
                   </div>
                 </Form.Group>
               </Col>
+             
             </Row>
 
             {/* Variant details */}
@@ -540,7 +743,7 @@ function VendorAddProduct() {
                       className="single-product-form mx-2"
                       type="color"
                       value={color}
-                      style={{ padding: "5px" }}
+                      style={{ padding: "5px", height: "40px", width: "6%" }}
                       onChange={(e) => {
                         const selectedColor = e.target.value;
                         setColor(selectedColor);
@@ -596,10 +799,12 @@ function VendorAddProduct() {
               <Col md={12}>
                 <Form.Group>
                   <Form.Label className="single-product-form-label">
-                    Size and Stock
+                    {selectedCategoryName?.toLowerCase() === "kids"
+                      ? "Age and Stock"
+                      : "Size and Stock"}
                   </Form.Label>
                   <div className="size-selection">
-                    {["S", "M", "L", "XL", "XXL", "XXXL"].map((size) => (
+                    {currentSizes.map((size) => (
                       <div key={size} className="size-stock-group">
                         <label className="size-checkbox-label">
                           <input
@@ -641,7 +846,9 @@ function VendorAddProduct() {
             <div className="mt-4">
               <h4 className="mb-3">Added Variants ({variants.length})</h4>
               {variants.length === 0 && (
-                <p className="text-muted">No variants added yet. Add at least one variant.</p>
+                <p className="text-muted">
+                  No variants added yet. Add at least one variant.
+                </p>
               )}
               {variants.map((variant, index) => (
                 <div
@@ -705,7 +912,9 @@ function VendorAddProduct() {
                         <span>Sizes:</span>{" "}
                         <span style={{ fontWeight: "400", color: "#333333" }}>
                           {variant.sizes
-                            .map(({ size, stock }) => `${size} (Stock: ${stock})`)
+                            .map(
+                              ({ size, stock }) => `${size} (Stock: ${stock})`
+                            )
                             .join(", ")}
                         </span>
                       </p>
@@ -873,18 +1082,39 @@ function VendorAddProduct() {
                     </Form.Group>
                   </Col>
                   <Col md={4}>
-                    <Form.Group>
-                      <Form.Label className="single-product-form-label">
-                        Length
-                      </Form.Label>
-                      <Form.Control
-                        className="single-product-form"
-                        type="text"
-                        placeholder="Enter Length"
-                        value={length}
-                        onChange={(e) => setLength(e.target.value)}
-                      />
-                    </Form.Group>
+                  <Form.Group>
+  <Form.Label className="single-product-form-label">
+    Length
+  </Form.Label>
+  <div className="position-relative">
+    <Form.Control
+      className="single-product-form"
+      type="text"
+      placeholder="Enter Length"
+      value={length}
+      onChange={(e) => setLength(e.target.value)}
+      style={{ paddingRight: "80px" }} // Add padding to make room for the dropdown
+    />
+    <Form.Select 
+      className="position-absolute"
+      style={{ 
+        top: 0, 
+        right: 0, 
+        width: "80px", 
+        height: "100%", 
+        borderTopLeftRadius: 0, 
+        borderBottomLeftRadius: 0,
+        borderLeft: "1px solid #ced4da",
+        background:"e9e9e9"
+      }}
+      value={lengthUnit}
+      onChange={(e) => setLengthUnit(e.target.value)}
+    >
+      <option value="cm">cm</option>
+      <option value="m">m</option>
+    </Form.Select>
+  </div>
+</Form.Group>
                   </Col>
                   <Col md={4}>
                     <Form.Group>
@@ -900,9 +1130,7 @@ function VendorAddProduct() {
                       />
                     </Form.Group>
                   </Col>
-
-
-                  </Row>
+                </Row>
 
                 <Row className="mb-4">
                   <Col md={4}>
@@ -976,12 +1204,21 @@ function VendorAddProduct() {
               </Col>
             </Row>
 
-            <button
-              type="submit"
-              className="w-25 category-model-cancel"
-            >
-              Add
-            </button>
+            <button type="submit" className="w-25 category-model-add" disabled={loading}>
+  {loading ? (
+    <>
+      <span
+        className="spinner-border spinner-border-sm me-2"
+        role="status"
+        aria-hidden="true"
+      ></span>
+      Loading...
+    </>
+  ) : (
+    "Add"
+  )}
+</button>
+
           </Col>
         </Row>
       </Form>

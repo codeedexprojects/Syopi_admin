@@ -29,11 +29,15 @@ function Coin() {
     setLoading(true);
     try {
       const response = await getCoinSettingsApi();
-      console.log(response);
+      console.log('API Response:', response);
       
-      if (response) {
+      if (response && response.data) {
         setSettings(response.data);
         setFormValues(response.data);
+      } else if (response) {
+        // Handle case where response doesn't have data property
+        setSettings(response);
+        setFormValues(response);
       }
     } catch (error) {
       toast.error('Failed to load coin settings');
@@ -47,7 +51,7 @@ function Coin() {
     const { name, value } = e.target;
     setFormValues({
       ...formValues,
-      [name]: parseFloat(value) || 0
+      [name]: value === '' ? '' : parseFloat(value) || 0
     });
   };
 
@@ -57,8 +61,17 @@ function Coin() {
     
     try {
       const response = await updateCoinSettingsApi(formValues);
+      console.log('Update Response:', response);
+      
       if (response) {
-        setSettings(response.settings);
+        // Handle different possible response structures
+        if (response.settings) {
+          setSettings(response.settings);
+        } else if (response.data) {
+          setSettings(response.data);
+        } else {
+          setSettings(response);
+        }
         toast.success('Coin settings updated successfully');
       }
     } catch (error) {
@@ -103,15 +116,15 @@ function Coin() {
                 <div className="settings-summary">
                   <div className="setting-item">
                     <div className="setting-label">Cashback Percentage:</div>
-                    <div className="setting-value">{settings.percentage}%</div>
+                    <div className="setting-value">{settings.percentage || 0}%</div>
                   </div>
                   <div className="setting-item">
                     <div className="setting-label">Minimum Transaction Amount:</div>
-                    <div className="setting-value">₹{settings.minAmount}</div>
+                    <div className="setting-value">₹{settings.minAmount || 0}</div>
                   </div>
                   <div className="setting-item">
                     <div className="setting-label">Referral Reward:</div>
-                    <div className="setting-value">{settings.referralCoins} coins</div>
+                    <div className="setting-value">{settings.referralCoins || 50} coins</div>
                   </div>
                   <div className="setting-item">
                     <div className="setting-label">Last Updated:</div>
@@ -145,7 +158,7 @@ function Coin() {
                   <Form.Control
                     type="number"
                     name="percentage"
-                    value={formValues.percentage}
+                    value={formValues.percentage || 0}
                     onChange={handleInputChange}
                     min="0"
                     max="100"
@@ -162,10 +175,11 @@ function Coin() {
                   <Form.Control
                     type="number"
                     name="minAmount"
-                    value={formValues.minAmount}
+                    value={formValues.minAmount === 0 ? '' : formValues.minAmount}
                     onChange={handleInputChange}
                     min="0"
                     step="0.01"
+                    placeholder="Enter minimum amount"
                     required
                   />
                   <Form.Text className="text-muted">
@@ -178,10 +192,11 @@ function Coin() {
                   <Form.Control
                     type="number"
                     name="referralCoins"
-                    value={formValues.referralCoins}
+                    value={formValues.referralCoins === 0 ? '' : formValues.referralCoins}
                     onChange={handleInputChange}
                     min="0"
                     step="1"
+                    placeholder="Enter referral coins"
                     required
                   />
                   <Form.Text className="text-muted">

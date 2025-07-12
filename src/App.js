@@ -15,6 +15,9 @@ import Offer from './Pages/Offer';
 import Coupon from './Pages/Coupon';
 import Notification from './Pages/Notification';
 import Carousel from './Pages/Carousel';
+
+import Commision from './Pages/Commission';
+
 import Category from './Pages/Category';
 import Subcategory from './Pages/Subcategory';
 import Managevendors from './Pages/Managevendors';
@@ -48,6 +51,7 @@ import BrandCarousel from './Pages/BrandCarousel';
 import VendorLogin from './Pages/Vendor/VendorLogin';
 import UserProfile from './Pages/UserProfile';
 import VendorPayout from './Pages/VendorPayout';
+import Revenue from './Pages/Revenue';
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -122,6 +126,8 @@ function App() {
         />
                 <Route path="/homepage" element={<ProtectedRoute role="admin">{renderLayout(Homepage)}</ProtectedRoute>} />
                 <Route path="/userprofile/:id" element={<ProtectedRoute role="admin">{renderLayout(UserProfile)}</ProtectedRoute>} />
+                <Route path="/revenue" element={<ProtectedRoute role="admin">{renderLayout(Revenue)}</ProtectedRoute>} />
+                <Route path="/commision" element={<ProtectedRoute role="admin">{renderLayout(Commision)}</ProtectedRoute>} />
 
                 <Route path="/coin" element={<ProtectedRoute role="admin">{renderLayout(Coin)}</ProtectedRoute>} />
                 <Route path="/categorycarousal" element={<ProtectedRoute role="admin">{renderLayout(CategoryCarousel)}</ProtectedRoute>} />

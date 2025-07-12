@@ -89,8 +89,12 @@ export default function Dproduct() {
                 >
                   {index + 1}
                 </TableCell>
- 
-                <TableCell component="th" scope="row">
+
+                <TableCell
+                  component="th"
+                  scope="row"
+                  style={{ maxWidth: "150px" }}
+                >
                   <img
                     src={
                       row.images && row.images.length > 0
@@ -109,7 +113,17 @@ export default function Dproduct() {
                     }}
                   />
                   <br />
-                  {row.name || "-"}
+                  <span
+                    style={{
+                      display: "inline-block",
+                      maxWidth: "100%",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {row.name || "-"}
+                  </span>
                 </TableCell>
 
                 <TableCell align="left" className="product-tabledata">

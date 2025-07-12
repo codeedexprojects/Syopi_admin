@@ -1,0 +1,320 @@
+.revenue-container {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  padding: 20px;
+  margin-top: 8%;
+}
+
+.revenue-main-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.revenue-title {
+  font-size: 28px;
+  font-weight: bold;
+  color: #212529;
+  margin-bottom: 30px;
+}
+
+/* Header */
+.revenue-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+}
+
+.revenue-refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: #0d6efd;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.revenue-refresh-btn:hover {
+  background-color: #0b5ed7;
+}
+
+.revenue-refresh-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.revenue-refresh-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.revenue-spinning {
+  animation: revenue-spin 1s linear infinite;
+}
+
+@keyframes revenue-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Filter Card */
+.revenue-filter-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.revenue-filter-tabs {
+  display: flex;
+  border-bottom: 1px solid #dee2e6;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.revenue-filter-item {
+  margin-bottom: -1px;
+}
+
+.revenue-filter-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 24px;
+  border: none;
+  background: none;
+  color: #6c757d;
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.revenue-filter-link:hover {
+  color: #495057;
+  background-color: #f8f9fa;
+}
+
+.revenue-filter-link.active {
+  color: #0d6efd;
+  background-color: #f0f7ff;
+  border-bottom-color: #0d6efd;
+}
+
+.revenue-filter-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.revenue-filter-info {
+  padding: 12px 24px;
+  background-color: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+}
+
+.revenue-filter-info-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.revenue-filter-label {
+  font-size: 14px;
+  color: #6c757d;
+}
+
+.revenue-last-updated {
+  font-size: 14px;
+  color: #6c757d;
+}
+
+/* Stats Cards */
+.revenue-stats-row {
+  margin-bottom: 20px;
+}
+
+.revenue-stat-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 20px;
+  height: 100%;
+}
+
+.revenue-stat-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.revenue-stat-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #6c757d;
+  margin-bottom: 4px;
+}
+
+.revenue-stat-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #212529;
+  margin: 0;
+}
+
+.revenue-stat-icon-container {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.revenue-stat-icon-container svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Summary Table */
+.revenue-summary-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.revenue-summary-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.revenue-summary-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #212529;
+  margin: 0;
+}
+
+.revenue-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.revenue-table-header {
+  background-color: #f8f9fa;
+}
+
+.revenue-table th {
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.revenue-table td {
+  padding: 12px 24px;
+  font-size: 14px;
+  color: #212529;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.revenue-net-row {
+  background-color: #f8f9fa;
+}
+
+.revenue-bold {
+  font-weight: 600;
+}
+
+.revenue-text-left {
+  text-align: left;
+}
+
+.revenue-text-right {
+  text-align: right;
+}
+
+.revenue-text-success {
+  color: #198754;
+}
+
+.revenue-text-danger {
+  color: #dc3545;
+}
+
+/* Loading Spinner */
+.revenue-loading-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.revenue-spinner-icon {
+  width: 32px;
+  height: 32px;
+  color: #0d6efd;
+  animation: revenue-spin 1s linear infinite;
+}
+
+.revenue-loading-text {
+  margin-left: 10px;
+  color: #6c757d;
+}
+
+/* Error Message */
+.revenue-error-container {
+  margin-bottom: 20px;
+}
+
+.revenue-error-message {
+  background-color: #f8d7da;
+  border: 1px solid #f5c2c7;
+  border-radius: 4px;
+  padding: 16px;
+  text-align: center;
+}
+
+.revenue-error-text {
+  color: #842029;
+  margin-bottom: 12px;
+}
+
+.revenue-retry-btn {
+  padding: 8px 16px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.revenue-retry-btn:hover {
+  background-color: #bb2d3b;
+}
+
+/* No Data Message */
+.revenue-no-data {
+  text-align: center;
+  padding: 40px 0;
+}
+
+.revenue-no-data-icon {
+  width: 48px;
+  height: 48px;
+  color: #adb5bd;
+  margin-bottom: 16px;
+}
+
+.revenue-no-data-text {
+  color: #6c757d;
+  font-size: 18px;
+  margin: 0;
+}

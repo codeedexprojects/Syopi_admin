@@ -9,6 +9,7 @@ import { createVendorApi } from "../services/allApi";
 import { toast, ToastContainer } from "react-toastify";
 import { AiOutlineCloudUpload } from "react-icons/ai";
 import { useNavigate } from "react-router-dom";
+import dayjs from 'dayjs';
 
 function Addvendors() {
   const [images, setImages] = useState([null, null, null, null]);
@@ -23,7 +24,7 @@ function Addvendors() {
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [pinCode, setPinCode] = useState("");
-  const [stock, setStock] = useState("");
+  // const [stock, setStock] = useState("");
   const [storeType, setStoreType] = useState("");
   const [password, setPassword] = useState("");
   const [bankName, setBankName] = useState("");
@@ -31,9 +32,9 @@ function Addvendors() {
   const [accountHolderName, setAccountHolderName] = useState("");
   const [ifscCode, setIfscCode] = useState("");
   const [gstNumber, setGstNumber] = useState("");
+  const [sinceDate, setSinceDate] = useState(dayjs()); // Add this state
 
-  const [license, setLicense] = useState(null); // Changed from 'licence' to 'license'
-  // Removed certificate state since backend doesn't handle it
+  const [license, setLicense] = useState(null);
   const [logo, setLogo] = useState(null);
   const [passbookImage, setPassbookImage] = useState(null);
   const [email, setEmail] = useState("");
@@ -41,9 +42,36 @@ function Addvendors() {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
 
-    // Check if at least one image is selected
+    // Enhanced validation
     if (images.every((image) => !image)) {
       toast.error("At least one image is required");
+      return;
+    }
+
+    // Required field validation
+    if (!shopName.trim()) {
+      toast.error("Shop name is required");
+      return;
+    }
+
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error("Valid email is required");
+      return;
+    }
+
+    if (!phoneNumber || !/^\d{10}$/.test(phoneNumber)) {
+      toast.error("Valid 10-digit phone number is required");
+      return;
+    }
+
+    if (!pinCode || !/^\d{6}$/.test(pinCode)) {
+      toast.error("Valid 6-digit pincode is required");
+      return;
+    }
+
+    // GST validation - should be 15 characters with specific format
+    if (gstNumber && !/^\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z\d]{1}[Z]{1}[A-Z\d]{1}$/.test(gstNumber)) {
+      toast.error("Invalid GST number format");
       return;
     }
 
@@ -57,31 +85,42 @@ function Addvendors() {
       return;
     }
 
-    if (!/^[A-Za-z]{4}\d{7}$/.test(ifscCode)) {
-      toast.error("IFSC code must be 4 letters followed by 7 digits");
+    if (!/^[A-Za-z]{4}0\d{6}$/.test(ifscCode)) {
+      toast.error("IFSC code format: 4 letters + 0 + 6 digits (e.g., SBIN0001234)");
       return;
     }
 
     const formData = new FormData();
 
-    // Append all text fields
+    // Append all text fields with validation
     formData.append("ownername", "vendor");
     formData.append("fileType", "vendor");
     formData.append("userType", "admin");
     formData.append("businessname", shopName.trim());
     formData.append("description", description.trim());
     formData.append("address", address.trim());
-    formData.append("number", phoneNumber);
-    formData.append("businesslocation", location);
-    formData.append("businesslandmark", landmark);
-    formData.append("city", city);
-    formData.append("stock", stock);
-    formData.append("state", state);
-    formData.append("email", email);
-    formData.append("pincode", pinCode);
-    formData.append("storetype", storeType);
+    formData.append("number", phoneNumber.trim());
+    formData.append("businesslocation", location.trim());
+    formData.append("businesslandmark", landmark.trim());
+    formData.append("city", city.trim());
+    // formData.append("stock", stock.toString());
+    formData.append("state", state.trim());
+    formData.append("email", email.trim().toLowerCase());
+    formData.append("pincode", pinCode.trim());
+    formData.append("storetype", storeType.trim());
     formData.append("password", password);
-    formData.append("gstNumber", gstNumber.trim().toUpperCase());
+    
+    // Add the since date
+    if (sinceDate) {
+      formData.append("since", sinceDate.toISOString());
+    }
+    
+    // Only append GST if provided
+    if (gstNumber.trim()) {
+      formData.append("gstNumber", gstNumber.trim().toUpperCase());
+    }
+    
+    // Bank details as JSON
     formData.append("bankDetails", JSON.stringify({
       bankName: bankName.trim(),
       accountNumber: accountNumber.trim(),
@@ -89,12 +128,12 @@ function Addvendors() {
       ifscCode: ifscCode.trim().toUpperCase()
     }));
     
-    // Append only the file fields that backend expects
+    // Append files
     if (license) formData.append("license", license);
     if (logo) formData.append("storelogo", logo);
     if (passbookImage) formData.append("passbookImage", passbookImage);
-    // Removed certificate append since backend doesn't handle it
 
+    // Add images
     images.forEach((image) => {
       if (image) {
         formData.append("images", image);
@@ -111,13 +150,37 @@ function Addvendors() {
 
       if (response.success) {
         toast.success("Vendor created successfully");
-        setImages([null, null, null, null]); 
+        // Reset form
+        setImages([null, null, null, null]);
+        setShopName("");
+        setDescription("");
+        setAddress("");
+        setPhoneNumber("");
+        setLocation("");
+        setLandMark("");
+        setCity("");
+        setState("");
+        setPinCode("");
+        // setStock("");
+        setStoreType("");
+        setPassword("");
+        setBankName("");
+        setAccountNumber("");
+        setAccountHolderName("");
+        setIfscCode("");
+        setGstNumber("");
+        setEmail("");
+        setLicense(null);
+        setLogo(null);
+        setPassbookImage(null);
+        setSinceDate(dayjs());
 
         navigate("/managevendors");
       } else {
         toast.error(response.error || "Failed to create Vendor");
       }
     } catch (err) {
+      console.error("API Error:", err);
       toast.error(err.message || "An unexpected error occurred");
     }
   };
@@ -210,7 +273,7 @@ function Addvendors() {
               <Col md={4}>
                 <Form.Group>
                   <Form.Label className="single-product-form-label">
-                    Shop Name
+                    Shop Name *
                   </Form.Label>
                   <Form.Control
                     className="single-product-form"
@@ -218,6 +281,7 @@ function Addvendors() {
                     placeholder="Enter shop name"
                     value={shopName}
                     onChange={(e) => setShopName(e.target.value)}
+                    required
                   />
                 </Form.Group>
               </Col>
@@ -238,14 +302,15 @@ function Addvendors() {
               <Col md={4}>
                 <Form.Group>
                   <Form.Label className="single-product-form-label">
-                    Email
+                    Email *
                   </Form.Label>
                   <Form.Control
                     className="single-product-form"
-                    type="text"
+                    type="email"
                     placeholder="Enter Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    required
                   />
                 </Form.Group>
               </Col>
@@ -271,7 +336,7 @@ function Addvendors() {
               <Col md={4}>
                 <Form.Group>
                   <Form.Label className="single-product-form-label">
-                    location
+                    Location
                   </Form.Label>
                   <Form.Control
                     className="single-product-form"
@@ -329,14 +394,16 @@ function Addvendors() {
               <Col md={6}>
                 <Form.Group>
                   <Form.Label className="single-product-form-label">
-                    Pincode
+                    Pincode *
                   </Form.Label>
                   <Form.Control
                     className="single-product-form"
                     type="text"
-                    placeholder="Enter pincode"
+                    placeholder="Enter 6-digit pincode"
                     value={pinCode}
-                    onChange={(e) => setPinCode(e.target.value)}
+                    onChange={(e) => setPinCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    maxLength={6}
+                    required
                   />
                 </Form.Group>
               </Col>
@@ -359,14 +426,16 @@ function Addvendors() {
               <Col md={6}>
                 <Form.Group>
                   <Form.Label className="single-product-form-label">
-                    Phone No
+                    Phone No *
                   </Form.Label>
                   <Form.Control
                     className="single-product-form"
                     type="text"
-                    placeholder="Enter Phone Number"
+                    placeholder="Enter 10-digit phone number"
                     value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    maxLength={10}
+                    required
                   />
                 </Form.Group>
               </Col>
@@ -375,7 +444,7 @@ function Addvendors() {
               <Col md={6}>
                 <Form.Group>
                   <Form.Label className="single-product-form-label">
-                    GST Number
+                    GST Number (Optional)
                   </Form.Label>
                   <Form.Control
                     className="single-product-form"
@@ -385,6 +454,9 @@ function Addvendors() {
                     onChange={(e) => setGstNumber(e.target.value.toUpperCase())}
                     maxLength={15}
                   />
+                  <Form.Text className="text-muted">
+                    Format: 22AAAAA0000A1Z5 (Optional)
+                  </Form.Text>
                 </Form.Group>
               </Col>
               <Col md={6}>
@@ -469,12 +541,11 @@ function Addvendors() {
                 </Form.Group>
               </Col>
             </Row>
-            {/* Removed the Certificates field entirely since backend doesn't handle it */}
             <Row className="mb-3">
               <Col md={3}>
                 <Form.Group>
                   <Form.Label className="single-product-form-label">
-                    Bank Name
+                    Bank Name *
                   </Form.Label>
                   <Form.Control
                     className="single-product-form"
@@ -482,27 +553,29 @@ function Addvendors() {
                     placeholder="Enter bank name"
                     value={bankName}
                     onChange={(e) => setBankName(e.target.value)}
+                    required
                   />
                 </Form.Group>
               </Col>
               <Col md={3}>
                 <Form.Group>
                   <Form.Label className="single-product-form-label">
-                    Account Number
+                    Account Number *
                   </Form.Label>
                   <Form.Control
                     className="single-product-form"
                     type="text"
                     placeholder="Enter account number"
                     value={accountNumber}
-                    onChange={(e) => setAccountNumber(e.target.value)}
+                    onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
+                    required
                   />
                 </Form.Group>
               </Col>
               <Col md={3}>
                 <Form.Group>
                   <Form.Label className="single-product-form-label">
-                    Account Holder
+                    Account Holder *
                   </Form.Label>
                   <Form.Control
                     className="single-product-form"
@@ -510,39 +583,43 @@ function Addvendors() {
                     placeholder="Enter account holder name"
                     value={accountHolderName}
                     onChange={(e) => setAccountHolderName(e.target.value)}
+                    required
                   />
                 </Form.Group>
               </Col>
               <Col md={3}>
                 <Form.Group>
                   <Form.Label className="single-product-form-label">
-                    IFSC Code
+                    IFSC Code *
                   </Form.Label>
                   <Form.Control
                     className="single-product-form"
                     type="text"
-                    placeholder="Enter IFSC code"
+                    placeholder="e.g., SBIN0001234"
                     value={ifscCode}
                     onChange={(e) => setIfscCode(e.target.value.toUpperCase())}
+                    maxLength={11}
+                    required
                   />
                 </Form.Group>
               </Col>
             </Row>
             <Row className="mb-3">
-              <Col md={3}>
+              {/* <Col md={3}>
                 <Form.Group>
                   <Form.Label className="single-product-form-label">
                     Stock
                   </Form.Label>
                   <Form.Control
                     className="single-product-form"
-                    type="text"
+                    type="number"
                     placeholder="Enter stock quantity"
                     value={stock}
                     onChange={(e) => setStock(e.target.value)}
+                    min="0"
                   />
                 </Form.Group>
-              </Col>
+              </Col> */}
               <Col md={5}>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                   <Form.Group>
@@ -551,6 +628,8 @@ function Addvendors() {
                     </Form.Label>
                     <div className="input-with-icon">
                       <DateTimePicker
+                        value={sinceDate}
+                        onChange={(newValue) => setSinceDate(newValue)}
                         style={{ border: "none" }}
                         viewRenderers={{
                           hours: renderTimeViewClock,
@@ -566,14 +645,15 @@ function Addvendors() {
               <Col md={4}>
                 <Form.Group>
                   <Form.Label className="single-product-form-label">
-                    password
+                    Password *
                   </Form.Label>
                   <Form.Control
                     className="single-product-form"
-                    type="text"
+                    type="password"
                     placeholder="Enter password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    required
                   />
                 </Form.Group>
               </Col>
@@ -583,11 +663,11 @@ function Addvendors() {
             className="w-25 category-model-add mt-3"
             onClick={handleFormSubmit}
           >
-            Add
+            Add Vendor
           </button>
         </Col>
       </Row>
-      <ToastContainer></ToastContainer>
+      <ToastContainer />
     </div>
   );
 }

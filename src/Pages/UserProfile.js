@@ -8,6 +8,7 @@ import UserActivity from "../Components/UserActivity";
 import UserOverview from "../Components/UserOverview";
 import { useParams } from "react-router-dom";
 import { getUserByID } from "../services/allApi";
+import UserReferals from "../Components/UserReferals";
 
 function UserProfile() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -29,6 +30,7 @@ function UserProfile() {
             cart: product.cart,
             activity: product.activity,
             totalOrders: product.totalOrders,
+            referredUsers:product.referredUsers
           });
         } else {
           console.error("Invalid response format:", response);
@@ -66,6 +68,9 @@ function UserProfile() {
         return <UserCart cart={user.cart} />;
       case "activity":
         return <UserActivity activity={user.activity} />;
+      case "referredUsers":
+        return <UserReferals refferals={user.referredUsers} />;
+        
       default:
         return <UserOverview user={user} />;
     }
@@ -181,6 +186,15 @@ function UserProfile() {
                 Activity
               </Nav.Link>
             </Nav.Item>
+            <Nav.Item>
+              <Nav.Link
+                className={activeTab === "referredUsers" ? "active" : ""}
+                onClick={() => setActiveTab("referredUsers")}
+              >
+                Reffered Users
+              </Nav.Link>
+            </Nav.Item>
+            
           </Nav>
         </Col>
       </Row>

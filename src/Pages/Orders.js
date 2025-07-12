@@ -39,7 +39,7 @@ function Orders() {
         setLoading(true);
         const response = await getAdminOrdersApi();
         console.log(response);
-  
+
         if (response.success) {
           // Sort orders by createdAt (latest first)
           const sortedOrders = response.data.orders.sort(
@@ -56,9 +56,6 @@ function Orders() {
         setLoading(false);
       }
     };
-  
-  
-  
 
     fetchOrders();
   }, []);
@@ -153,22 +150,21 @@ function Orders() {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-IN"); 
+    return date.toLocaleDateString("en-IN");
   };
 
   // Status color mapping
   const getStatusColor = (status) => {
     const statusColors = {
-      "In-Transit": "secondary",    // Gray
-      "Processing": "info",         // Light Blue
-      "Shipping": "primary",        // Dark Blue
-      "Pending": "warning",         // Orange
-      "Delivered": "success",       // Green
-      "Returned": "dark",           // Dark Gray or pick another
-      "Cancelled": "danger",        // Red
-      "Confirmed": "success",       // Green (or 'primary' if you want a different tone)
+      "In-Transit": "secondary", // Gray
+      Processing: "info", // Light Blue
+      Shipping: "primary", // Dark Blue
+      Pending: "warning", // Orange
+      Delivered: "success", // Green
+      Returned: "dark", // Dark Gray or pick another
+      Cancelled: "danger", // Red
+      Confirmed: "success", // Green (or 'primary' if you want a different tone)
     };
-    
 
     return statusColors[status] || "light";
   };
@@ -216,43 +212,42 @@ function Orders() {
               <Card.Body>
                 <Row>
                   <Col md={3}>
-                  <div
-  className="product-image-preview"
-  style={{
-    width: "200px",
-    height: "250px",
-    borderRadius: "8px",
-    overflow: "hidden",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: "10px",
-    backgroundColor: "#f0f0f0",
-  }}
->
-  {order.productId?.images?.[0] ? (
-    <img
-      src={`${BASE_URL}/uploads/${order.productId.images[0]}`}
-      alt={order.colorName || "Product"}
-      style={{
-        width: "100%",
-        height: "100%",
-        objectFit: "cover",
-      }}
-    />
-  ) : (
-    <span
-      style={{
-        color: "#666",
-        fontSize: "12px",
-        textAlign: "center",
-      }}
-    >
-      No Image
-    </span>
-  )}
-</div>
-
+                    <div
+                      className="product-image-preview"
+                      style={{
+                        width: "200px",
+                        height: "250px",
+                        borderRadius: "8px",
+                        overflow: "hidden",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginBottom: "10px",
+                        backgroundColor: "#f0f0f0",
+                      }}
+                    >
+                      {order.productId?.images?.[0] ? (
+                        <img
+                          src={`${BASE_URL}/uploads/${order.productId.images[0]}`}
+                          alt={order.colorName || "Product"}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
+                        />
+                      ) : (
+                        <span
+                          style={{
+                            color: "#666",
+                            fontSize: "12px",
+                            textAlign: "center",
+                          }}
+                        >
+                          No Image
+                        </span>
+                      )}
+                    </div>
                   </Col>
                   <Col md={9}>
                     <table className="table table-borderless">
@@ -368,6 +363,8 @@ function Orders() {
                     value={status[order._id] || order.status}
                     onChange={(event) => handleStatusChange(event, order._id)}
                   >
+                                        <option value="Confirmed">Confirmed</option>
+
                     <option value="In-Transit">In-Transit</option>
                     <option value="Processing">Processing</option>
                     <option value="Shipping">Shipping</option>
@@ -432,22 +429,43 @@ function Orders() {
               </Card.Body>
             </Card>
 
-            <Card className="shadow-sm">
-              <Card.Header className="bg-light">
-                <h5 className="mb-0">Customer Information</h5>
-              </Card.Header>
-              <Card.Body>
-                <p>
-                  <strong>Customer ID:</strong> {order.userId}
-                </p>
-                <p>
-                  <strong>Address ID:</strong> {order.addressId}
-                </p>
-                <p>
-                  <strong>Vendor ID:</strong> {order.vendorId}
-                </p>
-              </Card.Body>
-            </Card>
+         <Card className="shadow-sm">
+  <Card.Header className="bg-light">
+    <h5 className="mb-0">Customer Information</h5>
+  </Card.Header>
+  <Card.Body>
+    <p>
+      <strong>Name:</strong> {order?.shippingAddress?.name ?? "N/A"}
+    </p>
+    <p>
+      <strong>Phone Number:</strong> {order?.shippingAddress?.number ?? "N/A"}
+    </p>
+    {order?.shippingAddress?.alternatenumber && (
+      <p>
+        <strong>Alternate Number:</strong> {order.shippingAddress.alternatenumber}
+      </p>
+    )}
+    <p>
+      <strong>Address Type:</strong> {order?.shippingAddress?.addressType ?? "N/A"}
+    </p>
+    <p>
+      <strong>Address:</strong> {order?.shippingAddress?.address ?? "N/A"}
+    </p>
+    <p>
+      <strong>Landmark:</strong> {order?.shippingAddress?.landmark  ?? "N/A"}
+    </p>
+    <p>
+      <strong>City:</strong> {order?.shippingAddress?.city ?? "N/A"}
+    </p>
+    <p>
+      <strong>State:</strong> {order?.shippingAddress?.state ?? "N/A"}
+    </p>
+    <p>
+      <strong>Pincode:</strong> {order?.shippingAddress?.pincode ?? "N/A"}
+    </p>
+  </Card.Body>
+</Card>
+
           </Col>
         </Row>
       </div>
@@ -531,6 +549,14 @@ function Orders() {
                 onClick={() => filterOrders("Delivered")}
               >
                 Delivered
+              </button>
+               <button
+                className={`order-status-button mx-2 mb-2 ${
+                  currentFilter === "Confirmed" ? "active" : ""
+                }`}
+                onClick={() => filterOrders("Confirmed")}
+              >
+                Confirmed
               </button>
               <button
                 className={`order-status-button mx-2 mb-2 ${
@@ -616,30 +642,30 @@ function Orders() {
                         {page * rowsPerPage + index + 1}
                       </TableCell>
                       <TableCell className="border-tabledata">
-  <div className="d-flex align-items-center">
-    {order.productId?.images?.[0] && (
-      <img
-        src={`${BASE_URL}/uploads/${order.productId.images[0]}`}
-        alt={order.productId?.name || "Product"}
-        className="me-2 rounded"
-        style={{
-          width: "32px",
-          height: "32px",
-          objectFit: "cover"
-        }}
-      />
-    )}
-    <div 
-      className="text-truncate" 
-      style={{ maxWidth: "120px" }}
-      title={order.productId?.name}
-    >
-      {order.productId?.name?.length > 15 
-        ? `${order.productId.name.substring(0, 15)}...` 
-        : order.productId?.name}
-    </div>
-  </div>
-</TableCell>
+                        <div className="d-flex align-items-center">
+                          {order.productId?.images?.[0] && (
+                            <img
+                              src={`${BASE_URL}/uploads/${order.productId.images[0]}`}
+                              alt={order.productId?.name || "Product"}
+                              className="me-2 rounded"
+                              style={{
+                                width: "32px",
+                                height: "32px",
+                                objectFit: "cover",
+                              }}
+                            />
+                          )}
+                          <div
+                            className="text-truncate"
+                            style={{ maxWidth: "120px" }}
+                            title={order.productId?.name}
+                          >
+                            {order.productId?.name?.length > 15
+                              ? `${order.productId.name.substring(0, 15)}...`
+                              : order.productId?.name}
+                          </div>
+                        </div>
+                      </TableCell>
 
                       <TableCell component="th" scope="row">
                         <div
@@ -683,6 +709,8 @@ function Orders() {
                             className="form-select-sm order-dropdown"
                           >
                             <option value="Pending">Pending</option>
+                            <option value="Confirmed">Confirmed</option>
+
                             <option value="Processing">Processing</option>
                             <option value="Shipping">Shipping</option>
 

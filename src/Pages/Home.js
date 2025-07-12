@@ -136,9 +136,7 @@ function Home() {
         <Col md={7}>
           <OrderGraph dashboardData={dashboardOrderData} />
         </Col>
-        <Col md={5}>
-          <Storevisitors />
-        </Col>
+      
       </Row>
       <Row className="mt-5">
         <Col md={6}>

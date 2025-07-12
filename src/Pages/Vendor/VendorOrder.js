@@ -327,16 +327,42 @@ function VendorOrder() {
               </Card.Body>
             </Card>
 
-            <Card className="shadow-sm">
-              <Card.Header className="bg-light">
-                <h5 className="mb-0">Customer Information</h5>
-              </Card.Header>
-              <Card.Body>
-                <p><strong>Customer ID:</strong> {order.userId}</p>
-                <p><strong>Address ID:</strong> {order.addressId}</p>
-                <p><strong>Vendor ID:</strong> {order.vendorId}</p>
-              </Card.Body>
-            </Card>
+           <Card className="shadow-sm">
+            <Card.Header className="bg-light">
+              <h5 className="mb-0">Customer Information</h5>
+            </Card.Header>
+            <Card.Body>
+              <p>
+                <strong>Name:</strong> {order?.shippingAddress?.name ?? "N/A"}
+              </p>
+              <p>
+                <strong>Phone Number:</strong> {order?.shippingAddress?.number ?? "N/A"}
+              </p>
+              {order?.shippingAddress?.alternatenumber && (
+                <p>
+                  <strong>Alternate Number:</strong> {order.shippingAddress.alternatenumber}
+                </p>
+              )}
+              <p>
+                <strong>Address Type:</strong> {order?.shippingAddress?.addressType ?? "N/A"}
+              </p>
+              <p>
+                <strong>Address:</strong> {order?.shippingAddress?.address ?? "N/A"}
+              </p>
+              <p>
+                <strong>Landmark:</strong> {order?.shippingAddress?.landmark  ?? "N/A"}
+              </p>
+              <p>
+                <strong>City:</strong> {order?.shippingAddress?.city ?? "N/A"}
+              </p>
+              <p>
+                <strong>State:</strong> {order?.shippingAddress?.state ?? "N/A"}
+              </p>
+              <p>
+                <strong>Pincode:</strong> {order?.shippingAddress?.pincode ?? "N/A"}
+              </p>
+            </Card.Body>
+          </Card>
           </Col>
         </Row>
       </div>

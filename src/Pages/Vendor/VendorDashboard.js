@@ -117,12 +117,12 @@ function VendorDashboard() {
         ))}
       </Row>
       <Row className="mt-5">
-        <Col md={7}>
+        <Col md={12}>
           <VOrderGraph vendordashboardData={dashboardOrderData} />
         </Col>
-        <Col md={5}>
+        {/* <Col md={5}>
           <Storevisitors />
-        </Col>
+        </Col> */}
       </Row>
       <Row className="mt-5">
         <Col md={6}>
@@ -132,19 +132,19 @@ function VendorDashboard() {
           <VDOrder />
         </Col>
       </Row>
-      <Row className="mt-5">
+      {/* <Row className="mt-5">
         <Col md={7}>
           <Weekly />
         </Col>
         <Col md={5}>
           <OrderStatistics></OrderStatistics>
         </Col>
-      </Row>
-      <Row className="mt-5">
+      </Row> */}
+      {/* <Row className="mt-5">
         <Col md={12}>
           <Leaderboard />
         </Col>
-      </Row>
+      </Row> */}
       <Row className="mt-5">
         <Col md={12}>
           <RecTransaction />

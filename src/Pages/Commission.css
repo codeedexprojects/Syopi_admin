@@ -1,0 +1,320 @@
+.commission-container {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  padding: 20px;
+  margin-top: 5%;
+}
+
+.commission-main-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.commission-title {
+  font-size: 28px;
+  font-weight: bold;
+  color: #212529;
+  margin-bottom: 30px;
+}
+
+/* Header */
+.commission-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+}
+
+.commission-refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: #0d6efd;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.commission-refresh-btn:hover {
+  background-color: #0b5ed7;
+}
+
+.commission-refresh-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.commission-refresh-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.commission-spinning {
+  animation: commission-spin 1s linear infinite;
+}
+
+@keyframes commission-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Filter Card */
+.commission-filter-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.commission-filter-tabs {
+  display: flex;
+  border-bottom: 1px solid #dee2e6;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.commission-filter-item {
+  margin-bottom: -1px;
+}
+
+.commission-filter-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 24px;
+  border: none;
+  background: none;
+  color: #6c757d;
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.commission-filter-link:hover {
+  color: #495057;
+  background-color: #f8f9fa;
+}
+
+.commission-filter-link.active {
+  color: #0d6efd;
+  background-color: #f0f7ff;
+  border-bottom-color: #0d6efd;
+}
+
+.commission-filter-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.commission-filter-info {
+  padding: 12px 24px;
+  background-color: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+}
+
+.commission-filter-info-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.commission-filter-label {
+  font-size: 14px;
+  color: #6c757d;
+}
+
+.commission-last-updated {
+  font-size: 14px;
+  color: #6c757d;
+}
+
+/* Stats Cards */
+.commission-stats-row {
+  margin-bottom: 20px;
+}
+
+.commission-stat-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 20px;
+  height: 100%;
+}
+
+.commission-stat-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.commission-stat-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #6c757d;
+  margin-bottom: 4px;
+}
+
+.commission-stat-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #212529;
+  margin: 0;
+}
+
+.commission-stat-icon-container {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.commission-stat-icon-container svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Summary Table */
+.commission-summary-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.commission-summary-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.commission-summary-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #212529;
+  margin: 0;
+}
+
+.commission-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.commission-table-header {
+  background-color: #f8f9fa;
+}
+
+.commission-table th {
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.commission-table td {
+  padding: 12px 24px;
+  font-size: 14px;
+  color: #212529;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.commission-net-row {
+  background-color: #f8f9fa;
+}
+
+.commission-bold {
+  font-weight: 600;
+}
+
+.commission-text-left {
+  text-align: left;
+}
+
+.commission-text-right {
+  text-align: right;
+}
+
+.commission-text-success {
+  color: #198754;
+}
+
+.commission-text-danger {
+  color: #dc3545;
+}
+
+/* Loading Spinner */
+.commission-loading-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.commission-spinner-icon {
+  width: 32px;
+  height: 32px;
+  color: #0d6efd;
+  animation: commission-spin 1s linear infinite;
+}
+
+.commission-loading-text {
+  margin-left: 10px;
+  color: #6c757d;
+}
+
+/* Error Message */
+.commission-error-container {
+  margin-bottom: 20px;
+}
+
+.commission-error-message {
+  background-color: #f8d7da;
+  border: 1px solid #f5c2c7;
+  border-radius: 4px;
+  padding: 16px;
+  text-align: center;
+}
+
+.commission-error-text {
+  color: #842029;
+  margin-bottom: 12px;
+}
+
+.commission-retry-btn {
+  padding: 8px 16px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.commission-retry-btn:hover {
+  background-color: #bb2d3b;
+}
+
+/* No Data Message */
+.commission-no-data {
+  text-align: center;
+  padding: 40px 0;
+}
+
+.commission-no-data-icon {
+  width: 48px;
+  height: 48px;
+  color: #adb5bd;
+  margin-bottom: 16px;
+}
+
+.commission-no-data-text {
+  color: #6c757d;
+  font-size: 18px;
+  margin: 0;
+}

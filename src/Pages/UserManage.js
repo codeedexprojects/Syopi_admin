@@ -38,41 +38,46 @@ function UserManage() {
   const [userStats, setUserStats] = useState([
     { title: "Most Wishlisted", number: 0 },
     { title: "Top Ordered", number: 0 },
-    { title: "Popular Viewed", number: 0 },
+   
     { title: "Total Users", number: 0 },
     { title: "Active Users", number: 0 },
     { title: "Inactive Users", number: 0 },
   ]);
 
-  const fetchData = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const response = await getallUserApi();
-      console.log("API Response:", response);
-      
-      if (response && response.data) {
-        setApiData(response.data);
-        setAllUsers(response.data.users || []);
-        
-        // Update user stats
-        updateUserStatsFromApi(response.data);
-        
-        // Apply initial filtering and pagination
-        applyFiltersAndPagination(response.data.users || [], searchQuery, filters);
-      } else {
-        setError("No data received from API");
-      }
-    } catch (err) {
-      console.error("Error fetching user data:", err);
-      setError("Failed to fetch users. Please try again.");
-    } finally {
-      setLoading(false);
+ const fetchData = async () => {
+  setLoading(true);
+  setError(null);
+
+  try {
+    const response = await getallUserApi();
+    console.log("API Response:", response);
+
+    if (response && response.data) {
+      const users = response.data.users || [];
+
+      // Sort by createdAt descending (latest first)
+      const sortedUsers = users.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      setApiData(response.data);
+      setAllUsers(sortedUsers);
+
+      // Update user stats
+      updateUserStatsFromApi(response.data);
+
+      // Apply initial filtering and pagination
+      applyFiltersAndPagination(sortedUsers, searchQuery, filters);
+    } else {
+      setError("No data received from API");
     }
-  };
+  } catch (err) {
+    console.error("Error fetching user data:", err);
+    setError("Failed to fetch users. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
+
   
-  // Update stats from API data
   const updateUserStatsFromApi = (data) => {
     if (!data) return;
     
@@ -86,7 +91,7 @@ function UserManage() {
         number: data.topOrderedProduct ? data.topOrderedProduct.count : 0 
       },
       // You may need to add this to your API response
-      { title: "Popular Viewed", number: 0 },
+     
       { title: "Total Users", number: data.totalUsers || 0 },
       { title: "Active Users", number: data.activeUsers || 0 },
       { title: "Inactive Users", number: data.inactiveUsers || 0 },
@@ -281,7 +286,7 @@ function UserManage() {
       {/* Filter Panel */}
       {showFilters && (
         <Row className="mt-3 filter-panel p-3">
-          <Col md={3}>
+          {/* <Col md={3}>
             <Form.Group>
               <Form.Label>Gender</Form.Label>
               <Form.Select 
@@ -294,7 +299,7 @@ function UserManage() {
                 <option value="other">Other</option>
               </Form.Select>
             </Form.Group>
-          </Col>
+          </Col> */}
           <Col md={3}>
             <Form.Group>
               <Form.Label>Role</Form.Label>
@@ -392,9 +397,9 @@ function UserManage() {
                     <TableCell className="dproduct-tablehead" align="left">
                       Mobile Number
                     </TableCell>
-                    <TableCell className="dproduct-tablehead" align="left">
+                    {/* <TableCell className="dproduct-tablehead" align="left">
                       Gender
-                    </TableCell>
+                    </TableCell> */}
                     <TableCell className="dproduct-tablehead" align="left">
                       Role
                     </TableCell>
@@ -427,9 +432,9 @@ function UserManage() {
     {row.phone || 'N/A'}
   </TableCell>
 
-  <TableCell align="left" className="dorder-tabledata">
+  {/* <TableCell align="left" className="dorder-tabledata">
     {row.gender || 'N/A'}
-  </TableCell>
+  </TableCell> */}
 
   <TableCell align="left" className="dorder-tabledata">
     {row.role || 'N/A'}
