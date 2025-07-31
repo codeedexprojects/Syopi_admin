@@ -44,7 +44,6 @@ function Managevendors() {
     setError(null);
     try {
       const response = await getallVendors();
-      console.log(response);
 
       if (response && response.data) {
         setVendors(response.data);

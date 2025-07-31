@@ -28,13 +28,11 @@ function LowestProduct() {
     setLoading(true);
     try {
       const response = await getLowestPriceProductApi();
-      console.log("lowest",response);
       
       setProducts(response.data.lowestPriceProducts);
       setError(null);
     } catch (err) {
       setError('Failed to fetch products. Please try again later.');
-      console.error('Error fetching products:', err);
     } finally {
       setLoading(false);
     }

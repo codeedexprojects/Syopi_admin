@@ -39,7 +39,7 @@ function Carousel() {
 
   const [title, setTitle] = useState("");
   const [imageFile, setImageFile] = useState(null);
-  const [date, setDate] = useState(null);
+  // const [date, setDate] = useState(null);
   const [selectedCategories, setSelectedCategories] = useState("");
   const [selectedId, setSelectedId] = useState("");
   const [showeditModal, setShoweditModal] = useState(false);
@@ -80,7 +80,7 @@ function Carousel() {
     // Set other slider data
     setTitle(slider.title);
     setSelectedCategories(slider.cate);
-    setDate(slider.date || null);
+    // setDate(slider.date || null);
     setUploadedImage(`${BASE_URL}/uploads/${slider.image}` || "");
     setSelectedId(slider._id);
   };
@@ -168,7 +168,6 @@ function Carousel() {
     setError(null);
     try {
       const response = await getCategorySliderApi();
-      console.log(response);
 
       if (response && response.data) {
         setRows(response.data);
@@ -192,7 +191,6 @@ function Carousel() {
   const fetchCategories = async () => {
     try {
       const response = await getCategoriesApi();
-      console.log("categories", response);
 
       if (response.success) {
         setCategories(response.data);
@@ -213,7 +211,6 @@ function Carousel() {
   const fetchSubCategories = async (categoryId) => {
     try {
       const response = await getsubcategoryByID(categoryId); 
-      console.log("Subcategories", response);
 
       if (response.success) {
         setSubCategories(response.data);
@@ -235,7 +232,7 @@ function Carousel() {
     e.preventDefault();
 
     // Validate fields
-    if (!title || !selectedCategories || !imageFile || !date) {
+    if (!title || !selectedCategories || !imageFile ) {
       toast.error("All fields are required");
       return;
     }
@@ -245,10 +242,9 @@ function Carousel() {
     formData.append("categoryId", selectedCategories);
     formData.append("subCategoryId", selectedsubCategories);
 
-    formData.append("date", new Date(date).toISOString());
+    // formData.append("date", new Date(date).toISOString());
     formData.append("userType", "admin");
     formData.append("image", imageFile);
-    console.log("FormData being sent:");
     for (let [key, value] of formData.entries()) {
       console.log(`${key}:`, value);
     }
@@ -295,7 +291,7 @@ function Carousel() {
     e.preventDefault();
 
     // Validation
-    if (!title || !selectedCategories || !date || !imageFile) {
+    if (!title || !selectedCategories  || !imageFile) {
       toast.error("All fields are required");
       return;
     }
@@ -304,14 +300,13 @@ function Carousel() {
     const formData = new FormData();
     formData.append("title", title.trim());
     formData.append("categoryId", selectedCategories);
-    formData.append("date", date); // Ensure date is in "YYYY-MM-DD" format
+    // formData.append("date", date);
     // formData.append("fileType", "category");
     formData.append("userType", "admin");
     formData.append("image", imageFile);
 
     try {
       const response = await updateCategorysliderApi(selectedId, formData);
-      console.log(response); // Debug response for issues
 
       if (response.success) {
         toast.success("Carousel updated successfully");
@@ -622,7 +617,7 @@ function Carousel() {
                   </Col>
                 </Row>
 
-                <Row className="mt-3">
+                {/* <Row className="mt-3">
                   <Col md={12}>
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                       <Form.Group>
@@ -661,7 +656,7 @@ function Carousel() {
                       </Form.Group>
                     </LocalizationProvider>
                   </Col>
-                </Row>
+                </Row> */}
               </Form>
             </Col>
           </Row>
@@ -777,7 +772,7 @@ function Carousel() {
                     </Form.Group>
                   </Col>
                 </Row>
-                <Row className="mt-3">
+                {/* <Row className="mt-3">
                   <Col md={12}>
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                       <Form.Group>
@@ -816,7 +811,7 @@ function Carousel() {
                       </Form.Group>
                     </LocalizationProvider>
                   </Col>
-                </Row>
+                </Row> */}
               </Form>
             </Col>
           </Row>

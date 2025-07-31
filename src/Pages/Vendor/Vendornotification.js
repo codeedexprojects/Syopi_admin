@@ -93,7 +93,6 @@ function Vendornotification() {
     setError(null);
     try {
       const response = await getvendornotificationApi();
-      console.log(response);
 
       if (response && response.data) {
         setNotification(response.data);
@@ -132,7 +131,7 @@ function Vendornotification() {
     formData.append("userType", "vendor"); // Assuming this is required
     formData.append("image", imageFile); // Attach the actual file
 
-    console.log("FormData being sent:");
+    
     for (let [key, value] of formData.entries()) {
       console.log(`${key}:`, value);
     }
@@ -186,7 +185,6 @@ function Vendornotification() {
 
     try {
       const response = await updatevendornotificationapi(notificationId, formData);
-      console.log(response); // Debug response for issues
 
       if (response.success) {
         toast.success("Carousel updated successfully");

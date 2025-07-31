@@ -49,7 +49,7 @@ function Subcategory() {
     setLoading(true);
     try {
       const response = await getSubCategoriesApi();
-      console.log(response); // Log the response to debug
+    
       if (response.success && Array.isArray(response.data.subCategories)) {
         setSubCategories(response.data.subCategories); // Extract subCategories
       } else {
@@ -154,7 +154,7 @@ function Subcategory() {
     formData.append("fileType", "subcategory"); // Assuming this is required
     formData.append("userType", "admin"); // Assuming this is required
     formData.append("image", imageFile); // Attach the actual file
-    console.log("FormData being sent:");
+   
     for (let [key, value] of formData.entries()) {
       console.log(`${key}:`, value);
     }

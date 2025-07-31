@@ -37,7 +37,7 @@ function Carousel() {
   const [title, setTitle] = useState("");
   const [link, setLink] = useState("");
   const [imageFile, setImageFile] = useState(null);
-  const [date, setDate] = useState(null);
+  // const [date, setDate] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState("");
   const [selectedId, setSelectedId] = useState("");
   const [showeditModal, setShoweditModal] = useState(false);
@@ -78,7 +78,7 @@ function Carousel() {
     setTitle(slider.title);
     setSelectedProduct(slider.cate);
     setLink(slider.link || "");
-    setDate(slider.date || null);
+    // setDate(slider.date || null);
     setUploadedImage(`${BASE_URL}/uploads/${slider.image}` || "");
     setSelectedId(slider._id);
   };
@@ -166,7 +166,6 @@ function Carousel() {
     setError(null);
     try {
       const response = await getSliderApi();
-      console.log(response);
 
       if (response && response.data) {
         setRows(response.data);
@@ -188,7 +187,6 @@ function Carousel() {
   const fetchProducts = async () => {
     try {
       const response = await getallProducts();
-      console.log("products", response);
 
       if (response.success) {
         setProducts(response.data.products);
@@ -210,7 +208,7 @@ function Carousel() {
     e.preventDefault();
 
     // Validate fields
-    if (!title || !link || !selectedProduct || !imageFile || !date) {
+    if (!title || !link || !selectedProduct || !imageFile ) {
       toast.error("All fields are required");
       return;
     }
@@ -219,11 +217,10 @@ function Carousel() {
     formData.append("title", title.trim());
     formData.append("link", link.trim());
     formData.append("productId", selectedProduct);
-    formData.append("date", new Date(date).toISOString()); // Ensure date formatting
+    // formData.append("date", new Date(date).toISOString());
     formData.append("userType", "admin"); // Assuming this is required
     formData.append("image", imageFile); // Attach the actual file
 
-    console.log("FormData being sent:");
     for (let [key, value] of formData.entries()) {
       console.log(`${key}:`, value);
     }
@@ -270,7 +267,7 @@ function Carousel() {
     e.preventDefault();
 
     // Validation
-    if (!title || !link || !selectedProduct || !date || !imageFile) {
+    if (!title || !link || !selectedProduct  || !imageFile) {
       toast.error("All fields are required");
       return;
     }
@@ -280,14 +277,13 @@ function Carousel() {
     formData.append("title", title.trim());
     formData.append("link", link.trim());
     formData.append("productId", selectedProduct);
-    formData.append("date", date); // Ensure date is in "YYYY-MM-DD" format
+    // formData.append("date", date); 
     // formData.append("fileType", "category");
     formData.append("userType", "admin");
     formData.append("image", imageFile);
 
     try {
       const response = await updatesliderApi(selectedId, formData);
-      console.log(response); // Debug response for issues
 
       if (response.success) {
         toast.success("Carousel updated successfully");
@@ -578,7 +574,7 @@ function Carousel() {
                     </Form.Group>
                   </Col>
                 </Row>
-                <Row className="mt-3">
+                {/* <Row className="mt-3">
                   <Col md={12}>
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                       <Form.Group>
@@ -617,7 +613,7 @@ function Carousel() {
                       </Form.Group>
                     </LocalizationProvider>
                   </Col>
-                </Row>
+                </Row> */}
               </Form>
             </Col>
           </Row>
@@ -748,7 +744,7 @@ function Carousel() {
                     </Form.Group>
                   </Col>
                 </Row>
-                <Row className="mt-3">
+                {/* <Row className="mt-3">
                   <Col md={12}>
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                       <Form.Group>
@@ -787,7 +783,7 @@ function Carousel() {
                       </Form.Group>
                     </LocalizationProvider>
                   </Col>
-                </Row>
+                </Row> */}
               </Form>
             </Col>
           </Row>

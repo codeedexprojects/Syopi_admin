@@ -37,11 +37,9 @@ function TopsalesProduct() {
   const fetchCategories = async () => {
     try {
       const response = await getCategoriesApi();
-      console.log("categories", response);
       setCategories(response.data);
     } catch (error) {
       toast.error('Failed to fetch categories');
-      console.error(error);
     }
   };
 
@@ -51,20 +49,17 @@ function TopsalesProduct() {
     try {
       setLoading(true);
       const response = await getsubcategoryByID(categoryId);
-      console.log("subcategories for category", categoryId, response);
       
       if (response.data && response.data) {
         setFilteredSubcategories(response.data);
       } else {
         setFilteredSubcategories([]);
-        console.error("Unexpected response format from getsubcategoryByID:", response);
       }
       
       // Clear any previously selected subcategory
       setFormData(prev => ({ ...prev, subcategoryId: '' }));
     } catch (error) {
       toast.error('Failed to fetch subcategories');
-      console.error("Error fetching subcategories:", error);
       setFilteredSubcategories([]);
     } finally {
       setLoading(false);
@@ -75,12 +70,10 @@ function TopsalesProduct() {
     try {
       setLoading(true);
       const response = await getAllTopSaleProductsApi();
-      console.log("topsales", response);
       
       setTopSaleProducts(response.data.topSaleSectionProducts);
     } catch (error) {
       toast.error('Failed to fetch top sale products');
-      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -153,7 +146,6 @@ function TopsalesProduct() {
       fetchTopSaleProducts();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Operation failed');
-      console.error(error);
     } finally {
       setLoading(false);
     }

@@ -29,7 +29,6 @@ function VendorLogin() {
     try {
       const response = await venodorLoginApi({ email, password });
       
-      console.log("Response:", response);
       
       setLoading(false);
       

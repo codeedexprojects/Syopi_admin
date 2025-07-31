@@ -17,7 +17,7 @@ import { useState } from "react";
 import HashLoader from "react-spinners/HashLoader";
 import { BASE_URL } from "../services/baseUrl";
 import { useNavigate } from "react-router-dom";
-import { FaEdit, FaEye, FaFlag } from "react-icons/fa";
+import { FaEdit, FaEye } from "react-icons/fa";
 
 function Products() {
   // State for products data
@@ -303,10 +303,9 @@ function Products() {
     setError(null);
     try {
       const response = await getallProducts();
-      console.log("products", response);
+      console.log(response);
 
       if (response && response.data) {
-        console.log("Received products:", response.data.products.length);
         setRows(response.data.products.reverse());
         setTotalPages(Math.ceil(response.data.products.length / itemsPerPage));
       }
@@ -404,11 +403,6 @@ function Products() {
   const paginatedData = getPaginatedData(filteredData);
 
   // Debug information
-  console.log("Total products:", rows.length);
-  console.log("Filtered products:", filteredData.length);
-  console.log("Paginated products:", paginatedData.length);
-  console.log("Current page:", page, "of", totalPages);
-  console.log("Filters applied:", filtersApplied);
 
   return (
     <div className="Products">
@@ -527,7 +521,7 @@ function Products() {
                         {row.name || "-"}
                       </TableCell>
                       <TableCell align="left" className="product-tabledata">
-                        {row.brand?.name}
+                        {row.brand?.name || row.brand}
                       </TableCell>
 
                       <TableCell align="left" className="product-tabledata">
@@ -537,7 +531,7 @@ function Products() {
                         {row.totalStock || 0}
                       </TableCell>
                       <TableCell align="left" className="product-tabledata">
-                      ₹{getBasePrice(row)}
+                        ₹{getBasePrice(row)}
                       </TableCell>
                       <TableCell
                         onClick={(event) => {

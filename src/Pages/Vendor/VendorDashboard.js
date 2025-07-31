@@ -29,7 +29,6 @@ function VendorDashboard() {
   }, []);
   const fetchDashboardProductData = async () => {
     const result = await getVendorDashboardProductApi();
-    console.log("dashboard-product", result);
     if (result.success) {
       setDashboardProductData(result.data);
     } else {
@@ -38,7 +37,6 @@ function VendorDashboard() {
   };
   const fetchDashboardOrderData = async () => {
     const result = await getVendorDashboardOrderApi();
-    console.log("dashboard-order", result);
     if (result.success) {
       setDashboardOrderData(result.data);
     } else {

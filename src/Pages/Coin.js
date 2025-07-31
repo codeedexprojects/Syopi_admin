@@ -12,12 +12,16 @@ function Coin() {
   const [settings, setSettings] = useState({
     percentage: 0,
     minAmount: 0,
-    referralCoins: 50
+    referralCoins: 0,
+    coinValue: 0,
+    maxOrderDiscountPercent: 0
   });
   const [formValues, setFormValues] = useState({
     percentage: 0,
     minAmount: 0,
-    referralCoins: 50
+    referralCoins: 0,
+    coinValue: 0,
+    maxOrderDiscountPercent: 0
   });
 
   // Fetch current coin settings on component mount
@@ -29,7 +33,7 @@ function Coin() {
     setLoading(true);
     try {
       const response = await getCoinSettingsApi();
-      console.log('API Response:', response);
+      
       
       if (response && response.data) {
         setSettings(response.data);
@@ -41,7 +45,7 @@ function Coin() {
       }
     } catch (error) {
       toast.error('Failed to load coin settings');
-      console.error('Error fetching coin settings:', error);
+      // console.error('Error fetching coin settings:', error);
     } finally {
       setLoading(false);
     }
@@ -61,7 +65,6 @@ function Coin() {
     
     try {
       const response = await updateCoinSettingsApi(formValues);
-      console.log('Update Response:', response);
       
       if (response) {
         // Handle different possible response structures
@@ -76,7 +79,7 @@ function Coin() {
       }
     } catch (error) {
       toast.error('Failed to update coin settings');
-      console.error('Error updating coin settings:', error);
+      // console.error('Error updating coin settings:', error);
     } finally {
       setUpdating(false);
     }
@@ -95,7 +98,7 @@ function Coin() {
         <Col>
           <h2 className="section-title">Coin Settings Management</h2>
           <p className="section-description">
-            Configure coin earning rate, minimum transaction amount, and referral rewards
+            Configure coin earning rate, minimum transaction amount, referral rewards, and coin redemption settings
           </p>
         </Col>
       </Row>
@@ -124,7 +127,15 @@ function Coin() {
                   </div>
                   <div className="setting-item">
                     <div className="setting-label">Referral Reward:</div>
-                    <div className="setting-value">{settings.referralCoins || 50} coins</div>
+                    <div className="setting-value">{settings.referralCoins || 0} coins</div>
+                  </div>
+                  <div className="setting-item">
+                    <div className="setting-label">Coin Value:</div>
+                    <div className="setting-value">₹{settings.coinValue || 0} per coin</div>
+                  </div>
+                  <div className="setting-item">
+                    <div className="setting-label">Max Order Discount:</div>
+                    <div className="setting-value">{settings.maxOrderDiscountPercent || 0}% of order value</div>
                   </div>
                   <div className="setting-item">
                     <div className="setting-label">Last Updated:</div>
@@ -201,6 +212,41 @@ function Coin() {
                   />
                   <Form.Text className="text-muted">
                     Number of coins awarded for successful referrals
+                  </Form.Text>
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label>Coin Value (₹ per coin)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    name="coinValue"
+                    value={formValues.coinValue === 0 ? '' : formValues.coinValue}
+                    onChange={handleInputChange}
+                    min="0"
+                    step="0.01"
+                    placeholder="Enter coin value"
+                    required
+                  />
+                  <Form.Text className="text-muted">
+                    Monetary value of each coin when redeeming
+                  </Form.Text>
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label>Max Order Discount (%)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    name="maxOrderDiscountPercent"
+                    value={formValues.maxOrderDiscountPercent === 0 ? '' : formValues.maxOrderDiscountPercent}
+                    onChange={handleInputChange}
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    placeholder="Enter max discount percentage"
+                    required
+                  />
+                  <Form.Text className="text-muted">
+                    Maximum percentage of order value that can be discounted with coins
                   </Form.Text>
                 </Form.Group>
 

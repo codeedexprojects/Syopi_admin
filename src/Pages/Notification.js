@@ -129,7 +129,6 @@ function Notification() {
   const fetchUsers = async () => {
     try {
       const response = await getallUserApi();
-      console.log("users",response);
       
       if (response && response.data) {
         setUsers(response.data.users);

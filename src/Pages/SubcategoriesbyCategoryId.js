@@ -58,9 +58,7 @@ function SubcategoriesbyCategoryId() {
     setError(""); // Reset error state before the fetch begins
 
     try {
-      console.log("Fetching subcategories for category ID:", categoryid);
       const response = await getsubcategoryByID(categoryid);
-      console.log("API Response:", response);
 
       if (response.success && Array.isArray(response.data)) {
         if (response.data.length > 0) {
@@ -176,7 +174,6 @@ function SubcategoriesbyCategoryId() {
     formData.append("fileType", "subcategory"); // Assuming this is required
     formData.append("userType", "admin"); // Assuming this is required
     formData.append("image", imageFile); // Attach the actual file
-    console.log("FormData being sent:");
     for (let [key, value] of formData.entries()) {
       console.log(`${key}:`, value);
     }

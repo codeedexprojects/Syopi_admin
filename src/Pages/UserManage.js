@@ -50,7 +50,6 @@ function UserManage() {
 
   try {
     const response = await getallUserApi();
-    console.log("API Response:", response);
 
     if (response && response.data) {
       const users = response.data.users || [];
@@ -178,7 +177,7 @@ function UserManage() {
 
   const handleSearchSubmit = (event) => {
     event.preventDefault();
-    console.log("Searching for:", searchQuery);
+  
     setCurrentPage(1); // Reset to first page when searching
     applyFiltersAndPagination(allUsers, searchQuery, filters);
   };
@@ -195,7 +194,7 @@ function UserManage() {
   };
   
   const applyFilters = () => {
-    console.log("Applying filters:", filters);
+    
     setCurrentPage(1); // Reset to first page when filters change
     applyFiltersAndPagination(allUsers, searchQuery, filters);
   };

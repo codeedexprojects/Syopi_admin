@@ -30,7 +30,6 @@ function AdminLogin() {
     try {
       const response = await adminLoginApi({ email, password });
   
-      console.log("Response:", response);
   
       setLoading(false);
   

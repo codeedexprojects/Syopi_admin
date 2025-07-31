@@ -4,7 +4,6 @@ import { BASE_URL } from '../services/baseUrl';
 import './userwishlist.css';
 
 const AdminWishlistItem = ({ wishlist }) => {
-  console.log("wishlist", wishlist);
   
   const formatDate = (dateString) => {
     const date = new Date(dateString);

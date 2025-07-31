@@ -38,7 +38,6 @@ function Orders() {
       try {
         setLoading(true);
         const response = await getAdminOrdersApi();
-        console.log(response);
 
         if (response.success) {
           // Sort orders by createdAt (latest first)
@@ -98,7 +97,6 @@ function Orders() {
         status: newStatus,
       });
 
-      console.log("API Response:", response);
 
       if (!response.success) {
         toast.error(response.message || "Failed to update status");

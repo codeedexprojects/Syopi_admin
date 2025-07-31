@@ -33,7 +33,6 @@ function Home() {
   }, []);
   const fetchDashboardProductData = async () => {
     const result = await getDashboardProductContentApi();
-    console.log("dashboard-product", result);
 
     if (result.success) {
       setDashboardProductData(result.data);
@@ -44,7 +43,6 @@ function Home() {
 
   const fetchDashboardOrderData = async () => {
     const result = await getDashboardOrdersContentApi();
-    console.log("dashboard-order", result);
 
     if (result.success) {
       setDashboardOrderData(result.data);
@@ -55,7 +53,6 @@ function Home() {
 
   const fetchDashboardUserData = async () => {
     const result = await getDashboardUserContentApi();
-    console.log("dashboard-user", result);
 
     if (result.success) {
       setDashboardUserData(result.data);

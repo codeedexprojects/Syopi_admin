@@ -42,7 +42,7 @@ function AffordableProductsAdmin() {
     } catch (err) {
       setError('Failed to load products. Please try again later.');
       setLoading(false);
-      console.error('Error fetching products:', err);
+      // console.error('Error fetching products:', err);
     }
   };
 
@@ -91,7 +91,7 @@ function AffordableProductsAdmin() {
         resetForm();
       }
     } catch (err) {
-      console.error('Error adding product:', err);
+      // console.error('Error adding product:', err);
       setError('Failed to add product. Please try again.');
     } finally {
       setLoading(false);
@@ -118,7 +118,7 @@ function AffordableProductsAdmin() {
         resetForm();
       }
     } catch (err) {
-      console.error('Error updating product:', err);
+      // console.error('Error updating product:', err);
       setError('Failed to update product. Please try again.');
     } finally {
       setLoading(false);
@@ -135,7 +135,7 @@ function AffordableProductsAdmin() {
       setShowDeleteModal(false);
       
     } catch (err) {
-      console.error('Error deleting product:', err);
+      // console.error('Error deleting product:', err);
       setError('Failed to delete product. Please try again.');
     } finally {
       setLoading(false);

@@ -159,7 +159,6 @@ function BrandCarousel() {
     setError(null);
     try {
       const response = await getBrandSliderApi();
-      console.log(response);
 
       if (response && response.data) {
         setRows(response.data);
@@ -181,7 +180,6 @@ function BrandCarousel() {
   const fetchBrands = async () => {
     try {
       const response = await getAllBrandsApi();
-      console.log("brands", response);
 
       if (response.success) {
         setBrands(response.data);
@@ -203,7 +201,7 @@ function BrandCarousel() {
     e.preventDefault();
 
     // Validate fields
-    if (!title ||  !selectedBrand || !imageFile || !date) {
+    if (!title ||  !selectedBrand || !imageFile ) {
       toast.error("All fields are required");
       return;
     }
@@ -211,11 +209,10 @@ function BrandCarousel() {
     const formData = new FormData();
     formData.append("title", title.trim());
     formData.append("brandId", selectedBrand);
-    formData.append("date", new Date(date).toISOString()); // Ensure date formatting
+    // formData.append("date", new Date(date).toISOString()); 
     formData.append("userType", "admin"); // Assuming this is required
     formData.append("image", imageFile); // Attach the actual file
 
-    console.log("FormData being sent:");
     for (let [key, value] of formData.entries()) {
       console.log(`${key}:`, value);
     }
@@ -262,7 +259,7 @@ function BrandCarousel() {
     e.preventDefault();
 
     // Validation
-    if (!title  || !selectedBrand || !date || !imageFile) {
+    if (!title  || !selectedBrand  || !imageFile) {
       toast.error("All fields are required");
       return;
     }
@@ -271,14 +268,13 @@ function BrandCarousel() {
     const formData = new FormData();
     formData.append("title", title.trim());
     formData.append("brandId", selectedBrand);
-    formData.append("date", date); // Ensure date is in "YYYY-MM-DD" format
+    // formData.append("date", date); 
     // formData.append("fileType", "category");
     formData.append("userType", "admin");
     formData.append("image", imageFile);
 
     try {
       const response = await updateBrandsliderApi(selectedId, formData);
-      console.log(response); // Debug response for issues
 
       if (response.success) {
         toast.success("Carousel updated successfully");
@@ -554,7 +550,7 @@ function BrandCarousel() {
                     </Form.Group>
                   </Col>
                 </Row>
-                <Row className="mt-3">
+                {/* <Row className="mt-3">
                   <Col md={12}>
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                       <Form.Group>
@@ -593,7 +589,7 @@ function BrandCarousel() {
                       </Form.Group>
                     </LocalizationProvider>
                   </Col>
-                </Row>
+                </Row> */}
               </Form>
             </Col>
           </Row>
@@ -708,7 +704,7 @@ function BrandCarousel() {
                     </Form.Group>
                   </Col>
                 </Row>
-                <Row className="mt-3">
+                {/* <Row className="mt-3">
                   <Col md={12}>
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                       <Form.Group>
@@ -747,7 +743,7 @@ function BrandCarousel() {
                       </Form.Group>
                     </LocalizationProvider>
                   </Col>
-                </Row>
+                </Row> */}
               </Form>
             </Col>
           </Row>

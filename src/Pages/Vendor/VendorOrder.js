@@ -28,7 +28,6 @@ function VendorOrder() {
       try {
         setLoading(true);
         const response = await getVendorOrdersApi();
-        console.log(response);
         
         if (response.success) {
           setOrders(response.data.orders);
@@ -76,7 +75,6 @@ function VendorOrder() {
         status: newStatus,
       });
 
-      console.log("API Response:", response);
 
       if (!response.success) {
         toast.error(response.message || "Failed to update status");

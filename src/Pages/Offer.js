@@ -103,7 +103,6 @@ function Offer() {
   const fetchProducts = async () => {
     try {
       const response = await getallProducts();
-      console.log(response);
 
       if (response.success && Array.isArray(response.data.products)) {
         setProduct(response.data.products);
@@ -130,7 +129,6 @@ function Offer() {
   const handleEditOffer = async (e) => {
     e.preventDefault();
 
-    console.log("Button clicked");
     console.log({
       offerName,
       offerType,
@@ -152,7 +150,6 @@ function Offer() {
       return;
     }
 
-    console.log("Proceeding with form submission");
 
     const offerData = {
       offerName: selectedOfferName,
@@ -170,11 +167,9 @@ function Offer() {
     const offerId = selectedOfferId; // Ensure this contains the correct ID
 
     try {
-      console.log("Sending offer data:", offerData);
       const response = await updateofferApi(offerId, offerData); // Pass the offerId along with offerData
 
       // Log the entire response object to inspect it
-      console.log("API Response:", response);
 
       if (response.status === 200) {
         toast.success("Offer updated successfully!");
@@ -210,13 +205,11 @@ function Offer() {
     setError(null);
     try {
       const response = await getOfferApi();
-      console.log(response);
 
       if (response && response.data) {
         setRows(response.data.offers);
         setTotalPages(Math.ceil(response.data.offers.length / rowsPerPage));
 
-        console.log(response);
       }
     } catch (err) {
       setError("Failed to fetch offer. Please try again.");
@@ -359,7 +352,6 @@ function Offer() {
       ownerId: ownerId,
       products: selectedProduct.map((product) => product.value),
     };
-    console.log(selectedProduct);
 
     try {
       const response = await createofferApi(offerData);

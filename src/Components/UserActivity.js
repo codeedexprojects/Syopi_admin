@@ -4,7 +4,6 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './UserActivity.css';
 
 function UserActivity({ activity }) {
-  console.log("activity", activity);
   
   // If no activity data is available
   if (!activity || activity.length === 0) {

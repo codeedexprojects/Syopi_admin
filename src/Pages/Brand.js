@@ -53,7 +53,6 @@ useEffect(() => {
     setError(null);
     try {
       const response = await getAllBrandsApi();
-      console.log(response);
 
       setBrands(response.data);
     } catch (error) {

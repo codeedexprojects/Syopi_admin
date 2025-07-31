@@ -54,10 +54,10 @@ function Addproduct() {
       if (response.success && Array.isArray(response.data)) {
         setCategories(response.data);
       } else {
-        console.error(
-          "Failed to fetch categories:",
-          response.error || "Unknown error"
-        );
+        // console.error(
+        //   "Failed to fetch categories:",
+        //   response.error || "Unknown error"
+        // );
       }
     } catch (error) {
       console.error("Error fetching categories:", error.message);
@@ -86,7 +86,6 @@ function Addproduct() {
   const fetchBrands = async () => {
     try {
       const response = await getAllBrandsApi();
-      console.log("brands", response);
 
       if (response.status === 200) {
         setBrands(response.data);
@@ -108,7 +107,6 @@ function Addproduct() {
   const fetchSubCategories = async (categoryId) => {
     try {
       const response = await getsubcategoryByID(categoryId);
-      console.log("sub", response);
 
       if (response.success && Array.isArray(response.data)) {
         setSubCategories(response.data);
@@ -152,296 +150,325 @@ function Addproduct() {
     setSelectedBrand(e.target.value);
   };
 
-// Image compression utility
-const compressImage = (file, maxWidth = 800, quality = 0.7) => {
-  return new Promise((resolve, reject) => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const img = new Image();
-    
-    img.onload = () => {
-      // Calculate new dimensions
-      let { width, height } = img;
-      
-      if (width > height) {
-        if (width > maxWidth) {
-          height = (height * maxWidth) / width;
-          width = maxWidth;
-        }
-      } else {
-        if (height > maxWidth) {
-          width = (width * maxWidth) / height;
-          height = maxWidth;
-        }
-      }
-      
-      canvas.width = width;
-      canvas.height = height;
-      
-      // Draw and compress
-      ctx.drawImage(img, 0, 0, width, height);
-      
-      canvas.toBlob(
-        (blob) => {
-          if (blob) {
-            // Create a new File object with compressed data
-            const compressedFile = new File([blob], file.name, {
-              type: 'image/jpeg',
-              lastModified: Date.now()
-            });
-            resolve(compressedFile);
-          } else {
-            reject(new Error('Compression failed'));
+  // Image compression utility
+  const compressImage = (file, maxWidth = 800, quality = 0.7) => {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const img = new Image();
+
+      img.onload = () => {
+        // Calculate new dimensions
+        let { width, height } = img;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
           }
-        },
-        'image/jpeg',
-        quality
-      );
-    };
-    
-    img.onerror = () => reject(new Error('Image loading failed'));
-    img.src = URL.createObjectURL(file);
-  });
-};
-
-// Enhanced validation function
-const validateImageFile = (file) => {
-  const maxSize = 5 * 1024 * 1024; // 5MB in bytes
-  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-  
-  if (!file) {
-    return { isValid: false, error: "No file selected" };
-  }
-  
-  if (!allowedTypes.includes(file.type)) {
-    return { isValid: false, error: "Only JPEG, PNG, GIF, and WebP images are allowed" };
-  }
-  
-  if (file.size > maxSize) {
-    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
-    return { isValid: false, error: `File size (${fileSizeMB}MB) exceeds 5MB limit` };
-  }
-  
-  return { isValid: true, error: null };
-};
-
-// Updated handleVariantImageChange function with compression
-const handleVariantImageChange = async (index, event) => {
-  if (event.target.files && event.target.files[0]) {
-    const file = event.target.files[0];
-    const validation = validateImageFile(file);
-    
-    if (!validation.isValid) {
-      toast.error(validation.error);
-      event.target.value = '';
-      return;
-    }
-    
-    try {
-      // Show compression progress
-      
-      // Compress the image
-      const compressedFile = await compressImage(file, 800, 0.7);
-      
-      // Log compression results
-      const originalSizeMB = (file.size / (1024 * 1024)).toFixed(2);
-      const compressedSizeMB = (compressedFile.size / (1024 * 1024)).toFixed(2);
-      console.log(`Image compressed: ${originalSizeMB}MB → ${compressedSizeMB}MB`);
-      
-      const newImages = [...variantImages];
-      newImages[index] = compressedFile;
-      setVariantImages(newImages);
-      
-    } catch (error) {
-      console.error('Compression error:', error);
-      toast.error('Failed to compress image. Please try a different image.');
-      event.target.value = '';
-    }
-  }
-};
-
-// Enhanced form submit handler with better error handling
-const handleFormSubmit = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-
-  if (!productName || !selectedCategory || !description) {
-    toast.error("All fields are required");
-    setLoading(false);
-    return;
-  }
-
-  if (variants.length === 0) {
-    toast.error("At least one variant is required");
-    setLoading(false);
-    return;
-  }
-
-  // Calculate total payload size before sending
-  let totalSize = 0;
-  const maxTotalSize = 45 * 1024 * 1024; // 45MB limit to be safe
-
-  try {
-    const formData = new FormData();
-    
-    // Add text fields
-    formData.append("name", productName.trim());
-    formData.append("cost", cost.trim());
-    formData.append("description", description.trim());
-    formData.append("category", selectedCategory);
-    formData.append("subcategory", selectedSubCategory || "");
-    formData.append("brand", selectedBrand || "");
-    formData.append("isReturnable", isReturnable || "false");
-    formData.append("CODAvailable", CODAvailable || "false");
-    formData.append("returnWithinDays", returnWithinDays || "");
-    formData.append("productType", selectedProductType || "");
-    formData.append("owner", adminID || "");
-    formData.append("fileType", "product");
-    formData.append("userType", "admin");
-
-    // Compress and add main product images
-    if (variants[0]?.images) {
-      for (let i = 0; i < variants[0].images.length; i++) {
-        const image = variants[0].images[i];
-        if (image) {
-          let processedImage = image;
-          
-          // Compress if image is large
-          if (image.size > 1024 * 1024) { // If larger than 1MB
-            toast.info(`Compressing main image ${i + 1}...`);
-            processedImage = await compressImage(image, 800, 0.7);
+        } else {
+          if (height > maxWidth) {
+            width = (width * maxWidth) / height;
+            height = maxWidth;
           }
-          
-          formData.append("images", processedImage);
-          totalSize += processedImage.size;
         }
-      }
-    }
 
-    // Prepare features
-    const features = {
-      material: selectedProductType === "Dress" ? material || "" : undefined,
-      soleMaterial: selectedProductType === "Chappal" ? soleMaterial || "" : undefined,
-      netWeight: netWeight || "",
-      fit: fit || "",
-      sleevesType: selectedProductType === "Dress" ? sleevesType || "" : undefined,
-      length: length ? `${length} ${lengthUnit}` : "",
-      occasion: occasion || "",
-    };
+        canvas.width = width;
+        canvas.height = height;
 
-    const cleanedFeatures = Object.fromEntries(
-      Object.entries(features).filter(([_, value]) => value !== undefined)
-    );
+        // Draw and compress
+        ctx.drawImage(img, 0, 0, width, height);
 
-    formData.append("features", JSON.stringify(cleanedFeatures));
-
-    const formattedVariants = variants.map((variant, index) => {
-      const { images, ...variantData } = variant;
-      return {
-        ...variantData,
-        imageIndexes: Array(variant.images.length)
-          .fill()
-          .map((_, i) => `${index}_${i}`),
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              // Create a new File object with compressed data
+              const compressedFile = new File([blob], file.name, {
+                type: "image/jpeg",
+                lastModified: Date.now(),
+              });
+              resolve(compressedFile);
+            } else {
+              reject(new Error("Compression failed"));
+            }
+          },
+          "image/jpeg",
+          quality
+        );
       };
+
+      img.onerror = () => reject(new Error("Image loading failed"));
+      img.src = URL.createObjectURL(file);
     });
+  };
 
-    formData.append("variants", JSON.stringify(formattedVariants));
+  // Enhanced validation function
+  const validateImageFile = (file) => {
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    const allowedTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+    ];
 
-    // Compress and add variant images
-    for (let variantIndex = 0; variantIndex < variants.length; variantIndex++) {
-      const variant = variants[variantIndex];
-      for (let imageIndex = 0; imageIndex < variant.images.length; imageIndex++) {
-        const image = variant.images[imageIndex];
-        if (image) {
-          let processedImage = image;
-          
-          // Compress if image is large
-          if (image.size > 1024 * 1024) { // If larger than 1MB
-            toast.info(`Compressing variant image ${variantIndex + 1}-${imageIndex + 1}...`);
-            processedImage = await compressImage(image, 800, 0.7);
-          }
-          
-          formData.append(`variantImages[${variantIndex}]`, processedImage);
-          totalSize += processedImage.size;
-        }
-      }
+    if (!file) {
+      return { isValid: false, error: "No file selected" };
     }
 
-    // Check total size
-    if (totalSize > maxTotalSize) {
-      const totalSizeMB = (totalSize / (1024 * 1024)).toFixed(2);
-      toast.error(`Total upload size (${totalSizeMB}MB) exceeds limit. Please reduce image quality or quantity.`);
+    if (!allowedTypes.includes(file.type)) {
+      return {
+        isValid: false,
+        error: "Only JPEG, PNG, GIF, and WebP images are allowed",
+      };
+    }
+
+    if (file.size > maxSize) {
+      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      return {
+        isValid: false,
+        error: `File size (${fileSizeMB}MB) exceeds 5MB limit`,
+      };
+    }
+
+    return { isValid: true, error: null };
+  };
+
+  // Updated handleVariantImageChange function with compression
+  const handleVariantImageChange = async (index, event) => {
+    if (event.target.files && event.target.files[0]) {
+      const file = event.target.files[0];
+      const validation = validateImageFile(file);
+
+      if (!validation.isValid) {
+        toast.error(validation.error);
+        event.target.value = "";
+        return;
+      }
+
+      try {
+        // Show compression progress
+
+        // Compress the image
+        const compressedFile = await compressImage(file, 800, 0.7);
+
+        // Log compression results
+        const originalSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        const compressedSizeMB = (compressedFile.size / (1024 * 1024)).toFixed(
+          2
+        );
+
+        const newImages = [...variantImages];
+        newImages[index] = compressedFile;
+        setVariantImages(newImages);
+      } catch (error) {
+        console.error("Compression error:", error);
+        toast.error("Failed to compress image. Please try a different image.");
+        event.target.value = "";
+      }
+    }
+  };
+
+  // Enhanced form submit handler with better error handling
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    if (!productName || !selectedCategory || !description) {
+      toast.error("All fields are required");
       setLoading(false);
       return;
     }
 
-    console.log("FormData being sent:");
-    console.log(`Total payload size: ${(totalSize / (1024 * 1024)).toFixed(2)}MB`);
-    for (let [key, value] of formData.entries()) {
-      if (value instanceof File) {
-        console.log(`${key}: File(${value.name}, ${(value.size / 1024).toFixed(1)}KB)`);
-      } else {
-        console.log(`${key}:`, value);
+    if (variants.length === 0) {
+      toast.error("At least one variant is required");
+      setLoading(false);
+      return;
+    }
+
+    // Calculate total payload size before sending
+    let totalSize = 0;
+    const maxTotalSize = 45 * 1024 * 1024; // 45MB limit to be safe
+
+    try {
+      const formData = new FormData();
+
+      // Add text fields
+      formData.append("name", productName.trim());
+      formData.append("cost", cost.trim());
+      formData.append("description", description.trim());
+      formData.append("category", selectedCategory);
+      formData.append("subcategory", selectedSubCategory || "");
+      formData.append("brand", selectedBrand || "");
+      formData.append("isReturnable", isReturnable || "false");
+      formData.append("CODAvailable", CODAvailable || "false");
+      formData.append("returnWithinDays", returnWithinDays || "");
+      formData.append("productType", selectedProductType || "");
+      formData.append("owner", adminID || "");
+      formData.append("fileType", "product");
+      formData.append("userType", "admin");
+
+      // Compress and add main product images
+      if (variants[0]?.images) {
+        for (let i = 0; i < variants[0].images.length; i++) {
+          const image = variants[0].images[i];
+          if (image) {
+            let processedImage = image;
+
+            // Compress if image is large
+            if (image.size > 1024 * 1024) {
+              // If larger than 1MB
+              toast.info(`Compressing main image ${i + 1}...`);
+              processedImage = await compressImage(image, 800, 0.7);
+            }
+
+            formData.append("images", processedImage);
+            totalSize += processedImage.size;
+          }
+        }
       }
-    }
 
-    // Send API request with timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+      // Prepare features
+      const features = {
+        material: selectedProductType === "Dress" ? material || "" : undefined,
+        soleMaterial:
+          selectedProductType === "Chappal" ? soleMaterial || "" : undefined,
+        netWeight: netWeight || "",
+        fit: fit || "",
+        sleevesType:
+          selectedProductType === "Dress" ? sleevesType || "" : undefined,
+        length: length ? `${length} ${lengthUnit}` : "",
+        occasion: occasion || "",
+      };
 
-    const response = await createProductApi(formData, {
-      signal: controller.signal
-    });
-    
-    clearTimeout(timeoutId);
-    console.log(response);
+      const cleanedFeatures = Object.fromEntries(
+        Object.entries(features).filter(([_, value]) => value !== undefined)
+      );
 
-    if (response.success) {
-      toast.success("Product created successfully");
-      // Reset all form fields
-      setProductName("");
-      setDescription("");
-      setSelectedCategory("");
-      setSelectedCategoryName("");
-      setSelectedSubCategory("");
-      setCost("");
-      setSelectedBrand("");
-      setIsReturnable("");
-      setCODAvailable("");
-      setReturnWithinDays("");
-      setSelectedProductType("");
-      setNetWeight("");
-      setFit("");
-      setMaterial("");
-      setSoleMaterial("");
-      setSleevesType("");
-      setLength("");
-      setLengthUnit("cm");
-      setOccasion("");
-      setColor("#000000");
-      setColorName("Black");
-      setWholesalePrice("");
-      setPrice("");
-      setSizeStocks({});
-      setSelectedSizes([]);
-      setVariantImages([null, null, null, null]);
-      setVariants([]);
-    } else {
-      toast.error(response.error || "Failed to create product");
+      formData.append("features", JSON.stringify(cleanedFeatures));
+
+      const formattedVariants = variants.map((variant, index) => {
+        const { images, ...variantData } = variant;
+        return {
+          ...variantData,
+          imageIndexes: Array(variant.images.length)
+            .fill()
+            .map((_, i) => `${index}_${i}`),
+        };
+      });
+
+      formData.append("variants", JSON.stringify(formattedVariants));
+
+      // Compress and add variant images
+      for (
+        let variantIndex = 0;
+        variantIndex < variants.length;
+        variantIndex++
+      ) {
+        const variant = variants[variantIndex];
+        for (
+          let imageIndex = 0;
+          imageIndex < variant.images.length;
+          imageIndex++
+        ) {
+          const image = variant.images[imageIndex];
+          if (image) {
+            let processedImage = image;
+
+            // Compress if image is large
+            if (image.size > 1024 * 1024) {
+              // If larger than 1MB
+              toast.info(
+                `Compressing variant image ${variantIndex + 1}-${
+                  imageIndex + 1
+                }...`
+              );
+              processedImage = await compressImage(image, 800, 0.7);
+            }
+
+            formData.append(`variantImages[${variantIndex}]`, processedImage);
+            totalSize += processedImage.size;
+          }
+        }
+      }
+
+      // Check total size
+      if (totalSize > maxTotalSize) {
+        const totalSizeMB = (totalSize / (1024 * 1024)).toFixed(2);
+        toast.error(
+          `Total upload size (${totalSizeMB}MB) exceeds limit. Please reduce image quality or quantity.`
+        );
+        setLoading(false);
+        return;
+      }
+
+      for (let [key, value] of formData.entries()) {
+        if (value instanceof File) {
+          console.log(
+            `${key}: File(${value.name}, ${(value.size / 1024).toFixed(1)}KB)`
+          );
+        } else {
+          console.log(`${key}:`, value);
+        }
+      }
+
+      // Send API request with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+
+      const response = await createProductApi(formData, {
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (response.success) {
+        toast.success("Product created successfully");
+        // Reset all form fields
+        setProductName("");
+        setDescription("");
+        setSelectedCategory("");
+        setSelectedCategoryName("");
+        setSelectedSubCategory("");
+        setCost("");
+        setSelectedBrand("");
+        setIsReturnable("");
+        setCODAvailable("");
+        setReturnWithinDays("");
+        setSelectedProductType("");
+        setNetWeight("");
+        setFit("");
+        setMaterial("");
+        setSoleMaterial("");
+        setSleevesType("");
+        setLength("");
+        setLengthUnit("cm");
+        setOccasion("");
+        setColor("#000000");
+        setColorName("Black");
+        setWholesalePrice("");
+        setPrice("");
+        setSizeStocks({});
+        setSelectedSizes([]);
+        setVariantImages([null, null, null, null]);
+        setVariants([]);
+      } else {
+        toast.error(response.error || "Failed to create product");
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
+      if (err.name === "AbortError") {
+        toast.error("Upload timeout. Please try again with smaller images.");
+      } else if (err.message.includes("413")) {
+        toast.error("Upload too large. Please compress your images further.");
+      } else {
+        toast.error(err.message || "An unexpected error occurred");
+      }
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    console.error('Upload error:', err);
-    if (err.name === 'AbortError') {
-      toast.error("Upload timeout. Please try again with smaller images.");
-    } else if (err.message.includes('413')) {
-      toast.error("Upload too large. Please compress your images further.");
-    } else {
-      toast.error(err.message || "An unexpected error occurred");
-    }
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleSelectVariantImage = (index) => {
     if (variantImages[index] && variantImages[0] !== variantImages[index]) {
@@ -453,69 +480,69 @@ const handleFormSubmit = async (e) => {
     }
   };
 
- const handleAddVariant = () => {
-  if (!color || !colorName || Object.keys(sizeStocks).length === 0) {
-    toast.error("Please fill in all required fields for the variant");
-    return;
-  }
-
-  if (!variantImages[0]) {
-    toast.error("At least one image is required for each variant");
-    return;
-  }
-
-  // Validate all uploaded images
-  const filteredImages = variantImages.filter((img) => img !== null);
-  for (let i = 0; i < filteredImages.length; i++) {
-    const validation = validateImageFile(filteredImages[i]);
-    if (!validation.isValid) {
-      toast.error(`Image ${i + 1}: ${validation.error}`);
+  const handleAddVariant = () => {
+    if (!color || !colorName || Object.keys(sizeStocks).length === 0) {
+      toast.error("Please fill in all required fields for the variant");
       return;
     }
-  }
 
-  if (!wholesalePrice || !price) {
-    toast.error("Please enter both wholesale and normal prices");
-    return;
-  }
+    if (!variantImages[0]) {
+      toast.error("At least one image is required for each variant");
+      return;
+    }
 
-  if (isNaN(Number(wholesalePrice)) || isNaN(Number(price))) {
-    toast.error("Prices must be valid numbers");
-    return;
-  }
+    // Validate all uploaded images
+    const filteredImages = variantImages.filter((img) => img !== null);
+    for (let i = 0; i < filteredImages.length; i++) {
+      const validation = validateImageFile(filteredImages[i]);
+      if (!validation.isValid) {
+        toast.error(`Image ${i + 1}: ${validation.error}`);
+        return;
+      }
+    }
 
-  const formattedSizes = Object.entries(sizeStocks).map(([size, stock]) => ({
-    size,
-    stock: Number(stock),
-  }));
+    if (!wholesalePrice || !price) {
+      toast.error("Please enter both wholesale and normal prices");
+      return;
+    }
 
-  const totalStock = formattedSizes.reduce(
-    (sum, { stock }) => sum + stock,
-    0
-  );
+    if (isNaN(Number(wholesalePrice)) || isNaN(Number(price))) {
+      toast.error("Prices must be valid numbers");
+      return;
+    }
 
-  const newVariant = {
-    color,
-    colorName,
-    wholesalePrice: Number(wholesalePrice),
-    price: Number(price),
-    stock: totalStock,
-    sizes: formattedSizes,
-    images: filteredImages,
+    const formattedSizes = Object.entries(sizeStocks).map(([size, stock]) => ({
+      size,
+      stock: Number(stock),
+    }));
+
+    const totalStock = formattedSizes.reduce(
+      (sum, { stock }) => sum + stock,
+      0
+    );
+
+    const newVariant = {
+      color,
+      colorName,
+      wholesalePrice: Number(wholesalePrice),
+      price: Number(price),
+      stock: totalStock,
+      sizes: formattedSizes,
+      images: filteredImages,
+    };
+
+    setVariants((prevVariants) => [...prevVariants, newVariant]);
+
+    setColor("#000000");
+    setColorName("Black");
+    setWholesalePrice("");
+    setPrice("");
+    setSizeStocks({});
+    setSelectedSizes([]);
+    setVariantImages([null, null, null, null]);
+
+    toast.success("Variant added successfully");
   };
-
-  setVariants((prevVariants) => [...prevVariants, newVariant]);
-
-  setColor("#000000");
-  setColorName("Black");
-  setWholesalePrice("");
-  setPrice("");
-  setSizeStocks({});
-  setSelectedSizes([]);
-  setVariantImages([null, null, null, null]);
-
-  toast.success("Variant added successfully");
-};
   const kidSizes = ["New Born", "0-1", "1-2", "2-3", "3-4", "4-5", "5-6"];
   const adultSizes = ["S", "M", "L", "XL", "XXL", "XXXL"];
   const currentSizes =
@@ -549,57 +576,59 @@ const handleFormSubmit = async (e) => {
       </Row>
       <Form onSubmit={handleFormSubmit}>
         <Row>
-         <Col md={3}>
-  <div className="position-relative">
-    <h4 className="mb-3">Current Variant Images</h4>
-    <p className="text-muted small mb-2">Max file size: 5MB per image</p>
-    <div className="image-square large">
-      {variantImages[0] ? (
-        <img
-          src={URL.createObjectURL(variantImages[0])}
-          alt="Selected Product"
-          className="img-fluid added-image"
-        />
-      ) : (
-        <div className="add-image-icon">+</div>
-      )}
-      <input
-        type="file"
-        accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-        className="image-input"
-        onChange={(event) => handleVariantImageChange(0, event)}
-      />
-    </div>
-  </div>
-  <Row className="mt-3">
-    {[1, 2, 3].map((index) => (
-      <Col key={index} xs={4} className="position-relative">
-        <div
-          className="image-square small"
-          onClick={() => handleSelectVariantImage(index)}
-        >
-          {variantImages[index] ? (
-            <img
-              src={URL.createObjectURL(variantImages[index])}
-              alt={`Product ${index + 1}`}
-              className="img-fluid added-image"
-            />
-          ) : (
-            <div className="add-image-icon">+</div>
-          )}
-          <input
-            type="file"
-            accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-            className="image-input"
-            onChange={(event) =>
-              handleVariantImageChange(index, event)
-            }
-          />
-        </div>
-      </Col>
-    ))}
-  </Row>
-</Col>
+          <Col md={3}>
+            <div className="position-relative">
+              <h4 className="mb-3">Current Variant Images</h4>
+              <p className="text-muted small mb-2">
+                Max file size: 5MB per image
+              </p>
+              <div className="image-square large">
+                {variantImages[0] ? (
+                  <img
+                    src={URL.createObjectURL(variantImages[0])}
+                    alt="Selected Product"
+                    className="img-fluid added-image"
+                  />
+                ) : (
+                  <div className="add-image-icon">+</div>
+                )}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                  className="image-input"
+                  onChange={(event) => handleVariantImageChange(0, event)}
+                />
+              </div>
+            </div>
+            <Row className="mt-3">
+              {[1, 2, 3].map((index) => (
+                <Col key={index} xs={4} className="position-relative">
+                  <div
+                    className="image-square small"
+                    onClick={() => handleSelectVariantImage(index)}
+                  >
+                    {variantImages[index] ? (
+                      <img
+                        src={URL.createObjectURL(variantImages[index])}
+                        alt={`Product ${index + 1}`}
+                        className="img-fluid added-image"
+                      />
+                    ) : (
+                      <div className="add-image-icon">+</div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                      className="image-input"
+                      onChange={(event) =>
+                        handleVariantImageChange(index, event)
+                      }
+                    />
+                  </div>
+                </Col>
+              ))}
+            </Row>
+          </Col>
           <Col md={9} className="single-product-right-column">
             <Row className="mb-3">
               <Col md={4}>
@@ -691,20 +720,51 @@ const handleFormSubmit = async (e) => {
                     Brand
                   </Form.Label>
                   <div className="dropdown-wrapper">
-                    <Form.Select
-                      className="single-product-form custom-dropdown"
-                      value={selectedBrand}
-                      onChange={handleBrandChange}
-                      aria-label="Select brand"
-                    >
-                      <option value="">Select Brand</option>
-                      {brands?.map?.((brand) => (
-                        <option key={brand._id} value={brand._id}>
-                          {brand.name}
-                        </option>
-                      )) || <option disabled>No brands available</option>}
-                    </Form.Select>
-                    <FaChevronDown className="dropdown-icon" />
+                    <div className="input-group">
+                      <Form.Select
+                        className="single-product-form custom-dropdown"
+                        value={selectedBrand}
+                        onChange={(e) => {
+                          setSelectedBrand(e.target.value);
+                          // If "Other" is selected, focus on the manual input
+                          if (e.target.value === "other") {
+                            document
+                              .getElementById("manualBrandInput")
+                              ?.focus();
+                          }
+                        }}
+                        aria-label="Select brand"
+                      >
+                        <option value="">Select Brand</option>
+                        {brands?.map?.((brand) => (
+                          <option key={brand._id} value={brand._id}>
+                            {brand.name}
+                          </option>
+                        ))}
+                        <option value="other">Other (Enter manually)</option>
+                      </Form.Select>
+                      <FaChevronDown className="dropdown-icon" />
+                    </div>
+                    {/* Manual input for new brands */}
+                    {(selectedBrand === "other" ||
+                      (selectedBrand &&
+                        !brands.some((b) => b._id === selectedBrand))) && (
+                      <Form.Control
+                        id="manualBrandInput"
+                        className="single-product-form mt-2"
+                        type="text"
+                        placeholder="Enter brand name"
+                        value={selectedBrand === "other" ? "" : selectedBrand}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          // Check if the entered value matches an existing brand
+                          const matchingBrand = brands.find(
+                            (b) => b.name.toLowerCase() === value.toLowerCase()
+                          );
+                          setSelectedBrand(matchingBrand?._id || value);
+                        }}
+                      />
+                    )}
                   </div>
                 </Form.Group>
               </Col>
@@ -1105,39 +1165,39 @@ const handleFormSubmit = async (e) => {
                     </Form.Group>
                   </Col>
                   <Col md={4}>
-                  <Form.Group>
-  <Form.Label className="single-product-form-label">
-    Length
-  </Form.Label>
-  <div className="position-relative">
-    <Form.Control
-      className="single-product-form"
-      type="text"
-      placeholder="Enter Length"
-      value={length}
-      onChange={(e) => setLength(e.target.value)}
-      style={{ paddingRight: "80px" }} // Add padding to make room for the dropdown
-    />
-    <Form.Select 
-      className="position-absolute"
-      style={{ 
-        top: 0, 
-        right: 0, 
-        width: "80px", 
-        height: "100%", 
-        borderTopLeftRadius: 0, 
-        borderBottomLeftRadius: 0,
-        borderLeft: "1px solid #ced4da",
-        background:"e9e9e9"
-      }}
-      value={lengthUnit}
-      onChange={(e) => setLengthUnit(e.target.value)}
-    >
-      <option value="cm">cm</option>
-      <option value="m">m</option>
-    </Form.Select>
-  </div>
-</Form.Group>
+                    <Form.Group>
+                      <Form.Label className="single-product-form-label">
+                        Length
+                      </Form.Label>
+                      <div className="position-relative">
+                        <Form.Control
+                          className="single-product-form"
+                          type="text"
+                          placeholder="Enter Length"
+                          value={length}
+                          onChange={(e) => setLength(e.target.value)}
+                          style={{ paddingRight: "80px" }} // Add padding to make room for the dropdown
+                        />
+                        <Form.Select
+                          className="position-absolute"
+                          style={{
+                            top: 0,
+                            right: 0,
+                            width: "80px",
+                            height: "100%",
+                            borderTopLeftRadius: 0,
+                            borderBottomLeftRadius: 0,
+                            borderLeft: "1px solid #ced4da",
+                            background: "e9e9e9",
+                          }}
+                          value={lengthUnit}
+                          onChange={(e) => setLengthUnit(e.target.value)}
+                        >
+                          <option value="cm">cm</option>
+                          <option value="m">m</option>
+                        </Form.Select>
+                      </div>
+                    </Form.Group>
                   </Col>
                   <Col md={4}>
                     <Form.Group>
@@ -1227,21 +1287,24 @@ const handleFormSubmit = async (e) => {
               </Col>
             </Row>
 
-            <button type="submit" className="w-25 category-model-add" disabled={loading}>
-  {loading ? (
-    <>
-      <span
-        className="spinner-border spinner-border-sm me-2"
-        role="status"
-        aria-hidden="true"
-      ></span>
-      Loading...
-    </>
-  ) : (
-    "Add"
-  )}
-</button>
-
+            <button
+              type="submit"
+              className="w-25 category-model-add"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <span
+                    className="spinner-border spinner-border-sm me-2"
+                    role="status"
+                    aria-hidden="true"
+                  ></span>
+                  Loading...
+                </>
+              ) : (
+                "Add"
+              )}
+            </button>
           </Col>
         </Row>
       </Form>

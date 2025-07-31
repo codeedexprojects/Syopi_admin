@@ -62,7 +62,6 @@ const [deleteImageModal, setDeleteImageModal] = useState({
     const fetchproductData = async () => {
       try {
         const response = await getvendorproductByID(id);
-        console.log(response);
 
         if (response && response.data) {
           const product = response.data;
@@ -71,7 +70,8 @@ const [deleteImageModal, setDeleteImageModal] = useState({
           setProductName(product.name || "");
           setDescription(product.description || "");
           setBrand(product.brand || "");
-          setSelectedBrand(product.brand?._id || "");
+          const brandValue = product.brand?._id || product.brand || "";
+          setSelectedBrand(brandValue);
           setSelectedProductType(product.productType || "");
           setVariants(product.variants || []);
           setMaterial(product.features?.material || "");
@@ -125,7 +125,6 @@ const [deleteImageModal, setDeleteImageModal] = useState({
   const fetchsubCategories = async (categoryId) => {
     try {
       const response = await getvendorsubcategoryByID(categoryId);
-      console.log("subcategories", response);
       if (response.success && Array.isArray(response.data)) {
         setSubCategories(response.data);
       } else {
@@ -170,7 +169,6 @@ const [deleteImageModal, setDeleteImageModal] = useState({
   const fetchBrands = async () => {
     try {
       const response = await getAllVendorBrandsApi();
-      console.log("brands", response);
 
       if (response.status === 200) {
         setBrands(response.data);
@@ -232,13 +230,11 @@ const handleVariantImageChange = (variantIndex, imageIndex, event) => {
     const file = event.target.files[0];
     const previewUrl = URL.createObjectURL(file);
     
-    console.log('Generated preview URL:', previewUrl);
 
     // Determine the key for the variant
     const variantKey = editingIndex !== null ? editingIndex : 'new';
     
-    console.log('Current newVariantImages before update:', newVariantImages);
-    console.log('Current variantPreviewImages before update:', variantPreviewImages);
+
 
     setNewVariantImages(prev => {
       const updated = {
@@ -248,7 +244,6 @@ const handleVariantImageChange = (variantIndex, imageIndex, event) => {
           [imageIndex]: file
         }
       };
-      console.log('Updated newVariantImages:', updated);
       return updated;
     });
 
@@ -260,7 +255,6 @@ const handleVariantImageChange = (variantIndex, imageIndex, event) => {
           [imageIndex]: previewUrl
         }
       };
-      console.log('Updated variantPreviewImages:', updated);
       return updated;
     });
   }
@@ -325,8 +319,7 @@ const handleDeleteConfirm = async () => {
     setImageToDelete(null);
   };
 const handleEditVariant = (index) => {
-  console.log('Editing variant at index:', index);
-  console.log('Current variant:', variants[index]);
+
 
   const variant = variants[index];
   setSelectedVariantIndex(index);
@@ -343,21 +336,17 @@ const handleEditVariant = (index) => {
   setSelectedSizes(variant.sizes.map(({ size }) => size));
   setEditingIndex(index);
 
-  console.log('Existing variant images:', variant.images);
 
   // Initialize preview images for this variant
   const previews = {};
   variant.images?.forEach((img, i) => {
     if (img instanceof File) {
       previews[i] = URL.createObjectURL(img);
-      console.log(`Image ${i} is a File object, created preview URL`);
     } else if (typeof img === 'string') {
       previews[i] = `${BASE_URL}/uploads/${img}`;
-      console.log(`Image ${i} is a string, using server URL`);
     }
   });
   
-  console.log('Setting preview images:', previews);
   setVariantPreviewImages(prev => ({ ...prev, [index]: previews }));
 };
 
@@ -387,7 +376,6 @@ const handleAddVariant = () => {
   const hasNewImages = newVariantImages[variantKey] && 
                       Object.values(newVariantImages[variantKey] || {}).some(img => img !== null);
 
-  console.log('Image check:', { hasExistingImages, hasNewImages });
 
   if (!hasExistingImages && !hasNewImages) {
     toast.error("At least one image is required for each variant");
@@ -408,7 +396,6 @@ const handleAddVariant = () => {
     images: []
   };
 
-  console.log('New variant object before images:', newVariant);
 
   // Keep existing images if editing
   if (editingIndex !== null && variants[editingIndex]?.images) {
@@ -422,19 +409,17 @@ const handleAddVariant = () => {
     // For new images, we'll handle them in the form submission
   }
 
-  console.log('Final variant to add/update:', newVariant);
 
   // Update state
   if (editingIndex !== null) {
     setVariants(prev => {
       const updated = prev.map((v, i) => (i === editingIndex ? newVariant : v));
-      console.log('Updated variants array:', updated);
+     
       return updated;
     });
   } else {
     setVariants(prev => {
       const updated = [...prev, newVariant];
-      console.log('Added new variant to array:', updated);
       return updated;
     });
   }
@@ -452,7 +437,6 @@ const handleAddVariant = () => {
   setVariantPreviewImages(prev => {
     const newPreviews = {...prev};
     delete newPreviews[variantKey];
-    console.log('Cleared preview images for variant:', variantKey);
     return newPreviews;
   });
 };
@@ -509,7 +493,9 @@ const handleFormSubmit = async (e) => {
   formData.append("description", description);
   formData.append("category", selectedCategory);
   formData.append("subcategory", selectedSubCategory);
-  formData.append("brand", selectedBrand);
+   const selectedBrandObj = brands.find(b => b._id === selectedBrand);
+  const brandValue = selectedBrandObj ? selectedBrandObj._id : selectedBrand;
+  formData.append("brand", brandValue);
   formData.append("productType", selectedProductType);
         formData.append("owner", vendorID || "");
   formData.append("isReturnable", isReturnable);
@@ -872,29 +858,58 @@ const confirmDeleteImage = async () => {
               </Col>
             </Row>
             <Row className="mb-3">
-              <Col md={4}>
-                <Form.Group>
-                  <Form.Label className="single-product-form-label">
-                    Brand
-                  </Form.Label>
-                  <div className="dropdown-wrapper">
-                    <Form.Select
-                      className="single-product-form custom-dropdown"
-                      value={selectedBrand}
-                      onChange={(e) => setSelectedBrand(e.target.value)}
-                      aria-label="Select brand"
-                    >
-                      <option value="">Select Brand</option>
-                      {brands?.map?.((brand) => (
-                        <option key={brand._id} value={brand._id}>
-                          {brand.name}
-                        </option>
-                      )) || <option disabled>No brands available</option>}
-                    </Form.Select>
-                    <FaChevronDown className="dropdown-icon" />
-                  </div>
-                </Form.Group>
-              </Col>
+                 <Col md={4}>
+               <Form.Group>
+                 <Form.Label className="single-product-form-label">
+                   Brand
+                 </Form.Label>
+                 <div className="dropdown-wrapper">
+                   <div className="input-group">
+                     <Form.Select
+                       className="single-product-form custom-dropdown"
+                       value={selectedBrand}
+                       onChange={(e) => {
+                         setSelectedBrand(e.target.value);
+                         // If "Other" is selected, focus on the manual input
+                         if (e.target.value === "other") {
+                           document.getElementById("manualBrandInput")?.focus();
+                         }
+                       }}
+                       aria-label="Select brand"
+                     >
+                       <option value="">Select Brand</option>
+                       {brands?.map?.((brand) => (
+                         <option key={brand._id} value={brand._id}>
+                           {brand.name}
+                         </option>
+                       ))}
+                       <option value="other">Other (Enter manually)</option>
+                     </Form.Select>
+                     <FaChevronDown className="dropdown-icon" />
+                   </div>
+                   {/* Manual input for new brands */}
+                   {(selectedBrand === "other" ||
+                     (selectedBrand &&
+                       !brands.some((b) => b._id === selectedBrand))) && (
+                     <Form.Control
+                       id="manualBrandInput"
+                       className="single-product-form mt-2"
+                       type="text"
+                       placeholder="Enter brand name"
+                       value={selectedBrand === "other" ? "" : selectedBrand}
+                       onChange={(e) => {
+                         const value = e.target.value;
+                         // Check if the entered value matches an existing brand
+                         const matchingBrand = brands.find(
+                           (b) => b.name.toLowerCase() === value.toLowerCase()
+                         );
+                         setSelectedBrand(matchingBrand?._id || value);
+                       }}
+                     />
+                   )}
+                 </div>
+               </Form.Group>
+             </Col>
 
               <Col md={4}>
                 <Form.Group>

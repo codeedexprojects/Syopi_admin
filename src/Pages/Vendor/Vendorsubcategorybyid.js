@@ -22,9 +22,7 @@ function Vendorsubcategorybyid() {
     setError("");
 
     try {
-      console.log("Fetching subcategories for category ID:", categoryid);
       const response = await getvendorsubcategoryByID(categoryid);
-      console.log("API Response:", response);
 
       if (response.success && Array.isArray(response.data)) {
         if (response.data.length > 0) {

@@ -35,7 +35,6 @@ function VendorPayout() {
     setLoading(true);
     try {
       const response = await getAllVendorPayoutsApi();
-      console.log("payouts", response);
       
       if (response.success) {
         setPayouts(response.data.payouts);

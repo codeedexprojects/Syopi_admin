@@ -128,7 +128,6 @@ function Category() {
     formData.append("userType", "admin");
     formData.append("image", imageFile);
 
-    console.log("FormData being sent:");
     for (let [key, value] of formData.entries()) {
       console.log(`${key}:`, value);
     }
@@ -180,9 +179,7 @@ function Category() {
     setShowPopoverModal(true);
   };
 
-  const handleView = () => {
-    console.log("View category:", selectedCategory);
-  };
+
   const handleDeleteModalClose = () => setShowDeleteModal(false);
 
   const handleDeleteModalShow = () => {

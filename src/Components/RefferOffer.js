@@ -45,7 +45,6 @@ function RefferOffer() {
     setLoading(true);
     try {
       const response = await getAllrefferalOffersApi();
-      console.log("refferal",response);
       
       if (response.data) {
         setReferralOffers(response.data.offerSections);
@@ -61,7 +60,6 @@ function RefferOffer() {
   const fetchCoinSettings = async () => {
     try {
       const response = await getCoinSettingsApi();
-      console.log("coin", response);
   
       if (response.data) {
         // wrap it in an array if it's a single object

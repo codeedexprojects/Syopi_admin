@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import ReactApexChart from 'react-apexcharts';
 
 const ApexChart = ({ vendordashboardData }) => {
-  console.log("vendordashboard", vendordashboardData);
   
   const [state, setState] = useState({
     series: [],

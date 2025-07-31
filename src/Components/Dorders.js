@@ -21,7 +21,7 @@ export default function Dproduct() {
          try {
 
            const response = await getAdminOrdersApi();
-           console.log(response);
+  
    
            if (response.success) {
             const orders =response.data.orders.reverse();

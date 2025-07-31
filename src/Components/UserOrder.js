@@ -5,7 +5,6 @@ import './userorder.css';
 
 function UserOrder({orders}) {
   const [searchTerm, setSearchTerm] = useState('');
-  console.log("orders",orders);
   
  
 

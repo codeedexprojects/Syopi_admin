@@ -37,26 +37,26 @@ function VendorProduct() {
     product_type: [],
   });
 
-const [availableSizes, setAvailableSizes] = useState([]);
+  const [availableSizes, setAvailableSizes] = useState([]);
 
-const brands = ["Nike", "Adidas", "Puma"];
-const stocks = ["In Stock", "Out of Stock"];
-const productTypes = ["Dress", "Chappal"];
+  const brands = ["Nike", "Adidas", "Puma"];
+  const stocks = ["In Stock", "Out of Stock"];
+  const productTypes = ["Dress", "Chappal"];
 
-// Define sizes based on product type
-const sizeOptions = {
-  Dress: ["S", "M", "L", "XL"],
-  Chappal: ["6", "7", "8", "9", "10"],
-};
+  // Define sizes based on product type
+  const sizeOptions = {
+    Dress: ["S", "M", "L", "XL"],
+    Chappal: ["6", "7", "8", "9", "10"],
+  };
 
-// Update sizes when product type changes
-useEffect(() => {
-  if (filters.product_type.length === 1) {
-    setAvailableSizes(sizeOptions[filters.product_type[0]] || []);
-  } else {
-    setAvailableSizes([]);
-  }
-}, [filters.product_type]);
+  // Update sizes when product type changes
+  useEffect(() => {
+    if (filters.product_type.length === 1) {
+      setAvailableSizes(sizeOptions[filters.product_type[0]] || []);
+    } else {
+      setAvailableSizes([]);
+    }
+  }, [filters.product_type]);
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
 
@@ -91,17 +91,17 @@ useEffect(() => {
           <>
             <p className="single-product-form-label">Select product type</p>
             <>
-          <p className="single-product-form-label">Select Product Type</p>
-          {productTypes.map((type) => (
-            <Form.Check
-              key={type}
-              type="checkbox"
-              label={type}
-              checked={filters.product_type.includes(type)}
-              onChange={() => toggleCheckbox("product_type", type)}
-            />
-          ))}
-        </>
+              <p className="single-product-form-label">Select Product Type</p>
+              {productTypes.map((type) => (
+                <Form.Check
+                  key={type}
+                  type="checkbox"
+                  label={type}
+                  checked={filters.product_type.includes(type)}
+                  onChange={() => toggleCheckbox("product_type", type)}
+                />
+              ))}
+            </>
           </>
         );
       case "stock":
@@ -119,23 +119,23 @@ useEffect(() => {
             ))}
           </>
         );
-        case "size":
-          return availableSizes.length > 0 ? (
-            <>
-              <p className="single-product-form-label">Select Size</p>
-              {availableSizes.map((size) => (
-                <Form.Check
-                  key={size}
-                  type="checkbox"
-                  label={size}
-                  checked={filters.size.includes(size)}
-                  onChange={() => toggleCheckbox("size", size)}
-                />
-              ))}
-            </>
-          ) : (
-            <p className="text-muted">Please select a product type first.</p>
-          );
+      case "size":
+        return availableSizes.length > 0 ? (
+          <>
+            <p className="single-product-form-label">Select Size</p>
+            {availableSizes.map((size) => (
+              <Form.Check
+                key={size}
+                type="checkbox"
+                label={size}
+                checked={filters.size.includes(size)}
+                onChange={() => toggleCheckbox("size", size)}
+              />
+            ))}
+          </>
+        ) : (
+          <p className="text-muted">Please select a product type first.</p>
+        );
       case "minPrice":
         return (
           <>
@@ -167,34 +167,33 @@ useEffect(() => {
       default:
         return (
           <>
-          <p className="single-product-form-label">Select Product Type</p>
-          {productTypes.map((type) => (
-            <Form.Check
-              key={type}
-              type="checkbox"
-              label={type}
-              checked={filters.product_type.includes(type)}
-              onChange={() => toggleCheckbox("product_type", type)}
-            />
-          ))}
-        </>
+            <p className="single-product-form-label">Select Product Type</p>
+            {productTypes.map((type) => (
+              <Form.Check
+                key={type}
+                type="checkbox"
+                label={type}
+                checked={filters.product_type.includes(type)}
+                onChange={() => toggleCheckbox("product_type", type)}
+              />
+            ))}
+          </>
         );
     }
   };
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  
+
   const handlePageChange = (event, value) => {
     setCurrentPage(value);
   };
-  
+
   const fetchProducts = async (page = 1, limit = 10) => {
     setLoading(true);
     setError(null);
     try {
       const response = await getallvendorProducts(page, limit);
-      console.log(response);
-  
+
       if (response && response.data) {
         setRows(response.data.products);
         setTotalPages(Math.ceil(response.data.total / limit)); // Calculate total pages
@@ -206,15 +205,14 @@ useEffect(() => {
       setLoading(false);
     }
   };
-  
+
   // Fetch data on component mount
   useEffect(() => {
     fetchProducts(currentPage);
   }, [currentPage]);
-  
 
   const handlenavigation = () => {
-    navigate("/addvendorproducts")
+    navigate("/addvendorproducts");
   };
 
   const handlenavigatesingleproduct = (id) => {
@@ -331,13 +329,9 @@ useEffect(() => {
                     <TableCell align="left" className="product-tabledata">
                       {row.name}
                     </TableCell>
-                     <TableCell align="left" className="product-tabledata">
-                                            {row.brand &&
-                                            typeof row.brand === "string" &&
-                                            row.brand.trim() !== ""
-                                              ? row.brand
-                                              : "-"}
-                                          </TableCell>
+                    <TableCell align="left" className="product-tabledata">
+                      {row.brand?.name || row.brand}
+                    </TableCell>
                     <TableCell align="left" className="product-tabledata">
                       {row.productCode}
                     </TableCell>
@@ -372,15 +366,14 @@ useEffect(() => {
         )}
       </div>
       <Row className="mt-4 pagination-row">
-  <Pagination
-    className="pagination"
-    count={totalPages}  // Dynamic page count
-    page={currentPage}
-    onChange={handlePageChange}
-    variant="outlined"
-  />
-</Row>
-
+        <Pagination
+          className="pagination"
+          count={totalPages} // Dynamic page count
+          page={currentPage}
+          onChange={handlePageChange}
+          variant="outlined"
+        />
+      </Row>
 
       <Modal
         show={showModal}
@@ -424,7 +417,7 @@ useEffect(() => {
             {/* Left Sidebar */}
             <Col md={4} className="border-end pe-3">
               <Form>
-              <div className="filter-group">
+                <div className="filter-group">
                   <p
                     className="  single-product-form-label"
                     onClick={() => setActiveFilter("product_type")}
@@ -478,7 +471,6 @@ useEffect(() => {
                     Size
                   </p>
                 </div>
-               
               </Form>
             </Col>
 

@@ -19,7 +19,6 @@ export default function VDOrder() {
     const fetchOrders = async () => {
       try {
         const response = await getVendorOrdersApi();
-        console.log(response);
 
         if (response.success) {
           const orders = response.data.orders.reverse();

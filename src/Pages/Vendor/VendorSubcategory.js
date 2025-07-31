@@ -18,7 +18,6 @@ function VendorSubcategory() {
     setLoading(true);
     try {
       const response = await getVendorSubCategoriesApi();
-      console.log(response); // Log the response to debug
       if (response.success && Array.isArray(response.data)) {
         setSubCategories(response.data); // Extract subCategories
       } else {

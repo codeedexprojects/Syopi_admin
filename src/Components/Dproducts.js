@@ -20,16 +20,14 @@ export default function Dproduct() {
   const fetchProducts = async () => {
     try {
       const response = await getallProducts();
-      console.log("products", response);
+     
 
       if (response && response.data) {
         const products = response.data.products.reverse();
         const latest = products.slice(0, 4);
-        console.log("Latest 6 products:", latest.length);
         setProducts(latest);
       }
     } catch (err) {
-      console.error("Error fetching product data:", err);
     }
   };
 

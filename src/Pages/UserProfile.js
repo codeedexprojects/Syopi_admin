@@ -19,7 +19,6 @@ function UserProfile() {
     const fetchSingleUser = async () => {
       try {
         const response = await getUserByID(id);
-        console.log(response);
 
         if (response && response.data) {
           const product = response.data;

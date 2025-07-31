@@ -96,7 +96,6 @@ function VendorOffer() {
   const fetchProducts = async () => {
     try {
       const response = await getallvendorProducts();
-      console.log(response);
 
       if (response.success && Array.isArray(response.data.products)) {
         setProduct(response.data.products);
@@ -123,7 +122,6 @@ function VendorOffer() {
   const handleEditOffer = async (e) => {
     e.preventDefault();
 
-    console.log("Button clicked");
     console.log({
       offerName,
       offerType,
@@ -145,7 +143,6 @@ function VendorOffer() {
       return;
     }
 
-    console.log("Proceeding with form submission");
 
     const offerData = {
       offerName: selectedOfferName,
@@ -163,10 +160,8 @@ function VendorOffer() {
     const offerId = selectedOfferId;
 
     try {
-      console.log("Sending offer data:", offerData);
       const response = await updatevendorofferApi(offerId, offerData); 
 
-      console.log("API Response:", response);
 
       if (response.status === 200) {
         toast.success("Offer updated successfully!");
@@ -207,13 +202,11 @@ function VendorOffer() {
     setError(null);
     try {
       const response = await getvendorOfferApi(page, limit);
-      console.log(response);
 
       if (response && response.data) {
         setRows(response.data.offers);
         setTotalPages(Math.ceil(response.data.offers.length / limit)); 
 
-        console.log(response);
       }
     } catch (err) {
       setError("Failed to fetch offer. Please try again.");
@@ -251,8 +244,6 @@ function VendorOffer() {
     try {
       const response = await getVendorSubCategoriesApi();
       if (response.success && Array.isArray(response.data)) {
-        // Map API response to react-select format
-        console.log(response);
         
         setsubCategories(
           response.data.map((cat) => ({
@@ -310,7 +301,6 @@ function VendorOffer() {
       ownerId:ownerId,
       products: selectedProduct.map((product) => product.value),
     };
-    console.log(selectedProduct);
 
     try {
       const response = await createvendorofferApi(offerData);

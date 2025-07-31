@@ -38,7 +38,6 @@ function Productreview() {
 
   const handleSendReply = () => {
     // Add functionality to send reply here
-    console.log("Reply sent!");
     setIsReplyMode(false);
     setSelectedReview(null);
   };

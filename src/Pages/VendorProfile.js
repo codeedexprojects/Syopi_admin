@@ -58,7 +58,6 @@ function VendorProfile() {
     const fetchVendorData = async () => {
       try {
         const response = await getVendorbyID(id);
-        console.log("single-vendor", response);
 
         if (response && response.data) {
           const { vendor, products } = response.data;

@@ -91,7 +91,6 @@ function VendorSlider() {
     setError(null);
     try {
       const response = await getvendorSliderApi();
-      console.log(response);
 
       if (response && response.data) {
         setRows(response.data);
@@ -147,7 +146,6 @@ function VendorSlider() {
     formData.append("userType", "vendor"); // Assuming this is required
     formData.append("image", imageFile); // Attach the actual file
 
-    console.log("FormData being sent:");
     for (let [key, value] of formData.entries()) {
       console.log(`${key}:`, value);
     }
@@ -211,7 +209,6 @@ function VendorSlider() {
 
     try {
       const response = await updatevendorsliderApi(selectedId, formData);
-      console.log(response); // Debug response for issues
 
       if (response.success) {
         toast.success("Carousel updated successfully");

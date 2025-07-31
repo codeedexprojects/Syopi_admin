@@ -43,7 +43,6 @@ function TopPickProduct() {
     setLoading(true);
     try {
       const response = await getAllTopPickProductsApi();
-      console.log("top", response);
       
       if (response.status === 200 && response.data && response.data.topPickProducts) {
         setProducts(response.data.topPickProducts);
@@ -53,7 +52,6 @@ function TopPickProduct() {
       }
     } catch (error) {
       showNotification('Failed to fetch products', 'danger');
-      console.error('Error fetching products:', error);
     } finally {
       setLoading(false);
     }
@@ -63,15 +61,12 @@ function TopPickProduct() {
   const fetchCategories = async () => {
     try {
       const response = await getCategoriesApi();
-      console.log("categories", response);
       
       if (response.status === 200 && response.data) {
         setCategories(response.data || []);
       } else {
-        console.error('Error fetching categories:', response);
       }
     } catch (error) {
-      console.error('Error fetching categories:', error);
     }
   };
   
@@ -79,17 +74,14 @@ function TopPickProduct() {
   const fetchSubcategories = async (categoryId) => {
     try {
       const response = await getsubcategoryByID(categoryId);
-      console.log("subcategories", response);
       
       if (response.status === 200 && response.data) {
         // Adjust this based on your API response structure
         setFilteredSubcategories(response.data.subCategories || response.data || []);
       } else {
-        console.error('Error fetching subcategories:', response);
         setFilteredSubcategories([]);
       }
     } catch (error) {
-      console.error('Error fetching subcategories:', error);
       setFilteredSubcategories([]);
     }
   };
@@ -165,7 +157,6 @@ function TopPickProduct() {
       fetchAllProducts();
     } catch (error) {
       showNotification(error.response?.data?.message || 'An error occurred', 'danger');
-      console.error('Error submitting form:', error);
     } finally {
       setLoading(false);
     }

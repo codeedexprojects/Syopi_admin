@@ -59,9 +59,9 @@ function SingleProduct() {
   const [isKidsCategory, setIsKidsCategory] = useState(false);
   const [colorName, setColorName] = useState("");
   const [newVariantImages, setNewVariantImages] = useState({});
-const [deleteImageModal, setDeleteImageModal] = useState({
+  const [deleteImageModal, setDeleteImageModal] = useState({
     show: false,
-    imageName: null
+    imageName: null,
   });
 
   const navigate = useNavigate();
@@ -72,10 +72,11 @@ const [deleteImageModal, setDeleteImageModal] = useState({
     const fetchproductData = async () => {
       try {
         const response = await getproductByID(id);
-        console.log(response);
 
         if (response && response.data) {
           const product = response.data;
+           const brandValue = product.brand?._id || product.brand || "";
+        setSelectedBrand(brandValue);
           setProducts(product);
           setImages(product.images || [null, null, null, null]);
           setProductName(product.name || "");
@@ -136,7 +137,6 @@ const [deleteImageModal, setDeleteImageModal] = useState({
   const fetchsubCategories = async (categoryId) => {
     try {
       const response = await getsubcategoryByID(categoryId);
-      console.log("subcategories", response);
       if (response.success && Array.isArray(response.data)) {
         setSubCategories(response.data);
       } else {
@@ -157,31 +157,37 @@ const [deleteImageModal, setDeleteImageModal] = useState({
   }, []);
 
   const handleDeleteVariant = async (variantId) => {
-  if (!window.confirm("Are you sure you want to delete this variant? This action cannot be undone.")) {
-    return;
-  }
-
-  try {
-    const response = await deleteProductVariantApi(productId, variantId, {});
-    
-    if (response.success) {
-      toast.success("Variant deleted successfully!");
-      // Refresh the product data
-      const updatedProduct = await getproductByID(id);
-      setProducts(updatedProduct.data);
-      setVariants(updatedProduct.data.variants || []);
-    } else {
-      toast.error(response.error || "Failed to delete variant");
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this variant? This action cannot be undone."
+      )
+    ) {
+      return;
     }
-  } catch (error) {
-    console.error("Error deleting variant:", error);
-    toast.error(error.response?.data?.message || "An error occurred while deleting the variant");
-  }
-};
+
+    try {
+      const response = await deleteProductVariantApi(productId, variantId, {});
+
+      if (response.success) {
+        toast.success("Variant deleted successfully!");
+        // Refresh the product data
+        const updatedProduct = await getproductByID(id);
+        setProducts(updatedProduct.data);
+        setVariants(updatedProduct.data.variants || []);
+      } else {
+        toast.error(response.error || "Failed to delete variant");
+      }
+    } catch (error) {
+      console.error("Error deleting variant:", error);
+      toast.error(
+        error.response?.data?.message ||
+          "An error occurred while deleting the variant"
+      );
+    }
+  };
   const fetchBrands = async () => {
     try {
       const response = await getAllBrandsApi();
-      console.log("brands", response);
 
       if (response.status === 200) {
         setBrands(response.data);
@@ -231,59 +237,46 @@ const [deleteImageModal, setDeleteImageModal] = useState({
     setColorName(name);
   };
 
+  const handleVariantImageChange = (variantIndex, imageIndex, event) => {
+    console.log("handleVariantImageChange called with:", {
+      variantIndex,
+      imageIndex,
+      file: event?.target?.files?.[0],
+    });
+
+    if (event?.target?.files?.[0]) {
+      const file = event.target.files[0];
+      const previewUrl = URL.createObjectURL(file);
+
+
+      // Determine the key for the variant
+      const variantKey = editingIndex !== null ? editingIndex : "new";
+
   
-const handleVariantImageChange = (variantIndex, imageIndex, event) => {
-  console.log('handleVariantImageChange called with:', {
-    variantIndex,
-    imageIndex,
-    file: event?.target?.files?.[0]
-  });
+      setNewVariantImages((prev) => {
+        const updated = {
+          ...prev,
+          [variantKey]: {
+            ...prev[variantKey],
+            [imageIndex]: file,
+          },
+        };
+        return updated;
+      });
 
-  if (event?.target?.files?.[0]) {
-    const file = event.target.files[0];
-    const previewUrl = URL.createObjectURL(file);
-    
-    console.log('Generated preview URL:', previewUrl);
+      setVariantPreviewImages((prev) => {
+        const updated = {
+          ...prev,
+          [variantKey]: {
+            ...prev[variantKey],
+            [imageIndex]: previewUrl,
+          },
+        };
+        return updated;
+      });
+    }
+  };
 
-    // Determine the key for the variant
-    const variantKey = editingIndex !== null ? editingIndex : 'new';
-    
-    console.log('Current newVariantImages before update:', newVariantImages);
-    console.log('Current variantPreviewImages before update:', variantPreviewImages);
-
-    setNewVariantImages(prev => {
-      const updated = {
-        ...prev,
-        [variantKey]: {
-          ...prev[variantKey],
-          [imageIndex]: file
-        }
-      };
-      console.log('Updated newVariantImages:', updated);
-      return updated;
-    });
-
-    setVariantPreviewImages(prev => {
-      const updated = {
-        ...prev,
-        [variantKey]: {
-          ...prev[variantKey],
-          [imageIndex]: previewUrl
-        }
-      };
-      console.log('Updated variantPreviewImages:', updated);
-      return updated;
-    });
-  }
-};
-
-
-
-
-
-
-
- 
   const handleSizeSelection = (size) => {
     if (selectedSizes.includes(size)) {
       setSelectedSizes((prev) => prev.filter((s) => s !== size));
@@ -304,373 +297,377 @@ const handleVariantImageChange = (variantIndex, imageIndex, event) => {
   const handleDeleteModalOpen = () => setShowDeleteModal(true);
   const handleDeleteModalClose = () => setShowDeleteModal(false);
 
-const handleDeleteConfirm = async () => {
-  try {
-    await deleteProductapi(id);
-    toast.success("Product deleted successfully!", {
-      onClose: () => navigate("/products"),
+  const handleDeleteConfirm = async () => {
+    try {
+      await deleteProductapi(id);
+      toast.success("Product deleted successfully!", {
+        onClose: () => navigate("/products"),
+      });
+      setShowDeleteModal(false);
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      const errorMessage =
+        error?.response?.data?.message ||
+        "Failed to delete product. Please try again.";
+      toast.error(errorMessage);
+    }
+  };
+
+  const openDeleteModal = (variantIndex, imageIndex, imageName) => {
+    setImageToDelete({
+      variantIndex,
+      imageIndex,
+      imageName,
     });
-    setShowDeleteModal(false);
-  } catch (error) {
-    console.error("Error deleting product:", error);
-    const errorMessage =
-      error?.response?.data?.message ||
-      "Failed to delete product. Please try again.";
-    toast.error(errorMessage);
-  }
-};
-
- const openDeleteModal = (variantIndex, imageIndex, imageName) => {
-  setImageToDelete({
-    variantIndex,
-    imageIndex,
-    imageName
-  });
-  setIsModalOpen(true);
-};
-
- 
+    setIsModalOpen(true);
+  };
 
   const closeModal = () => {
     setIsModalOpen(false);
     setImageToDelete(null);
   };
-const handleEditVariant = (index) => {
-  console.log('Editing variant at index:', index);
-  console.log('Current variant:', variants[index]);
-
-  const variant = variants[index];
-  setSelectedVariantIndex(index);
-  setColor(variant.color);
-  setColorName(variant.colorName || "");
-  setwholesalePrice(variant.wholesalePrice);
-  setPrice(variant.price);
-
-  const sizeStockObj = {};
-  variant.sizes.forEach(({ size, stock }) => {
-    sizeStockObj[size] = stock;
-  });
-  setSizeStocks(sizeStockObj);
-  setSelectedSizes(variant.sizes.map(({ size }) => size));
-  setEditingIndex(index);
-
-  console.log('Existing variant images:', variant.images);
-
-  // Initialize preview images for this variant
-  const previews = {};
-  variant.images?.forEach((img, i) => {
-    if (img instanceof File) {
-      previews[i] = URL.createObjectURL(img);
-      console.log(`Image ${i} is a File object, created preview URL`);
-    } else if (typeof img === 'string') {
-      previews[i] = `${BASE_URL}/uploads/${img}`;
-      console.log(`Image ${i} is a string, using server URL`);
-    }
-  });
-  
-  console.log('Setting preview images:', previews);
-  setVariantPreviewImages(prev => ({ ...prev, [index]: previews }));
-};
+  const handleEditVariant = (index) => {
 
 
-// Update the handleAddVariant function
-const handleAddVariant = () => {
-  console.log('Adding/editing variant with data:', {
-    color,
-    colorName,
-    wholesalePrice,
-    price,
-    sizeStocks,
-    selectedSizes,
-    editingIndex,
-    variantPreviewImages,
-    newVariantImages
-  });
+    const variant = variants[index];
+    setSelectedVariantIndex(index);
+    setColor(variant.color);
+    setColorName(variant.colorName || "");
+    setwholesalePrice(variant.wholesalePrice);
+    setPrice(variant.price);
 
-  if (!color || !colorName || Object.keys(sizeStocks).length === 0) {
-    toast.error("Please fill in all required fields for the variant");
-    return;
-  }
+    const sizeStockObj = {};
+    variant.sizes.forEach(({ size, stock }) => {
+      sizeStockObj[size] = stock;
+    });
+    setSizeStocks(sizeStockObj);
+    setSelectedSizes(variant.sizes.map(({ size }) => size));
+    setEditingIndex(index);
 
-  // Check for images (existing or new)
-  const variantKey = editingIndex !== null ? editingIndex : 'new';
-  const hasExistingImages = editingIndex !== null && variants[editingIndex]?.images?.length > 0;
-  const hasNewImages = newVariantImages[variantKey] && 
-                      Object.values(newVariantImages[variantKey] || {}).some(img => img !== null);
 
-  console.log('Image check:', { hasExistingImages, hasNewImages });
+    // Initialize preview images for this variant
+    const previews = {};
+    variant.images?.forEach((img, i) => {
+      if (img instanceof File) {
+        previews[i] = URL.createObjectURL(img);
+      } else if (typeof img === "string") {
+        previews[i] = `${BASE_URL}/uploads/${img}`;
+      }
+    });
 
-  if (!hasExistingImages && !hasNewImages) {
-    toast.error("At least one image is required for each variant");
-    return;
-  }
-
-  const newVariant = {
-    ...(editingIndex !== null && { _id: variants[editingIndex]._id }), // Keep _id if editing
-    color,
-    colorName,
-    wholesalePrice: Number(wholesalePrice),
-    price: Number(price),
-    stock: Object.values(sizeStocks).reduce((sum, stock) => sum + Number(stock), 0),
-    sizes: Object.entries(sizeStocks).map(([size, stock]) => ({
-      size,
-      stock: Number(stock)
-    })),
-    images: []
+    setVariantPreviewImages((prev) => ({ ...prev, [index]: previews }));
   };
 
-  console.log('New variant object before images:', newVariant);
-
-  // Keep existing images if editing
-  if (editingIndex !== null && variants[editingIndex]?.images) {
-    newVariant.images = [...variants[editingIndex].images];
-    console.log('Kept existing images:', newVariant.images);
-  }
-
-  // Add new images if any
-  if (newVariantImages[variantKey]) {
-    console.log('Adding new images:', newVariantImages[variantKey]);
-    // For new images, we'll handle them in the form submission
-  }
-
-  console.log('Final variant to add/update:', newVariant);
-
-  // Update state
-  if (editingIndex !== null) {
-    setVariants(prev => {
-      const updated = prev.map((v, i) => (i === editingIndex ? newVariant : v));
-      console.log('Updated variants array:', updated);
-      return updated;
+  // Update the handleAddVariant function
+  const handleAddVariant = () => {
+    console.log("Adding/editing variant with data:", {
+      color,
+      colorName,
+      wholesalePrice,
+      price,
+      sizeStocks,
+      selectedSizes,
+      editingIndex,
+      variantPreviewImages,
+      newVariantImages,
     });
-  } else {
-    setVariants(prev => {
-      const updated = [...prev, newVariant];
-      console.log('Added new variant to array:', updated);
-      return updated;
+
+    if (!color || !colorName || Object.keys(sizeStocks).length === 0) {
+      toast.error("Please fill in all required fields for the variant");
+      return;
+    }
+
+    // Check for images (existing or new)
+    const variantKey = editingIndex !== null ? editingIndex : "new";
+    const hasExistingImages =
+      editingIndex !== null && variants[editingIndex]?.images?.length > 0;
+    const hasNewImages =
+      newVariantImages[variantKey] &&
+      Object.values(newVariantImages[variantKey] || {}).some(
+        (img) => img !== null
+      );
+
+
+    if (!hasExistingImages && !hasNewImages) {
+      toast.error("At least one image is required for each variant");
+      return;
+    }
+
+    const newVariant = {
+      ...(editingIndex !== null && { _id: variants[editingIndex]._id }), // Keep _id if editing
+      color,
+      colorName,
+      wholesalePrice: Number(wholesalePrice),
+      price: Number(price),
+      stock: Object.values(sizeStocks).reduce(
+        (sum, stock) => sum + Number(stock),
+        0
+      ),
+      sizes: Object.entries(sizeStocks).map(([size, stock]) => ({
+        size,
+        stock: Number(stock),
+      })),
+      images: [],
+    };
+
+
+    // Keep existing images if editing
+    if (editingIndex !== null && variants[editingIndex]?.images) {
+      newVariant.images = [...variants[editingIndex].images];
+    }
+
+    // Add new images if any
+    if (newVariantImages[variantKey]) {
+      console.log("Adding new images:", newVariantImages[variantKey]);
+      // For new images, we'll handle them in the form submission
+    }
+
+
+    // Update state
+    if (editingIndex !== null) {
+      setVariants((prev) => {
+        const updated = prev.map((v, i) =>
+          i === editingIndex ? newVariant : v
+        );
+        return updated;
+      });
+    } else {
+      setVariants((prev) => {
+        const updated = [...prev, newVariant];
+        return updated;
+      });
+    }
+
+    // Reset form
+    setColor("");
+    setColorName("");
+    setPrice("");
+    setwholesalePrice("");
+    setSelectedSizes([]);
+    setSizeStocks({});
+    setEditingIndex(null);
+
+    // Clear preview images for the current variant
+    setVariantPreviewImages((prev) => {
+      const newPreviews = { ...prev };
+      delete newPreviews[variantKey];
+      return newPreviews;
     });
-  }
-
-  // Reset form
-  setColor("");
-  setColorName("");
-  setPrice("");
-  setwholesalePrice("");
-  setSelectedSizes([]);
-  setSizeStocks({});
-  setEditingIndex(null);
-  
-  // Clear preview images for the current variant
-  setVariantPreviewImages(prev => {
-    const newPreviews = {...prev};
-    delete newPreviews[variantKey];
-    console.log('Cleared preview images for variant:', variantKey);
-    return newPreviews;
-  });
-};
-
-
-
+  };
 
   const productnavigation = () => {
     navigate("/products");
   };
 
-const handleFormSubmit = async (e) => {
-  e.preventDefault();
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
 
-  // Validate at least one variant exists
-  if (variants.length === 0) {
-    toast.error("At least one variant is required");
-    return;
-  }
-
-  // Separate variants into new and updated
-  const newVariants = [];
-  const updatedVariants = [];
-  
-  variants.forEach(variant => {
-    if (variant._id) {
-      // Existing variant - only include fields that can be updated
-      updatedVariants.push({
-        _id: variant._id,
-        color: variant.color,
-        colorName: variant.colorName,
-        wholesalePrice: variant.wholesalePrice,
-        price: variant.price,
-        sizes: variant.sizes,
-        stock: variant.stock
-      });
-    } else {
-      // New variant
-      newVariants.push({
-        color: variant.color,
-        colorName: variant.colorName,
-        wholesalePrice: variant.wholesalePrice,
-        price: variant.price,
-        sizes: variant.sizes,
-        stock: variant.stock
-      });
+    // Validate at least one variant exists
+    if (variants.length === 0) {
+      toast.error("At least one variant is required");
+      return;
     }
-  });
 
-  const formData = new FormData();
+    // Separate variants into new and updated
+    const newVariants = [];
+    const updatedVariants = [];
 
-  // Add basic product info
-  formData.append("name", productName);
-  formData.append("description", description);
-  formData.append("category", selectedCategory);
-  formData.append("subcategory", selectedSubCategory);
-  formData.append("brand", selectedBrand);
-  formData.append("productType", selectedProductType);
-  formData.append("owner", adminID);
-  formData.append("isReturnable", isReturnable);
-  formData.append("returnWithinDays", returnWithinDays);
-  formData.append("CODAvailable", codAvailable);
-  formData.append("cost", cost);
-
-  // Add features
-  const features = {
-    material,
-    sleevesType,
-    soleMaterial,
-    fit,
-    length,
-    occasion,
-    netWeight
-  };
-  formData.append("features", JSON.stringify(features));
-
-  // Add variants data
-  if (newVariants.length > 0) {
-    formData.append("newVariants", JSON.stringify(newVariants));
-  }
-  if (updatedVariants.length > 0) {
-    formData.append("updatedVariants", JSON.stringify(updatedVariants));
-  }
-
-  // Handle image uploads
-  Object.entries(newVariantImages).forEach(([variantKey, imagesObj]) => {
-    const variantIndex = variantKey === 'new' ? variants.length - 1 : parseInt(variantKey);
-    const variant = variants[variantIndex];
-    
-    // For new variants, use colorName as key
-    const formDataKey = variant._id ? variant._id : variant.colorName.toLowerCase().replace(/\s+/g, '-');
-
-    Object.entries(imagesObj || {}).forEach(([imgIndex, file]) => {
-      if (file instanceof File) {
-        formData.append(`variantImages[${formDataKey}]`, file);
+    variants.forEach((variant) => {
+      if (variant._id) {
+        // Existing variant - only include fields that can be updated
+        updatedVariants.push({
+          _id: variant._id,
+          color: variant.color,
+          colorName: variant.colorName,
+          wholesalePrice: variant.wholesalePrice,
+          price: variant.price,
+          sizes: variant.sizes,
+          stock: variant.stock,
+        });
+      } else {
+        // New variant
+        newVariants.push({
+          color: variant.color,
+          colorName: variant.colorName,
+          wholesalePrice: variant.wholesalePrice,
+          price: variant.price,
+          sizes: variant.sizes,
+          stock: variant.stock,
+        });
       }
     });
-  });
 
-  try {
-    const response = await updateproductapi(productId, formData);
-    
-    if (response.success) {
-      toast.success("Product updated successfully!");
-      const updatedProduct = await getproductByID(id);
-      setProducts(updatedProduct.data);
-      setVariants(updatedProduct.data.variants || []);
-      
-      // Clear the new images state after successful update
-      setNewVariantImages({});
-      setVariantPreviewImages({});
-    } else {
-      toast.error(response.error || "Failed to update product");
+    const formData = new FormData();
+
+    // Add basic product info
+    formData.append("name", productName);
+    formData.append("description", description);
+    formData.append("category", selectedCategory);
+    formData.append("subcategory", selectedSubCategory);
+  const selectedBrandObj = brands.find(b => b._id === selectedBrand);
+  const brandValue = selectedBrandObj ? selectedBrandObj._id : selectedBrand;
+  formData.append("brand", brandValue);
+    formData.append("productType", selectedProductType);
+    formData.append("owner", adminID);
+    formData.append("isReturnable", isReturnable);
+    formData.append("returnWithinDays", returnWithinDays);
+    formData.append("CODAvailable", codAvailable);
+    formData.append("cost", cost);
+
+    // Add features
+    const features = {
+      material,
+      sleevesType,
+      soleMaterial,
+      fit,
+      length,
+      occasion,
+      netWeight,
+    };
+    formData.append("features", JSON.stringify(features));
+
+    // Add variants data
+    if (newVariants.length > 0) {
+      formData.append("newVariants", JSON.stringify(newVariants));
     }
-  } catch (error) {
-    console.error("Submission error:", error);
-    toast.error(error.response?.data?.message || "An error occurred");
-  }
-};
-const handleDeleteImageClick = (imageName) => {
-  setDeleteImageModal({
-    show: true,
-    imageName
-  });
-};
+    if (updatedVariants.length > 0) {
+      formData.append("updatedVariants", JSON.stringify(updatedVariants));
+    }
+
+    // Handle image uploads
+    Object.entries(newVariantImages).forEach(([variantKey, imagesObj]) => {
+      const variantIndex =
+        variantKey === "new" ? variants.length - 1 : parseInt(variantKey);
+      const variant = variants[variantIndex];
+
+      // For new variants, use colorName as key
+      const formDataKey = variant._id
+        ? variant._id
+        : variant.colorName.toLowerCase().replace(/\s+/g, "-");
+
+      Object.entries(imagesObj || {}).forEach(([imgIndex, file]) => {
+        if (file instanceof File) {
+          formData.append(`variantImages[${formDataKey}]`, file);
+        }
+      });
+    });
+
+    try {
+      const response = await updateproductapi(productId, formData);
+
+      if (response.success) {
+        toast.success("Product updated successfully!");
+        const updatedProduct = await getproductByID(id);
+        setProducts(updatedProduct.data);
+        setVariants(updatedProduct.data.variants || []);
+
+        // Clear the new images state after successful update
+        setNewVariantImages({});
+        setVariantPreviewImages({});
+      } else {
+        toast.error(response.error || "Failed to update product");
+      }
+    } catch (error) {
+      console.error("Submission error:", error);
+      toast.error(error.response?.data?.message || "An error occurred");
+    }
+  };
+  const handleDeleteImageClick = (imageName) => {
+    setDeleteImageModal({
+      show: true,
+      imageName,
+    });
+  };
   const handleCloseDeleteImageModal = () => {
     setDeleteImageModal({
       show: false,
-      imageName: null
+      imageName: null,
     });
   };
 
-const confirmDeleteImage = async () => {
-  const { imageName } = deleteImageModal;
-  
-  if (!imageName) {
-    toast.error("No image selected for deletion");
-    handleCloseDeleteImageModal();
-    return;
-  }
+  const confirmDeleteImage = async () => {
+    const { imageName } = deleteImageModal;
 
-  try {
-    // Determine if this is a variant image or main product image
-    const isVariantImage = selectedVariantIndex !== null;
-    const variantId = isVariantImage ? variants[selectedVariantIndex]?._id : null;
+    if (!imageName) {
+      toast.error("No image selected for deletion");
+      handleCloseDeleteImageModal();
+      return;
+    }
 
-    const response = await deleteProductImageApi(productId, {
-      imageName,
-      variantId: variantId || "" // Send empty string if not a variant image
-    });
+    try {
+      // Determine if this is a variant image or main product image
+      const isVariantImage = selectedVariantIndex !== null;
+      const variantId = isVariantImage
+        ? variants[selectedVariantIndex]?._id
+        : null;
 
-    if (response.success) {
-      toast.success("Image deleted successfully!");
-      
-      // Update the preview images state
-      setVariantPreviewImages(prev => {
-        const updated = {...prev};
-        Object.keys(updated).forEach(variantKey => {
-          Object.keys(updated[variantKey]).forEach(imgKey => {
-            if (getImageNameFromPreview(updated[variantKey][imgKey]) === imageName) {
-              delete updated[variantKey][imgKey];
-            }
-          });
-        });
-        return updated;
+      const response = await deleteProductImageApi(productId, {
+        imageName,
+        variantId: variantId || "", // Send empty string if not a variant image
       });
 
-      // Update the variants state if this was a variant image
-      if (isVariantImage && variantId) {
-        setVariants(prev => {
-          return prev.map((variant, idx) => {
-            if (idx === selectedVariantIndex) {
-              return {
-                ...variant,
-                images: variant.images.filter(img => img !== imageName)
-              };
-            }
-            return variant;
+      if (response.success) {
+        toast.success("Image deleted successfully!");
+
+        // Update the preview images state
+        setVariantPreviewImages((prev) => {
+          const updated = { ...prev };
+          Object.keys(updated).forEach((variantKey) => {
+            Object.keys(updated[variantKey]).forEach((imgKey) => {
+              if (
+                getImageNameFromPreview(updated[variantKey][imgKey]) ===
+                imageName
+              ) {
+                delete updated[variantKey][imgKey];
+              }
+            });
           });
+          return updated;
         });
+
+        // Update the variants state if this was a variant image
+        if (isVariantImage && variantId) {
+          setVariants((prev) => {
+            return prev.map((variant, idx) => {
+              if (idx === selectedVariantIndex) {
+                return {
+                  ...variant,
+                  images: variant.images.filter((img) => img !== imageName),
+                };
+              }
+              return variant;
+            });
+          });
+        }
+      } else {
+        toast.error(response.error || "Failed to delete image");
       }
-    } else {
-      toast.error(response.error || "Failed to delete image");
+    } catch (error) {
+      console.error("Error deleting image:", error);
+      toast.error("An error occurred while deleting the image");
+    } finally {
+      handleCloseDeleteImageModal();
     }
-  } catch (error) {
-    console.error("Error deleting image:", error);
-    toast.error("An error occurred while deleting the image");
-  } finally {
-    handleCloseDeleteImageModal();
-  }
-};
+  };
   // Function to extract image name from preview URL
   const getImageNameFromPreview = (previewUrl) => {
-    if (typeof previewUrl !== 'string') return null;
-    
+    if (typeof previewUrl !== "string") return null;
+
     // If it's a new image (blob URL), return the file name
-    if (previewUrl.startsWith('blob:')) {
-      const variantKey = selectedVariantIndex !== null ? selectedVariantIndex : 'new';
-      const imageIndex = Object.values(variantPreviewImages[variantKey] || {}).indexOf(previewUrl);
+    if (previewUrl.startsWith("blob:")) {
+      const variantKey =
+        selectedVariantIndex !== null ? selectedVariantIndex : "new";
+      const imageIndex = Object.values(
+        variantPreviewImages[variantKey] || {}
+      ).indexOf(previewUrl);
       if (imageIndex !== -1 && newVariantImages[variantKey]?.[imageIndex]) {
         return newVariantImages[variantKey][imageIndex].name;
       }
       return null;
     }
-    
+
     // If it's an existing image (from server), extract from URL
-    const urlParts = previewUrl.split('/');
+    const urlParts = previewUrl.split("/");
     return urlParts[urlParts.length - 1];
   };
 
@@ -704,101 +701,118 @@ const confirmDeleteImage = async () => {
       </Row>
       <Row>
         <Col md={3}>
-        {/* Main variant image */}
-       {/* Main variant image */}
-<div className="position-relative single-product-wrapper">
-  {variantPreviewImages[selectedVariantIndex]?.[0] ? (
-    <>
-      <img
-        src={variantPreviewImages[selectedVariantIndex][0]}
-        alt="Main Variant Preview"
-        className="single-product-img"
-      />
-      <i
-        className="fa-solid fa-trash main-image-delete-icon"
-        onClick={() => {
-          const imageName = getImageNameFromPreview(variantPreviewImages[selectedVariantIndex][0]);
-          handleDeleteImageClick(imageName);
-        }}
-      ></i>
-    </>
-  ) : variants[selectedVariantIndex]?.images?.[0] ? (
-    <>
-      <img
-        src={`${BASE_URL}/uploads/${variants[selectedVariantIndex].images[0]}`}
-        alt="Main Variant"
-        className="single-product-img"
-      />
-      <i
-        className="fa-solid fa-trash main-image-delete-icon"
-        onClick={() => {
-          handleDeleteImageClick(variants[selectedVariantIndex].images[0]);
-        }}
-      ></i>
-    </>
-  ) : (
-    <div className="add-image-icon-large">
-      +
-      <input
-        type="file"
-        accept="image/*"
-        className="image-input"
-        onChange={(e) => handleVariantImageChange(selectedVariantIndex, 0, e)}
-      />
-    </div>
-  )}
-</div>
+          {/* Main variant image */}
+          <div className="position-relative single-product-wrapper">
+            {variantPreviewImages[selectedVariantIndex]?.[0] ? (
+              <>
+                <img
+                  src={variantPreviewImages[selectedVariantIndex][0]}
+                  alt="Main Variant Preview"
+                  className="single-product-img"
+                />
+                <i
+                  className="fa-solid fa-trash main-image-delete-icon"
+                  onClick={() => {
+                    const imageName = getImageNameFromPreview(
+                      variantPreviewImages[selectedVariantIndex][0]
+                    );
+                    handleDeleteImageClick(imageName);
+                  }}
+                ></i>
+              </>
+            ) : variants[selectedVariantIndex]?.images?.[0] ? (
+              <>
+                <img
+                  src={`${BASE_URL}/uploads/${variants[selectedVariantIndex].images[0]}`}
+                  alt="Main Variant"
+                  className="single-product-img"
+                />
+                <i
+                  className="fa-solid fa-trash main-image-delete-icon"
+                  onClick={() => {
+                    handleDeleteImageClick(
+                      variants[selectedVariantIndex].images[0]
+                    );
+                  }}
+                ></i>
+              </>
+            ) : (
+              <div className="add-image-icon-large">
+                +
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="image-input"
+                  onChange={(e) =>
+                    handleVariantImageChange(selectedVariantIndex, 0, e)
+                  }
+                />
+              </div>
+            )}
+          </div>
 
-{/* Additional variant images */}
-<Row className="mt-3">
-  {[1, 2, 3, 4].map((imgIndex) => (
-    <Col key={imgIndex} xs={3} className="position-relative">
-      <div className="image-square">
-        {variantPreviewImages[selectedVariantIndex]?.[imgIndex] ? (
-          <>
-            <img
-              src={variantPreviewImages[selectedVariantIndex][imgIndex]}
-              alt={`Variant Preview ${imgIndex}`}
-              className="img-fluid added-image"
-            />
-            <i
-              className="fa-solid fa-trash additional-image-delete-icon"
-              onClick={() => {
-                const imageName = getImageNameFromPreview(variantPreviewImages[selectedVariantIndex][imgIndex]);
-                handleDeleteImageClick(imageName);
-              }}
-            ></i>
-          </>
-        ) : variants[selectedVariantIndex]?.images?.[imgIndex] ? (
-          <>
-            <img
-              src={`${BASE_URL}/uploads/${variants[selectedVariantIndex].images[imgIndex]}`}
-              alt={`Variant ${imgIndex}`}
-              className="img-fluid added-image"
-            />
-            <i
-              className="fa-solid fa-trash additional-image-delete-icon"
-              onClick={() => {
-                handleDeleteImageClick(variants[selectedVariantIndex].images[imgIndex]);
-              }}
-            ></i>
-          </>
-        ) : (
-          <>
-            <div className="add-image-icon">+</div>
-            <input
-              type="file"
-              accept="image/*"
-              className="image-input"
-              onChange={(e) => handleVariantImageChange(selectedVariantIndex, imgIndex, e)}
-            />
-          </>
-        )}
-      </div>
-    </Col>
-  ))}
-</Row>
-      </Col>
+          {/* Additional variant images */}
+          <Row className="mt-3">
+            {[1, 2, 3, 4].map((imgIndex) => (
+              <Col key={imgIndex} xs={3} className="position-relative">
+                <div className="image-square">
+                  {variantPreviewImages[selectedVariantIndex]?.[imgIndex] ? (
+                    <>
+                      <img
+                        src={
+                          variantPreviewImages[selectedVariantIndex][imgIndex]
+                        }
+                        alt={`Variant Preview ${imgIndex}`}
+                        className="img-fluid added-image"
+                      />
+                      <i
+                        className="fa-solid fa-trash additional-image-delete-icon"
+                        onClick={() => {
+                          const imageName = getImageNameFromPreview(
+                            variantPreviewImages[selectedVariantIndex][imgIndex]
+                          );
+                          handleDeleteImageClick(imageName);
+                        }}
+                      ></i>
+                    </>
+                  ) : variants[selectedVariantIndex]?.images?.[imgIndex] ? (
+                    <>
+                      <img
+                        src={`${BASE_URL}/uploads/${variants[selectedVariantIndex].images[imgIndex]}`}
+                        alt={`Variant ${imgIndex}`}
+                        className="img-fluid added-image"
+                      />
+                      <i
+                        className="fa-solid fa-trash additional-image-delete-icon"
+                        onClick={() => {
+                          handleDeleteImageClick(
+                            variants[selectedVariantIndex].images[imgIndex]
+                          );
+                        }}
+                      ></i>
+                    </>
+                  ) : (
+                    <>
+                      <div className="add-image-icon">+</div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="image-input"
+                        onChange={(e) =>
+                          handleVariantImageChange(
+                            selectedVariantIndex,
+                            imgIndex,
+                            e
+                          )
+                        }
+                      />
+                    </>
+                  )}
+                </div>
+              </Col>
+            ))}
+          </Row>
+        </Col>
 
         <Col md={9} className="single-product-right-column">
           <Form>
@@ -884,29 +898,58 @@ const confirmDeleteImage = async () => {
               </Col>
             </Row>
             <Row className="mb-3">
-              <Col md={4}>
-                <Form.Group>
-                  <Form.Label className="single-product-form-label">
-                    Brand
-                  </Form.Label>
-                  <div className="dropdown-wrapper">
-                    <Form.Select
-                      className="single-product-form custom-dropdown"
-                      value={selectedBrand}
-                      onChange={(e) => setSelectedBrand(e.target.value)}
-                      aria-label="Select brand"
-                    >
-                      <option value="">Select Brand</option>
-                      {brands?.map?.((brand) => (
-                        <option key={brand._id} value={brand._id}>
-                          {brand.name}
-                        </option>
-                      )) || <option disabled>No brands available</option>}
-                    </Form.Select>
-                    <FaChevronDown className="dropdown-icon" />
-                  </div>
-                </Form.Group>
-              </Col>
+             <Col md={4}>
+  <Form.Group>
+    <Form.Label className="single-product-form-label">
+      Brand
+    </Form.Label>
+    <div className="dropdown-wrapper">
+      <div className="input-group">
+        <Form.Select
+          className="single-product-form custom-dropdown"
+          value={selectedBrand}
+          onChange={(e) => {
+            setSelectedBrand(e.target.value);
+            // If "Other" is selected, focus on the manual input
+            if (e.target.value === "other") {
+              document.getElementById("manualBrandInput")?.focus();
+            }
+          }}
+          aria-label="Select brand"
+        >
+          <option value="">Select Brand</option>
+          {brands?.map?.((brand) => (
+            <option key={brand._id} value={brand._id}>
+              {brand.name}
+            </option>
+          ))}
+          <option value="other">Other (Enter manually)</option>
+        </Form.Select>
+        <FaChevronDown className="dropdown-icon" />
+      </div>
+      {/* Manual input for new brands */}
+      {(selectedBrand === "other" ||
+        (selectedBrand &&
+          !brands.some((b) => b._id === selectedBrand))) && (
+        <Form.Control
+          id="manualBrandInput"
+          className="single-product-form mt-2"
+          type="text"
+          placeholder="Enter brand name"
+          value={selectedBrand === "other" ? "" : selectedBrand}
+          onChange={(e) => {
+            const value = e.target.value;
+            // Check if the entered value matches an existing brand
+            const matchingBrand = brands.find(
+              (b) => b.name.toLowerCase() === value.toLowerCase()
+            );
+            setSelectedBrand(matchingBrand?._id || value);
+          }}
+        />
+      )}
+    </div>
+  </Form.Group>
+</Col>
 
               <Col md={4}>
                 <Form.Group>
@@ -1053,190 +1096,203 @@ const confirmDeleteImage = async () => {
             </button>
             <div className="mt-4">
               <p className="single-product-form-label">Variants</p>
-            {variants.map((variant, index) => {
-  const totalStock = variant.sizes.reduce((sum, { stock }) => sum + stock, 0);
+              {variants.map((variant, index) => {
+                const totalStock = variant.sizes.reduce(
+                  (sum, { stock }) => sum + stock,
+                  0
+                );
 
-  return (
-    <div
-      key={index}
-      className="variant-card p-4 border rounded shadow-sm mb-4 position-relative"
-      style={{
-        backgroundColor: "#f9f9f9",
-        borderLeft: `5px solid ${variant.color}`,
-        borderRadius: "10px",
-      }}
-    >
-      <span
-        className="position-absolute"
-        style={{
-          top: "10px",
-          right: "10px",
-          cursor: "pointer",
-        }}
-        onClick={() => handleEditVariant(index)}
-      >
-        <i
-          className="fas fa-edit"
-          style={{
-            fontSize: "20px",
-            color: "#555555",
-          }}
-        ></i>
-      </span>
-      <span
-  className="position-absolute"
-  style={{
-    top: "10px",
-    right: "40px", // Adjust this to position it left of the edit button
-    cursor: "pointer",
-  }}
-  onClick={() => {
-    if (variant._id) {
-      handleDeleteVariant(variant._id);
-    } else {
-      // Handle case where variant hasn't been saved yet
-      setVariants(prev => prev.filter((_, i) => i !== index));
-      toast.success("Unsaved variant removed");
-    }
-  }}
->
-  <i
-    className="fas fa-trash"
-    style={{
-      fontSize: "20px",
-      color: "#ff0000",
-    }}
-  ></i>
-</span>
+                return (
+                  <div
+                    key={index}
+                    className="variant-card p-4 border rounded shadow-sm mb-4 position-relative"
+                    style={{
+                      backgroundColor: "#f9f9f9",
+                      borderLeft: `5px solid ${variant.color}`,
+                      borderRadius: "10px",
+                    }}
+                  >
+                    <span
+                      className="position-absolute"
+                      style={{
+                        top: "10px",
+                        right: "10px",
+                        cursor: "pointer",
+                      }}
+                      onClick={() => handleEditVariant(index)}
+                    >
+                      <i
+                        className="fas fa-edit"
+                        style={{
+                          fontSize: "20px",
+                          color: "#555555",
+                        }}
+                      ></i>
+                    </span>
+                    <span
+                      className="position-absolute"
+                      style={{
+                        top: "10px",
+                        right: "40px", // Adjust this to position it left of the edit button
+                        cursor: "pointer",
+                      }}
+                      onClick={() => {
+                        if (variant._id) {
+                          handleDeleteVariant(variant._id);
+                        } else {
+                          // Handle case where variant hasn't been saved yet
+                          setVariants((prev) =>
+                            prev.filter((_, i) => i !== index)
+                          );
+                          toast.success("Unsaved variant removed");
+                        }
+                      }}
+                    >
+                      <i
+                        className="fas fa-trash"
+                        style={{
+                          fontSize: "20px",
+                          color: "#ff0000",
+                        }}
+                      ></i>
+                    </span>
 
-      <div className="row mb-3">
-        <div className="col-md-6">
-          <p
-            className="mb-2"
-            style={{
-              fontFamily: "'Poppins', sans-serif",
-              fontSize: "16px",
-              fontWeight: "600",
-              color: "#000000",
-            }}
-          >
-            <span>Color:</span>{" "}
-            <span>
-              {variant.colorName || "N/A"}{" "}
-              <span
-                style={{
-                  display: "inline-block",
-                  width: "20px",
-                  height: "20px",
-                  backgroundColor: variant.color,
-                  borderRadius: "50%",
-                  marginLeft: "12px",
-                  verticalAlign: "middle",
-                }}
-              ></span>
-            </span>
-          </p>
-          <p
-            className="mb-2"
-            style={{
-              fontFamily: "'Poppins', sans-serif",
-              fontSize: "16px",
-              fontWeight: "600",
-              color: "#000000",
-            }}
-          >
-            <span>Stock:</span>{" "}
-            <span style={{ fontWeight: "400", color: "#333333" }}>
-              {totalStock}
-            </span>
-          </p>
-          <p
-            className="mb-2"
-            style={{
-              fontFamily: "'Poppins', sans-serif",
-              fontSize: "16px",
-              fontWeight: "600",
-              color: "#000000",
-            }}
-          >
-            <span>Sizes:</span>{" "}
-            <span style={{ fontWeight: "400", color: "#333333" }}>
-              {variant.sizes
-                .map(({ size, stock }) => `${size} (${stock})`)
-                .join(", ")}
-            </span>
-          </p>
-          <p
-            className="mb-2"
-            style={{
-              fontFamily: "'Poppins', sans-serif",
-              fontSize: "16px",
-              fontWeight: "600",
-              color: "#000000",
-            }}
-          >
-            <span>Wholesale Price:</span>{" "}
-            <span style={{ fontWeight: "400", color: "#333333" }}>
-              Rs. {variant.wholesalePrice}
-            </span>
-          </p>
-          <p
-            className="mb-2"
-            style={{
-              fontFamily: "'Poppins', sans-serif",
-              fontSize: "16px",
-              fontWeight: "600",
-              color: "#000000",
-            }}
-          >
-            <span>Normal Price:</span>{" "}
-            <span style={{ fontWeight: "400", color: "#333333" }}>
-              Rs. {variant.price}
-            </span>
-          </p>
-        </div>
+                    <div className="row mb-3">
+                      <div className="col-md-6">
+                        <p
+                          className="mb-2"
+                          style={{
+                            fontFamily: "'Poppins', sans-serif",
+                            fontSize: "16px",
+                            fontWeight: "600",
+                            color: "#000000",
+                          }}
+                        >
+                          <span>Color:</span>{" "}
+                          <span>
+                            {variant.colorName || "N/A"}{" "}
+                            <span
+                              style={{
+                                display: "inline-block",
+                                width: "20px",
+                                height: "20px",
+                                backgroundColor: variant.color,
+                                borderRadius: "50%",
+                                marginLeft: "12px",
+                                verticalAlign: "middle",
+                              }}
+                            ></span>
+                          </span>
+                        </p>
+                        <p
+                          className="mb-2"
+                          style={{
+                            fontFamily: "'Poppins', sans-serif",
+                            fontSize: "16px",
+                            fontWeight: "600",
+                            color: "#000000",
+                          }}
+                        >
+                          <span>Stock:</span>{" "}
+                          <span style={{ fontWeight: "400", color: "#333333" }}>
+                            {totalStock}
+                          </span>
+                        </p>
+                        <p
+                          className="mb-2"
+                          style={{
+                            fontFamily: "'Poppins', sans-serif",
+                            fontSize: "16px",
+                            fontWeight: "600",
+                            color: "#000000",
+                          }}
+                        >
+                          <span>Sizes:</span>{" "}
+                          <span style={{ fontWeight: "400", color: "#333333" }}>
+                            {variant.sizes
+                              .map(({ size, stock }) => `${size} (${stock})`)
+                              .join(", ")}
+                          </span>
+                        </p>
+                        <p
+                          className="mb-2"
+                          style={{
+                            fontFamily: "'Poppins', sans-serif",
+                            fontSize: "16px",
+                            fontWeight: "600",
+                            color: "#000000",
+                          }}
+                        >
+                          <span>Wholesale Price:</span>{" "}
+                          <span style={{ fontWeight: "400", color: "#333333" }}>
+                            Rs. {variant.wholesalePrice}
+                          </span>
+                        </p>
+                        <p
+                          className="mb-2"
+                          style={{
+                            fontFamily: "'Poppins', sans-serif",
+                            fontSize: "16px",
+                            fontWeight: "600",
+                            color: "#000000",
+                          }}
+                        >
+                          <span>Normal Price:</span>{" "}
+                          <span style={{ fontWeight: "400", color: "#333333" }}>
+                            Rs. {variant.price}
+                          </span>
+                        </p>
+                      </div>
 
-        <div className="col-md-6">
-          <p
-            className="mb-2"
-            style={{
-              fontFamily: "'Poppins', sans-serif",
-              fontSize: "16px",
-              fontWeight: "600",
-              color: "#000000",
-            }}
-          >
-            Variant Images:
-          </p>
+                      <div className="col-md-6">
+                        <p
+                          className="mb-2"
+                          style={{
+                            fontFamily: "'Poppins', sans-serif",
+                            fontSize: "16px",
+                            fontWeight: "600",
+                            color: "#000000",
+                          }}
+                        >
+                          Variant Images:
+                        </p>
 
-          <div className="d-flex flex-wrap">
-          {variant.images?.map((image, imgIndex) => {
-            if (!image) return null;
-            
-            // Check if image is a string (existing) or File object (new)
-            const isString = typeof image === 'string';
-            const src = isString 
-              ? `${BASE_URL}/uploads/${image}`
-              : URL.createObjectURL(image);
+                        <div className="d-flex flex-wrap">
+                          {variant.images?.map((image, imgIndex) => {
+                            if (!image) return null;
 
-            return (
-              <div key={`variant-${index}-image-${imgIndex}`} className="position-relative me-2 mb-2" style={{ width: "80px", height: "80px" }}>
-                <img
-                  src={src}
-                  alt={`Variant${index}Image ${imgIndex}`}
-                  className="img-fluid"
-                  style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "4px" }}
-                />
-               
-              </div>
-            );
-          })}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-})}
+                            // Check if image is a string (existing) or File object (new)
+                            const isString = typeof image === "string";
+                            const src = isString
+                              ? `${BASE_URL}/uploads/${image}`
+                              : URL.createObjectURL(image);
+
+                            return (
+                              <div
+                                key={`variant-${index}-image-${imgIndex}`}
+                                className="position-relative me-2 mb-2"
+                                style={{ width: "80px", height: "80px" }}
+                              >
+                                <img
+                                  src={src}
+                                  alt={`Variant${index}Image ${imgIndex}`}
+                                  className="img-fluid"
+                                  style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: "cover",
+                                    borderRadius: "4px",
+                                  }}
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
             <Row className="mb-3 mt-4">
               <Col md={12}>
@@ -1416,43 +1472,49 @@ const confirmDeleteImage = async () => {
         </Col>
       </Row>
 
-     <Modal show={showDeleteModal} onHide={handleDeleteModalClose} centered>
-  <Modal.Header closeButton>
-    <Modal.Title>Confirm Product Deletion</Modal.Title>
-  </Modal.Header>
-  <Modal.Body>
-    Are you sure you want to delete this product? This action cannot be undone.
-  </Modal.Body>
-  <Modal.Footer>
-    <Button variant="secondary" onClick={handleDeleteModalClose}>
-      Cancel
-    </Button>
-    <Button variant="danger" onClick={handleDeleteConfirm}>
-      Delete Product
-    </Button>
-  </Modal.Footer>
-</Modal>
+      <Modal show={showDeleteModal} onHide={handleDeleteModalClose} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Product Deletion</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Are you sure you want to delete this product? This action cannot be
+          undone.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleDeleteModalClose}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={handleDeleteConfirm}>
+            Delete Product
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
-{/* Delete Image Modal */}
-<Modal show={deleteImageModal.show} onHide={handleCloseDeleteImageModal} centered>
-  <Modal.Header closeButton>
-    <Modal.Title>Confirm Image Deletion</Modal.Title>
-  </Modal.Header>
-  <Modal.Body>
-    Are you sure you want to delete this image? This action cannot be undone.
-  </Modal.Body>
-  <Modal.Footer>
-    <Button variant="secondary" onClick={handleCloseDeleteImageModal}>
-      Cancel
-    </Button>
-    <Button variant="danger" onClick={confirmDeleteImage}>
-      Delete Image
-    </Button>
-  </Modal.Footer>
-</Modal>
+      {/* Delete Image Modal */}
+      <Modal
+        show={deleteImageModal.show}
+        onHide={handleCloseDeleteImageModal}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Image Deletion</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Are you sure you want to delete this image? This action cannot be
+          undone.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCloseDeleteImageModal}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={confirmDeleteImage}>
+            Delete Image
+          </Button>
+        </Modal.Footer>
+      </Modal>
       <ToastContainer></ToastContainer>
     </div>
   );
 }
 
-export default SingleProduct;   
+export default SingleProduct;

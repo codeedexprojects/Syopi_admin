@@ -70,7 +70,6 @@ function Coupon() {
     setError(null);
     try {
       const response = await getCouponApi();
-      console.log(response);
       
       if (response && response.data) {
         setRows(response.data);
@@ -141,7 +140,6 @@ function Coupon() {
   const fetchCategories = async () => {
     try {
       const response = await getCategoriesApi();
-      console.log("category",response);
       
       if (response.success && Array.isArray(response.data)) {
         setCategories(
@@ -169,7 +167,6 @@ function Coupon() {
   const fetchProducts = async () => {
     try {
       const response = await getallProducts();
-      console.log(response);
 
       if (response.success && Array.isArray(response.data.products)) {
         setProduct(response.data.products);
@@ -225,7 +222,6 @@ function Coupon() {
   const handleShowOffer = async (couponId) => {
     try {
       const offerDetails = await getCouponbyID(couponId);
-      console.log(offerDetails);
 
       setSelectedCoupon(offerDetails.data);
       
@@ -321,7 +317,6 @@ function Coupon() {
   const handleEditCoupon = async (e) => {
     e.preventDefault();
 
-    console.log("Button clicked");
 
     if (
       !selectedCouponName ||
@@ -335,7 +330,6 @@ function Coupon() {
       return;
     }
 
-    console.log("Proceeding with form submission");
 
     const offerData = {
       code: selectedCouponName,
@@ -353,11 +347,8 @@ function Coupon() {
     const offerId = selectedcouponId; // Ensure this contains the correct ID
 
     try {
-      console.log("Sending offer data:", offerData);
       const response = await updatecouponApi(offerId, offerData); // Pass the offerId along with offerData
 
-      // Log the entire response object to inspect it
-      console.log("API Response:", response);
 
       if (response.status === 200) {
         toast.success("coupon updated successfully!");
