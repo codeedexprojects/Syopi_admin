@@ -237,45 +237,38 @@ function SingleProduct() {
     setColorName(name);
   };
 
-  const handleVariantImageChange = (variantIndex, imageIndex, event) => {
-    console.log("handleVariantImageChange called with:", {
-      variantIndex,
-      imageIndex,
-      file: event?.target?.files?.[0],
-    });
+const handleVariantImageChange = (variantIndex, imageIndex, event) => {
+  if (event?.target?.files?.[0]) {
+    const file = event.target.files[0];
+    const previewUrl = URL.createObjectURL(file);
 
-    if (event?.target?.files?.[0]) {
-      const file = event.target.files[0];
-      const previewUrl = URL.createObjectURL(file);
+    // Determine the variant key - use 'new' for new variants being added
+    const variantKey = editingIndex !== null ? editingIndex : 'new';
 
+    // Update new variant images (for form submission)
+    setNewVariantImages((prev) => ({
+      ...prev,
+      [variantKey]: {
+        ...prev[variantKey],
+        [imageIndex]: file
+      }
+    }));
 
-      // Determine the key for the variant
-      const variantKey = editingIndex !== null ? editingIndex : "new";
+    // Update preview images (for UI display)
+    setVariantPreviewImages((prev) => ({
+      ...prev,
+      [variantKey]: {
+        ...prev[variantKey],
+        [imageIndex]: previewUrl
+      }
+    }));
 
-  
-      setNewVariantImages((prev) => {
-        const updated = {
-          ...prev,
-          [variantKey]: {
-            ...prev[variantKey],
-            [imageIndex]: file,
-          },
-        };
-        return updated;
-      });
-
-      setVariantPreviewImages((prev) => {
-        const updated = {
-          ...prev,
-          [variantKey]: {
-            ...prev[variantKey],
-            [imageIndex]: previewUrl,
-          },
-        };
-        return updated;
-      });
+    // If this is the first image (index 0), set this variant as selected
+    if (imageIndex === 0 && selectedVariantIndex === null) {
+      setSelectedVariantIndex(variantKey);
     }
-  };
+  }
+};
 
   const handleSizeSelection = (size) => {
     if (selectedSizes.includes(size)) {
@@ -359,101 +352,65 @@ function SingleProduct() {
   };
 
   // Update the handleAddVariant function
-  const handleAddVariant = () => {
-    console.log("Adding/editing variant with data:", {
-      color,
-      colorName,
-      wholesalePrice,
-      price,
-      sizeStocks,
-      selectedSizes,
-      editingIndex,
-      variantPreviewImages,
-      newVariantImages,
-    });
+const handleAddVariant = () => {
+  if (!color || !colorName || Object.keys(sizeStocks).length === 0) {
+    toast.error("Please fill in all required fields for the variant");
+    return;
+  }
 
-    if (!color || !colorName || Object.keys(sizeStocks).length === 0) {
-      toast.error("Please fill in all required fields for the variant");
-      return;
-    }
+  // Check for images (existing or new)
+  const variantKey = editingIndex !== null ? editingIndex : 'new';
+  const hasExistingImages = editingIndex !== null && variants[editingIndex]?.images?.length > 0;
+  const hasNewImages = newVariantImages[variantKey] && 
+    Object.values(newVariantImages[variantKey] || {}).some(img => img !== null);
 
-    // Check for images (existing or new)
-    const variantKey = editingIndex !== null ? editingIndex : "new";
-    const hasExistingImages =
-      editingIndex !== null && variants[editingIndex]?.images?.length > 0;
-    const hasNewImages =
-      newVariantImages[variantKey] &&
-      Object.values(newVariantImages[variantKey] || {}).some(
-        (img) => img !== null
-      );
+  if (!hasExistingImages && !hasNewImages) {
+    toast.error("At least one image is required for each variant");
+    return;
+  }
 
+  const newVariant = {
+    ...(editingIndex !== null && { _id: variants[editingIndex]._id }),
+    color,
+    colorName,
+    wholesalePrice: Number(wholesalePrice),
+    price: Number(price),
+    stock: Object.values(sizeStocks).reduce((sum, stock) => sum + Number(stock), 0),
+    sizes: Object.entries(sizeStocks).map(([size, stock]) => ({
+      size,
+      stock: Number(stock)
+    })),
+    images: editingIndex !== null ? [...variants[editingIndex].images] : []
+  };
 
-    if (!hasExistingImages && !hasNewImages) {
-      toast.error("At least one image is required for each variant");
-      return;
-    }
+  // Update state
+  if (editingIndex !== null) {
+    setVariants(prev => prev.map((v, i) => i === editingIndex ? newVariant : v));
+  } else {
+    setVariants(prev => [...prev, newVariant]);
+    // Set the newly added variant as selected
+    setSelectedVariantIndex(prev => variants.length); // This will be the new index
+  }
 
-    const newVariant = {
-      ...(editingIndex !== null && { _id: variants[editingIndex]._id }), // Keep _id if editing
-      color,
-      colorName,
-      wholesalePrice: Number(wholesalePrice),
-      price: Number(price),
-      stock: Object.values(sizeStocks).reduce(
-        (sum, stock) => sum + Number(stock),
-        0
-      ),
-      sizes: Object.entries(sizeStocks).map(([size, stock]) => ({
-        size,
-        stock: Number(stock),
-      })),
-      images: [],
-    };
+  // Reset form
+  setColor("");
+  setColorName("");
+  setPrice("");
+  setwholesalePrice("");
+  setSelectedSizes([]);
+  setSizeStocks({});
+  setEditingIndex(null);
 
-
-    // Keep existing images if editing
-    if (editingIndex !== null && variants[editingIndex]?.images) {
-      newVariant.images = [...variants[editingIndex].images];
-    }
-
-    // Add new images if any
-    if (newVariantImages[variantKey]) {
-      console.log("Adding new images:", newVariantImages[variantKey]);
-      // For new images, we'll handle them in the form submission
-    }
-
-
-    // Update state
-    if (editingIndex !== null) {
-      setVariants((prev) => {
-        const updated = prev.map((v, i) =>
-          i === editingIndex ? newVariant : v
-        );
-        return updated;
-      });
-    } else {
-      setVariants((prev) => {
-        const updated = [...prev, newVariant];
-        return updated;
-      });
-    }
-
-    // Reset form
-    setColor("");
-    setColorName("");
-    setPrice("");
-    setwholesalePrice("");
-    setSelectedSizes([]);
-    setSizeStocks({});
-    setEditingIndex(null);
-
-    // Clear preview images for the current variant
-    setVariantPreviewImages((prev) => {
+  // Keep the preview images for the newly added variant
+  if (variantKey === 'new') {
+    setVariantPreviewImages(prev => {
       const newPreviews = { ...prev };
-      delete newPreviews[variantKey];
+      newPreviews[variants.length] = prev['new']; // Move from 'new' to the new index
+      delete newPreviews['new'];
       return newPreviews;
     });
-  };
+  }
+};
 
   const productnavigation = () => {
     navigate("/products");
@@ -702,116 +659,119 @@ function SingleProduct() {
       <Row>
         <Col md={3}>
           {/* Main variant image */}
-          <div className="position-relative single-product-wrapper">
-            {variantPreviewImages[selectedVariantIndex]?.[0] ? (
+         {/* Main variant image */}
+<div className="position-relative single-product-wrapper">
+  {variantPreviewImages[selectedVariantIndex]?.[0] ? (
+    <>
+      <img
+        src={variantPreviewImages[selectedVariantIndex][0]}
+        alt="Main Variant Preview"
+        className="single-product-img"
+      />
+      <i
+        className="fa-solid fa-trash main-image-delete-icon"
+        onClick={() => {
+          const imageName = getImageNameFromPreview(
+            variantPreviewImages[selectedVariantIndex][0]
+          );
+          handleDeleteImageClick(imageName);
+        }}
+      ></i>
+    </>
+  ) : (
+    <>
+      {selectedVariantIndex !== null && variants[selectedVariantIndex]?.images?.[0] ? (
+        <>
+          <img
+            src={`${BASE_URL}/uploads/${variants[selectedVariantIndex].images[0]}`}
+            alt="Main Variant"
+            className="single-product-img"
+          />
+          <i
+            className="fa-solid fa-trash main-image-delete-icon"
+            onClick={() => {
+              handleDeleteImageClick(
+                variants[selectedVariantIndex].images[0]
+              );
+            }}
+          ></i>
+        </>
+      ) : (
+        <div className="add-image-icon-large">
+          +
+          <input
+            type="file"
+            accept="image/*"
+            className="image-input"
+            onChange={(e) =>
+              handleVariantImageChange(selectedVariantIndex || 'new', 0, e)
+            }
+          />
+        </div>
+      )}
+    </>
+  )}
+</div>
+
+{/* Additional variant images */}
+<Row className="mt-3">
+  {[1, 2, 3, 4].map((imgIndex) => (
+    <Col key={imgIndex} xs={3} className="position-relative">
+      <div className="image-square">
+        {variantPreviewImages[selectedVariantIndex]?.[imgIndex] ? (
+          <>
+            <img
+              src={variantPreviewImages[selectedVariantIndex][imgIndex]}
+              alt={`Variant Preview ${imgIndex}`}
+              className="img-fluid added-image"
+            />
+            <i
+              className="fa-solid fa-trash additional-image-delete-icon"
+              onClick={() => {
+                const imageName = getImageNameFromPreview(
+                  variantPreviewImages[selectedVariantIndex][imgIndex]
+                );
+                handleDeleteImageClick(imageName);
+              }}
+            ></i>
+          </>
+        ) : (
+          <>
+            {selectedVariantIndex !== null && variants[selectedVariantIndex]?.images?.[imgIndex] ? (
               <>
                 <img
-                  src={variantPreviewImages[selectedVariantIndex][0]}
-                  alt="Main Variant Preview"
-                  className="single-product-img"
+                  src={`${BASE_URL}/uploads/${variants[selectedVariantIndex].images[imgIndex]}`}
+                  alt={`Variant ${imgIndex}`}
+                  className="img-fluid added-image"
                 />
                 <i
-                  className="fa-solid fa-trash main-image-delete-icon"
-                  onClick={() => {
-                    const imageName = getImageNameFromPreview(
-                      variantPreviewImages[selectedVariantIndex][0]
-                    );
-                    handleDeleteImageClick(imageName);
-                  }}
-                ></i>
-              </>
-            ) : variants[selectedVariantIndex]?.images?.[0] ? (
-              <>
-                <img
-                  src={`${BASE_URL}/uploads/${variants[selectedVariantIndex].images[0]}`}
-                  alt="Main Variant"
-                  className="single-product-img"
-                />
-                <i
-                  className="fa-solid fa-trash main-image-delete-icon"
+                  className="fa-solid fa-trash additional-image-delete-icon"
                   onClick={() => {
                     handleDeleteImageClick(
-                      variants[selectedVariantIndex].images[0]
+                      variants[selectedVariantIndex].images[imgIndex]
                     );
                   }}
                 ></i>
               </>
             ) : (
-              <div className="add-image-icon-large">
-                +
+              <>
+                <div className="add-image-icon">+</div>
                 <input
                   type="file"
                   accept="image/*"
                   className="image-input"
                   onChange={(e) =>
-                    handleVariantImageChange(selectedVariantIndex, 0, e)
+                    handleVariantImageChange(selectedVariantIndex || 'new', imgIndex, e)
                   }
                 />
-              </div>
+              </>
             )}
-          </div>
-
-          {/* Additional variant images */}
-          <Row className="mt-3">
-            {[1, 2, 3, 4].map((imgIndex) => (
-              <Col key={imgIndex} xs={3} className="position-relative">
-                <div className="image-square">
-                  {variantPreviewImages[selectedVariantIndex]?.[imgIndex] ? (
-                    <>
-                      <img
-                        src={
-                          variantPreviewImages[selectedVariantIndex][imgIndex]
-                        }
-                        alt={`Variant Preview ${imgIndex}`}
-                        className="img-fluid added-image"
-                      />
-                      <i
-                        className="fa-solid fa-trash additional-image-delete-icon"
-                        onClick={() => {
-                          const imageName = getImageNameFromPreview(
-                            variantPreviewImages[selectedVariantIndex][imgIndex]
-                          );
-                          handleDeleteImageClick(imageName);
-                        }}
-                      ></i>
-                    </>
-                  ) : variants[selectedVariantIndex]?.images?.[imgIndex] ? (
-                    <>
-                      <img
-                        src={`${BASE_URL}/uploads/${variants[selectedVariantIndex].images[imgIndex]}`}
-                        alt={`Variant ${imgIndex}`}
-                        className="img-fluid added-image"
-                      />
-                      <i
-                        className="fa-solid fa-trash additional-image-delete-icon"
-                        onClick={() => {
-                          handleDeleteImageClick(
-                            variants[selectedVariantIndex].images[imgIndex]
-                          );
-                        }}
-                      ></i>
-                    </>
-                  ) : (
-                    <>
-                      <div className="add-image-icon">+</div>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="image-input"
-                        onChange={(e) =>
-                          handleVariantImageChange(
-                            selectedVariantIndex,
-                            imgIndex,
-                            e
-                          )
-                        }
-                      />
-                    </>
-                  )}
-                </div>
-              </Col>
-            ))}
-          </Row>
+          </>
+        )}
+      </div>
+    </Col>
+  ))}
+</Row>
         </Col>
 
         <Col md={9} className="single-product-right-column">

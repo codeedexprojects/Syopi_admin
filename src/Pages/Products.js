@@ -592,13 +592,13 @@ function Products() {
             <FaEdit className="modal-icons" />
             <span>Edit</span>
           </div>
-          <div
+          {/* <div
             className="modal-option"
             onClick={() => alert("Review clicked!")}
           >
             <FaEye className="modal-icons" />
             <span>Review</span>
-          </div>
+          </div> */}
           {/* <div
             className="modal-option"
             onClick={() => alert("Flagged clicked!")}
