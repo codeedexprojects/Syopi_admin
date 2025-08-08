@@ -24,3 +24,135 @@
     background-color: #f0f0f0;
   }
   
+.carousel-multi-select-container {
+  position: relative;
+  width: 100%;
+}
+
+.custom-popover {
+  animation: popoverFadeIn 0.2s ease-out forwards;
+}
+
+@keyframes popoverFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.popover-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.popover-item {
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.popover-item:hover {
+  background-color: #f5f5f5;
+}
+
+.carousel-multi-select-display {
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background-color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.carousel-multi-select-display:focus-within {
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.carousel-selected-items-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  width: 100%;
+}
+
+.carousel-selected-item {
+  background-color: #e9ecef;
+  border: 1px solid #adb5bd;
+  border-radius: 15px;
+  padding: 3px 8px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.carousel-remove-item {
+  cursor: pointer;
+  font-weight: bold;
+  color: #6c757d;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.carousel-remove-item:hover {
+  color: #dc3545;
+}
+
+.carousel-placeholder {
+  color: #6c757d;
+  font-style: italic;
+}
+
+.carousel-dropdown-icon {
+  color: #6c757d;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.carousel-multi-select-hidden {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  height: 0;
+  overflow: hidden;
+}
+
+.carousel-dropdown-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ced4da;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.carousel-dropdown-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f8f9fa;
+}
+
+.carousel-dropdown-item:hover {
+  background-color: #f8f9fa;
+}
+
+.carousel-dropdown-item:last-child {
+  border-bottom: none;
+}

@@ -10,10 +10,6 @@ import {
   TableHead,
   TableRow,
 } from "@mui/material";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
-import { renderTimeViewClock } from "@mui/x-date-pickers/timeViewRenderers";
 import { FaChevronDown } from "react-icons/fa";
 import { FaEllipsis } from "react-icons/fa6";
 import {
@@ -35,10 +31,9 @@ function Carousel() {
   const [error, setError] = useState(null);
   const [products, setProducts] = useState([]);
   const [title, setTitle] = useState("");
-  const [link, setLink] = useState("");
   const [imageFile, setImageFile] = useState(null);
   // const [date, setDate] = useState(null);
-  const [selectedProduct, setSelectedProduct] = useState("");
+  const [selectedProducts, setSelectedProducts] = useState([]);
   const [selectedId, setSelectedId] = useState("");
   const [showeditModal, setShoweditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -57,32 +52,42 @@ function Carousel() {
   const handleShow = () => setShow(true);
   const [popover, setPopover] = useState({ visible: false, x: 0, y: 0 });
   const popoverRef = useRef(null);
+  const [showAddDropdown, setShowAddDropdown] = useState(false);
 
-  const handleActionClick = (slider, event) => {
-    // Prevent event bubbling
-    event.stopPropagation();
-    
-    // Get click position
-    const { pageX, pageY } = event;
-    
-    // First toggle visibility - this will help with measuring the popover dimensions
-    setPopover((prev) => ({
-      visible: !prev.visible,
-      x: pageX, 
-      y: pageY,
-      // Add temporary values that will be updated after render
-      anchorPoint: 'bottom'
-    }));
-  
-    // Set other slider data
-    setTitle(slider.title);
-    setSelectedProduct(slider.cate);
-    setLink(slider.link || "");
-    // setDate(slider.date || null);
-    setUploadedImage(`${BASE_URL}/uploads/${slider.image}` || "");
-    setSelectedId(slider._id);
+  // 3. Add these helper functions
+  const toggleProductSelection = (productId) => {
+    setSelectedProducts((prev) => {
+      if (prev.includes(productId)) {
+        return prev.filter((id) => id !== productId);
+      } else {
+        return [...prev, productId];
+      }
+    });
   };
+
+  const getAvailableProducts = () => {
+    return products.filter(
+      (product) => !selectedProducts.includes(product._id)
+    );
+  };
+
+const handleActionClick = (slider, event) => {
+  event.stopPropagation();
   
+  setPopover({
+    visible: true,
+    x: event.clientX,
+    y: event.clientY,
+    anchorPoint: "bottom"
+  });
+
+  // Set the slider data
+  setTitle(slider.title);
+  setSelectedProducts(slider.productIds?.map(product => product._id) || []);
+  setUploadedImage(slider.image ? `${BASE_URL}/uploads/${slider.image}` : "");
+  setSelectedId(slider._id);
+};
+
   // Add this effect to adjust position after popover becomes visible
   useEffect(() => {
     if (popover.visible && popoverRef.current) {
@@ -90,59 +95,57 @@ function Carousel() {
       const popoverRect = popoverElement.getBoundingClientRect();
       const windowWidth = window.innerWidth;
       const windowHeight = window.innerHeight;
-      
+
       // Calculate adjusted position to keep popover fully visible
       let adjustedX = popover.x;
       let adjustedY = popover.y;
-      let anchorPoint = 'bottom';
-      
+      let anchorPoint = "bottom";
+
       // Adjust horizontal position if too close to right edge
       if (popover.x + popoverRect.width > windowWidth) {
         adjustedX = popover.x - popoverRect.width;
       }
-      
+
       // Position popover above the click point if there's not enough space below
       if (popover.y + popoverRect.height > windowHeight) {
         adjustedY = popover.y - popoverRect.height;
-        anchorPoint = 'top';
+        anchorPoint = "top";
       } else {
         // Add a small offset to position below the click point
         adjustedY = popover.y + 10;
       }
-      
+
       // Ensure popover doesn't go off the left edge
       if (adjustedX < 0) {
         adjustedX = 10;
       }
-      
+
       // Update popover position with calculated values
-      setPopover(prev => ({
+      setPopover((prev) => ({
         ...prev,
         x: adjustedX,
         y: adjustedY,
-        anchorPoint
+        anchorPoint,
       }));
     }
   }, [popover.visible]);
-  
+
   // Click handler for document to close popover when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (popoverRef.current && !popoverRef.current.contains(event.target)) {
-        setPopover(prev => ({ ...prev, visible: false }));
+        setPopover((prev) => ({ ...prev, visible: false }));
       }
     };
-    
+
     if (popover.visible) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
-    
+
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [popover.visible]);
-  
-  
 
   const handleClosePopover = () => {
     setPopover({ visible: false, x: 0, y: 0 });
@@ -166,6 +169,7 @@ function Carousel() {
     setError(null);
     try {
       const response = await getSliderApi();
+      console.log(response);
 
       if (response && response.data) {
         setRows(response.data);
@@ -180,9 +184,6 @@ function Carousel() {
   useEffect(() => {
     fetchslider();
   }, []);
-  const handleProductChange = (e) => {
-    setSelectedProduct(e.target.value);
-  };
 
   const fetchProducts = async () => {
     try {
@@ -208,15 +209,16 @@ function Carousel() {
     e.preventDefault();
 
     // Validate fields
-    if (!title || !link || !selectedProduct || !imageFile ) {
+    if (!title  || !selectedProducts.length === 0 || !imageFile) {
       toast.error("All fields are required");
       return;
     }
 
     const formData = new FormData();
     formData.append("title", title.trim());
-    formData.append("link", link.trim());
-    formData.append("productId", selectedProduct);
+    selectedProducts.forEach((productId) => {
+      formData.append("productIds", productId);
+    });
     // formData.append("date", new Date(date).toISOString());
     formData.append("userType", "admin"); // Assuming this is required
     formData.append("image", imageFile); // Attach the actual file
@@ -267,17 +269,17 @@ function Carousel() {
     e.preventDefault();
 
     // Validation
-    if (!title || !link || !selectedProduct  || !imageFile) {
+    if (!title  || selectedProducts.length === 0 || !imageFile) {
       toast.error("All fields are required");
       return;
     }
 
-    // Prepare FormData
     const formData = new FormData();
     formData.append("title", title.trim());
-    formData.append("link", link.trim());
-    formData.append("productId", selectedProduct);
-    // formData.append("date", date); 
+    selectedProducts.forEach((productId) => {
+      formData.append("productIds", productId);
+    });
+    // formData.append("date", date);
     // formData.append("fileType", "category");
     formData.append("userType", "admin");
     formData.append("image", imageFile);
@@ -422,9 +424,9 @@ function Carousel() {
                     <TableCell align="left" className="dproduct-tabledata">
                       {row.createdAt}
                     </TableCell>
-                    <TableCell align="left" className="dproduct-tabledata">
-                      {row.productId?.name || "N/A"}
-                    </TableCell>
+                   <TableCell align="left" className="dproduct-tabledata">
+  {row.productIds?.map(product => product.name).join(', ') || "N/A"}
+</TableCell>
 
                     <TableCell align="left" className="dproduct-tabledata">
                       <FaEllipsis
@@ -439,36 +441,49 @@ function Carousel() {
           </TableContainer>
         )}
       </div>
-      {popover.visible && (
+     {popover.visible && (
   <div
     ref={popoverRef}
     className="custom-popover"
     style={{
-      position: "fixed",
-      top: popover.y,
-      left: popover.x,
-      backgroundColor: "#fff",
-      border: "1px solid #ccc",
-      borderRadius: "5px",
-      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+      position: 'fixed',
+      top: `${popover.y}px`,
+      left: `${popover.x}px`,
       zIndex: 1000,
-      // Add transform origin based on anchor point
-      transformOrigin: popover.anchorPoint === 'top' ? 'center bottom' : 'center top',
-      // Add subtle animation
-      animation: "popoverFadeIn 0.2s ease-out forwards"
+      backgroundColor: 'white',
+      boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+      borderRadius: '4px',
+      padding: '8px 0',
+      minWidth: '120px'
     }}
   >
-    <ul className="popover-list">
-      <li className="popover-item" onClick={handleeditModalShow}>
-        Edit
-      </li>
-      <li className="popover-item" onClick={handleClosePopover}>
-        View
-      </li>
-      <li className="popover-item" onClick={handleDeleteModalShow}>
-        Remove
-      </li>
-    </ul>
+    <div 
+      className="popover-item" 
+      onClick={(e) => {
+        e.stopPropagation();
+        handleeditModalShow();
+      }}
+    >
+      Edit
+    </div>
+    <div 
+      className="popover-item"
+      onClick={(e) => {
+        e.stopPropagation();
+        handleClosePopover();
+      }}
+    >
+      View
+    </div>
+    <div 
+      className="popover-item"
+      onClick={(e) => {
+        e.stopPropagation();
+        handleDeleteModalShow();
+      }}
+    >
+      Remove
+    </div>
   </div>
 )}
       {deleteModal}
@@ -532,88 +547,83 @@ function Carousel() {
                     </Form.Group>
                   </Col>
                 </Row>
+                
                 <Row className="mb-3">
                   <Col md={12}>
-                    <Form.Group>
+                    <Form.Group controlId="productSelect">
                       <Form.Label className="single-product-form-label">
-                        Link
+                        Products
                       </Form.Label>
-                      <Form.Control
-                        className="single-product-form"
-                        type="text"
-                        placeholder="Enter Link"
-                        value={link}
-                        onChange={(e) => setLink(e.target.value)}
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
-                <Row className="mb-3">
-                  <Col md={12}>
-                    <Form.Group>
-                      <Form.Label className="single-product-form-label">
-                        Product
-                      </Form.Label>
-                      <div className="dropdown-wrapper">
-                        <Form.Control
-                          className="single-product-form custom-dropdown"
-                          as="select"
-                          value={selectedProduct}
-                          onChange={handleProductChange}
-                          aria-label="Select Product"
+                      <div className="carousel-multi-select-container">
+                        <div
+                          className="carousel-multi-select-display"
+                          onClick={() => setShowAddDropdown(!showAddDropdown)}
                         >
-                          <option value="">Select Product</option>
-                          {products.map((products) => (
-                            <option key={products._id} value={products._id}>
-                              {products.name}
-                            </option>
-                          ))}
-                        </Form.Control>
-                        <FaChevronDown className="dropdown-icon" />
+                          {selectedProducts.length === 0 ? (
+                            <span className="carousel-placeholder">
+                              Select products...
+                            </span>
+                          ) : (
+                            <div className="carousel-selected-items-container">
+                              {selectedProducts.map((productId) => {
+                                const product = products.find(
+                                  (p) => p._id === productId
+                                );
+                                return (
+                                  <span
+                                    key={productId}
+                                    className="carousel-selected-item"
+                                  >
+                                    {product?.name || "Unknown"}
+                                    <span
+                                      className="carousel-remove-item"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedProducts(
+                                          selectedProducts.filter(
+                                            (id) => id !== productId
+                                          )
+                                        );
+                                      }}
+                                    >
+                                      ×
+                                    </span>
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
+                          <FaChevronDown className="carousel-dropdown-icon" />
+                        </div>
+
+                        {showAddDropdown && (
+                          <div className="carousel-dropdown-list">
+                            {getAvailableProducts().length === 0 ? (
+                              <div className="carousel-dropdown-item">
+                                No more products available
+                              </div>
+                            ) : (
+                              getAvailableProducts().map((product) => (
+                                <div
+                                  key={product._id}
+                                  className="carousel-dropdown-item"
+                                  onClick={() => {
+                                    toggleProductSelection(product._id);
+                                    if (getAvailableProducts().length === 1) {
+                                      setShowAddDropdown(false);
+                                    }
+                                  }}
+                                >
+                                  {product.name}
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        )}
                       </div>
                     </Form.Group>
                   </Col>
                 </Row>
-                {/* <Row className="mt-3">
-                  <Col md={12}>
-                    <LocalizationProvider dateAdapter={AdapterDayjs}>
-                      <Form.Group>
-                        <Form.Label className="single-product-form-label">
-                          Date and Time
-                        </Form.Label>
-                        <div className="input-with-icon">
-                          <DateTimePicker
-                            value={date}
-                            onChange={(newValue) => setDate(newValue)}
-                            style={{ border: "none" }}
-                            PopperProps={{
-                              modifiers: [
-                                {
-                                  name: "flip",
-                                  options: {
-                                    fallbackPlacements: ["top"],
-                                  },
-                                },
-                                {
-                                  name: "offset",
-                                  options: {
-                                    offset: [0, -10],
-                                  },
-                                },
-                              ],
-                            }}
-                            viewRenderers={{
-                              hours: renderTimeViewClock,
-                              minutes: renderTimeViewClock,
-                              seconds: renderTimeViewClock,
-                            }}
-                            className="single-product-form datetime-picker"
-                          />
-                        </div>
-                      </Form.Group>
-                    </LocalizationProvider>
-                  </Col>
-                </Row> */}
               </Form>
             </Col>
           </Row>
@@ -702,88 +712,83 @@ function Carousel() {
                     </Form.Group>
                   </Col>
                 </Row>
+               
                 <Row className="mb-3">
                   <Col md={12}>
-                    <Form.Group>
+                    <Form.Group controlId="productSelect">
                       <Form.Label className="single-product-form-label">
-                        Link
+                        Products
                       </Form.Label>
-                      <Form.Control
-                        className="single-product-form"
-                        type="text"
-                        placeholder="Enter Link"
-                        value={link}
-                        onChange={(e) => setLink(e.target.value)}
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
-                <Row className="mb-3">
-                  <Col md={12}>
-                    <Form.Group>
-                      <Form.Label className="single-product-form-label">
-                        Product
-                      </Form.Label>
-                      <div className="dropdown-wrapper">
-                        <Form.Control
-                          className="single-product-form custom-dropdown"
-                          as="select"
-                          value={selectedProduct}
-                          onChange={handleProductChange}
-                          aria-label="Select category"
+                      <div className="carousel-multi-select-container">
+                        <div
+                          className="carousel-multi-select-display"
+                          onClick={() => setShowAddDropdown(!showAddDropdown)}
                         >
-                          <option value="">Select Product</option>
-                          {products.map((products) => (
-                            <option key={products._id} value={products._id}>
-                              {products.name}
-                            </option>
-                          ))}
-                        </Form.Control>
-                        <FaChevronDown className="dropdown-icon" />
+                          {selectedProducts.length === 0 ? (
+                            <span className="carousel-placeholder">
+                              Select products...
+                            </span>
+                          ) : (
+                            <div className="carousel-selected-items-container">
+                              {selectedProducts.map((productId) => {
+                                const product = products.find(
+                                  (p) => p._id === productId
+                                );
+                                return (
+                                  <span
+                                    key={productId}
+                                    className="carousel-selected-item"
+                                  >
+                                    {product?.name || "Unknown"}
+                                    <span
+                                      className="carousel-remove-item"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedProducts(
+                                          selectedProducts.filter(
+                                            (id) => id !== productId
+                                          )
+                                        );
+                                      }}
+                                    >
+                                      ×
+                                    </span>
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
+                          <FaChevronDown className="carousel-dropdown-icon" />
+                        </div>
+
+                        {showAddDropdown && (
+                          <div className="carousel-dropdown-list">
+                            {getAvailableProducts().length === 0 ? (
+                              <div className="carousel-dropdown-item">
+                                No more products available
+                              </div>
+                            ) : (
+                              getAvailableProducts().map((product) => (
+                                <div
+                                  key={product._id}
+                                  className="carousel-dropdown-item"
+                                  onClick={() => {
+                                    toggleProductSelection(product._id);
+                                    if (getAvailableProducts().length === 1) {
+                                      setShowAddDropdown(false);
+                                    }
+                                  }}
+                                >
+                                  {product.name}
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        )}
                       </div>
                     </Form.Group>
                   </Col>
                 </Row>
-                {/* <Row className="mt-3">
-                  <Col md={12}>
-                    <LocalizationProvider dateAdapter={AdapterDayjs}>
-                      <Form.Group>
-                        <Form.Label className="single-product-form-label">
-                          Date and Time
-                        </Form.Label>
-                        <div className="input-with-icon">
-                          <DateTimePicker
-                            value={date}
-                            onChange={(newValue) => setDate(newValue)}
-                            style={{ border: "none" }}
-                            PopperProps={{
-                              modifiers: [
-                                {
-                                  name: "flip",
-                                  options: {
-                                    fallbackPlacements: ["top"],
-                                  },
-                                },
-                                {
-                                  name: "offset",
-                                  options: {
-                                    offset: [0, -10],
-                                  },
-                                },
-                              ],
-                            }}
-                            viewRenderers={{
-                              hours: renderTimeViewClock,
-                              minutes: renderTimeViewClock,
-                              seconds: renderTimeViewClock,
-                            }}
-                            className="single-product-form datetime-picker"
-                          />
-                        </div>
-                      </Form.Group>
-                    </LocalizationProvider>
-                  </Col>
-                </Row> */}
               </Form>
             </Col>
           </Row>
